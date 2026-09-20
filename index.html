@@ -3,116 +3,188 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="뽀린걸 팬사이트 — 방송 일정, 콘텐츠, 팬 기록을 한곳에서 보는 비공식 팬페이지">
-  <title>뽀린걸 팬사이트 · BBoRinGirl</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#ff3d93">
+  <meta name="description" content="뽀린걸 3000일을 함께 축하하는 비공식 팬 사이트">
+  <title>뽀린걸 FAN SITE · 3000일</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="topbar">
-  <a class="brand" href="#home"><span class="brand-dot"></span>뽀린걸 팬사이트</a>
-  <button class="menu" aria-label="메뉴 열기">☰</button>
-  <nav>
-    <a href="#about">프로필</a>
-    <a href="#content">콘텐츠</a>
-    <a href="#schedule">방송</a>
-    <a href="#links">공식 링크</a>
-  </nav>
-</header>
+  <div class="sparkle-layer" aria-hidden="true"></div>
 
-<main id="home">
-  <section class="hero">
-    <div class="hero-copy">
-      <p class="eyebrow">UNOFFICIAL FAN SITE · BBoRinGirl</p>
-      <h1>여러분의 시간을<br><em>뽀릴게요!</em></h1>
-      <p class="lead">뽀린걸의 방송과 콘텐츠를 팬의 시선으로 모아보는 비공식 팬페이지입니다.</p>
-      <div class="hero-actions">
-        <a class="btn primary" href="https://play.sooplive.com/bboringirl" target="_blank" rel="noopener">SOOP 방송 보기 ↗</a>
-        <a class="btn ghost" href="#about">팬사이트 둘러보기</a>
-      </div>
-    </div>
-    <div class="hero-card">
-      <div class="avatar">뽀</div>
-      <div>
-        <span class="status">FAN PAGE</span>
-        <h2>뽀린걸</h2>
-        <p>SOOP · 버추얼 스트리머</p>
-      </div>
-    </div>
-  </section>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="뽀린걸 팬사이트 홈">
+      <span class="brand-mark">뽀</span>
+      <span><strong>뽀린걸</strong><small>FAN SITE</small></span>
+    </a>
+    <button class="menu-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false">☰</button>
+    <nav class="nav" aria-label="주요 메뉴">
+      <a class="active" href="#home">홈</a>
+      <a href="#about">뽀린걸 소개</a>
+      <a href="#anniversary">3000일 특별전</a>
+      <a href="#timeline">방송정보</a>
+      <a href="#gallery">팬 갤러리</a>
+      <a href="#community">커뮤니티</a>
+      <a href="#links">FAN HUB</a>
+    </nav>
+    <a class="header-cta" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP 방송 보러가기 ↗</a>
+  </header>
 
-  <section class="ticker"><span>♥</span> 오늘도 즐겁게 뽀리기 · 소통 · 게임 · 버추얼 콘텐츠 <span>♥</span></section>
-
-  <section id="about" class="section">
-    <div class="section-head">
-      <p class="eyebrow">PROFILE</p><h2>뽀린걸 알아보기</h2>
-    </div>
-    <div class="grid profile-grid">
-      <article class="card profile-main">
-        <div class="mini-avatar">뽀</div>
-        <div>
-          <h3>뽀린걸 <small>BBoRinGirl</small></h3>
-          <p>SOOP에서 소통 방송과 게임 방송을 진행하는 버추얼 스트리머.</p>
+  <main id="home">
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <p class="eyebrow">BOO RIN GIRL · 3000 DAYS ANNIVERSARY</p>
+        <h1><span>3000일</span><br>축하합니다 <i>♡</i></h1>
+        <p class="hero-copy">함께 웃고, 함께 떠들고, 함께 쌓아온 시간.<br><b>뽀글스</b>와 <b>뽀린걸</b>의 다음 장면도 계속됩니다.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">♡ SOOP 방송 보러가기</a>
+          <a class="btn btn-light" href="#anniversary">3000일 특별전 보기</a>
         </div>
-      </article>
-      <article class="card">
-        <h3>주 콘텐츠</h3>
-        <div class="chips"><span>소통</span><span>배틀그라운드</span><span>종합 게임</span><span>VRChat</span></div>
-      </article>
-      <article class="card">
-        <h3>팬사이트 원칙</h3>
-        <p>공식적으로 공개된 정보와 링크를 우선합니다. 비공개 정보·사생활 추측은 게시하지 않습니다.</p>
-      </article>
-    </div>
-  </section>
+        <div class="hero-meta">
+          <span></span><b>→</b><span>2026.10.03</span>
+          <em>3000 DAYS</em>
+        </div>
+      </div>
+    </section>
 
-  <section id="content" class="section dark">
-    <div class="section-head">
-      <p class="eyebrow">CONTENT</p><h2>콘텐츠 아카이브</h2>
-    </div>
-    <div class="content-grid">
-      <article class="content-card"><span>🎮 GAME</span><h3>게임 방송</h3><p>배틀그라운드부터 다양한 종합 게임까지.</p></article>
-      <article class="content-card"><span>💬 TALK</span><h3>소통 방송</h3><p>시청자와 편하게 이야기하는 시간을 모아보세요.</p></article>
-      <article class="content-card"><span>🥽 VR</span><h3>버추얼 콘텐츠</h3><p>버추얼 활동과 합방 콘텐츠를 한눈에.</p></article>
-    </div>
-  </section>
+    <section class="quick-links wrap" aria-label="빠른 메뉴">
+      <a href="#about"><span class="icon">✦</span><div><b>뽀린걸 소개</b><small>팬사이트에서 한눈에 알아보기</small></div><span>›</span></a>
+      <a href="#timeline"><span class="icon">◷</span><div><b>방송 일정</b><small>공식 채널 기준으로 업데이트</small></div><span>›</span></a>
+      <a href="#gallery"><span class="icon">▣</span><div><b>팬아트 갤러리</b><small>팬들이 만든 멋진 작품들</small></div><span>›</span></a>
+      <a class="featured" href="#anniversary"><span class="icon">★</span><div><b>3000일 특별전</b><small>기념 콘텐츠 모음</small></div><span>›</span></a>
+    </section>
 
-  <section id="schedule" class="section">
-    <div class="section-head">
-      <p class="eyebrow">LIVE</p><h2>방송 체크</h2>
-    </div>
-    <div class="schedule card">
-      <div class="live-dot"></div>
-      <div><strong>방송 여부는 공식 채널에서 확인</strong><p>방송 일정은 변동될 수 있으므로 최신 공지는 공식 채널을 기준으로 확인하세요.</p></div>
-      <a class="btn small" href="https://play.sooplive.com/bboringirl" target="_blank" rel="noopener">SOOP 열기</a>
-    </div>
-  </section>
+    <section class="section wrap" id="about">
+      <div class="section-head">
+        <div><span class="kicker">PROFILE</span><h2>뽀린걸을 소개합니다</h2></div>
+        <p>공개 자료를 바탕으로 만든 팬사이트용 요약입니다.</p>
+      </div>
+      <div class="profile-grid">
+        <article class="profile-card glass">
+          <div class="avatar-orbit"><div class="avatar-core">뽀</div></div>
+          <div>
+            <span class="pill">BBoRinGirl</span>
+            <h3>여러분의 시간을 뽀릴게요!</h3>
+            <p>SOOP에서 소통과 게임을 중심으로 활동하는 버추얼 크리에이터. 공개 자료에는 VRChat, 배틀그라운드, 종합 게임 등이 주요 콘텐츠로 소개되어 있습니다.</p>
+            <div class="tag-row"><span>#뽀글이</span><span>#뽀글스</span><span>#소통</span><span>#게임</span></div>
+          </div>
+        </article>
+        <div class="facts">
+          <div><small>첫 방송일</small><strong>2018.07.18</strong></div>
+          <div><small>팬덤명</small><strong>뽀글이 / 뽀글스</strong></div>
+          <div><small>주 콘텐츠</small><strong>소통 · VRChat · 배틀그라운드 · 종합 게임</strong></div>
+          <div><small>3000일 특별전</small><strong>2026.10.03 <span class="muted">· 제공 시안 기준</span></strong></div>
+        </div>
+      </div>
+    </section>
 
-  <section id="links" class="section">
-    <div class="section-head">
-      <p class="eyebrow">OFFICIAL</p><h2>공식 링크</h2>
-    </div>
-    <div class="links-grid">
-      <a class="link-card" href="https://play.sooplive.com/bboringirl" target="_blank" rel="noopener"><span>SOOP</span><strong>방송 채널 ↗</strong><small>라이브 · VOD</small></a>
-      <a class="link-card" href="https://www.youtube.com/results?search_query=%EB%BD%80%EB%A6%B0%EA%B1%B8" target="_blank" rel="noopener"><span>YouTube</span><strong>검색 결과 ↗</strong><small>공식 채널은 운영자 표기를 확인하세요.</small></a>
-    </div>
-  </section>
+    <section class="section anniversary" id="anniversary">
+      <div class="wrap">
+        <div class="anniversary-banner">
+          <div>
+            <span class="kicker light">SPECIAL EXHIBITION</span>
+            <h2>뽀린걸 3000일 기념 특별전</h2>
+            <p>3000일 동안 함께한 순간들을 기록하고, 앞으로의 시간을 미리 축하하는 공간.</p>
+          </div>
+          <div class="big-number">3000<span>일</span></div>
+        </div>
+        <div class="milestones">
+          <article><span>01</span><b>첫 방송</b><strong>2018.07.18</strong><p>공개 자료에 기록된 첫 방송일</p></article>
+          <article><span>02</span><b>1000일</b><strong>2021.04.12</strong><p>방송 1000일 기록</p></article>
+          <article><span>03</span><b>2000일</b><strong>2024.01.07</strong><p>방송 2000일 기록</p></article>
+          <article class="accent"><span>04</span><b>3000일</b><strong>2026.10.03</strong><p>제공해주신 시안의 기념 기준</p></article>
+        </div>
+      </div>
+    </section>
 
-  <section class="section fan-note">
-    <div class="note-box">
-      <p class="eyebrow">FOR FANS</p>
-      <h2>팬으로서 남기고 싶은 한마디</h2>
-      <p>아래 버튼을 누르면 이 브라우저에만 간단한 응원 메모를 저장할 수 있어요.</p>
-      <textarea id="memo" maxlength="300" placeholder="뽀린걸에게 응원 한마디를 적어보세요!"></textarea>
-      <div class="memo-row"><button class="btn primary" id="saveMemo">메모 저장</button><button class="btn ghost" id="clearMemo">지우기</button><span id="saved" aria-live="polite"></span></div>
-    </div>
-  </section>
-</main>
+    <section class="section wrap" id="timeline">
+      <div class="section-head">
+        <div><span class="kicker">BROADCAST ARCHIVE</span><h2>시간이 쌓인 순간들</h2></div>
+        <p>연혁을 클릭하면 자세한 설명이 열립니다.</p>
+      </div>
+      <div class="timeline">
+        <button class="timeline-item" data-modal="2018"><span>2018</span><b>첫 방송 · 유튜브 채널 개설</b><i>+</i></button>
+        <button class="timeline-item" data-modal="2019"><span>2019</span><b>팬카페 개설 · 방송 1주년</b><i>+</i></button>
+        <button class="timeline-item" data-modal="2021"><span>2021</span><b>방송 1000일 · 3주년</b><i>+</i></button>
+        <button class="timeline-item" data-modal="2024"><span>2024</span><b>방송 2000일 · 버추얼 데뷔</b><i>+</i></button>
+        <button class="timeline-item" data-modal="2025"><span>2025</span><b>방송 7주년 · 아바타 V2</b><i>+</i></button>
+      </div>
+    </section>
 
-<footer>
-  <strong>뽀린걸 팬사이트</strong>
-  <p>비공식 팬사이트 · 본 사이트는 뽀린걸 및 소속사의 공식 사이트가 아닙니다.</p>
-  <p class="sources">자료 기준: 공개된 SOOP 채널 및 공개 웹 자료 · 마지막 조사/작성: 2026-09-19</p>
-</footer>
-<script src="script.js"></script>
+    <section class="section wrap" id="gallery">
+      <div class="section-head">
+        <div><span class="kicker">FAN GALLERY</span><h2>팬아트 & 추억 보관함</h2></div>
+        <button class="text-btn" id="shuffleGallery">랜덤 추억 보기 ↻</button>
+      </div>
+      <div class="gallery-grid">
+        <figure class="gallery-card g1"><figcaption><b>3000일 축하</b><span>우리의 시간</span></figcaption></figure>
+        <figure class="gallery-card g2"><figcaption><b>뽀글이의 하루</b><span>소통 & 게임</span></figcaption></figure>
+        <figure class="gallery-card g3"><figcaption><b>다음 장면</b><span>앞으로도 함께</span></figcaption></figure>
+        <figure class="gallery-card g4"><figcaption><b>팬아트 보관함</b><span>작품을 준비해주세요</span></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="section community" id="community">
+      <div class="wrap community-grid">
+        <div>
+          <span class="kicker light">COMMUNITY</span>
+          <h2>뽀글이들의 작은 광장</h2>
+          <p>이 사이트는 팬들의 추억, 팬아트, 방송 명장면을 모으는 비공식 팬사이트.</p>
+        </div>
+        <div class="community-actions">
+          <button class="btn btn-light" id="messageBtn">축하 메시지 남기기</button>
+          <a class="btn btn-outline" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP으로 이동 ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="links">
+      <div class="section-head">
+        <div><span class="kicker">FAN HUB</span><h2>공식 채널 바로가기</h2></div>
+        <!-- <p>외부 링크는 실제 운영 시 공식 URL을 확인해 교체하세요.</p> -->
+      </div>
+      <div class="link-grid">
+          <a class="link-card" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer"><span>SOOP</span><b>뽀린걸 방송국</b><small>방송 · VOD · 방송 정보</small><strong>↗</strong></a>
+          <a class="link-card" href="https://www.youtube.com/@bboringirl" target="_blank" rel="noreferrer"><span>YOUTUBE</span><b>뽀린걸 YouTube</b><small>YouTube 정보</small><strong>↗</strong></a>
+          <a class="link-card" href="https://cafe.naver.com/bboringirl" target="_blank" rel="noreferrer"><span>CAFE</span><b>뽀치장 팬카페</b><small>뽀린걸 공식 팬카페 정보</small><strong>↗</strong></a>
+          <div class="link-card"><span>FAN ART</span><b>팬아트 접수함</b><small>미구현 ㅎㅎ</small><strong>+</strong></div>
+      </div>
+    </section>
+
+    <section class="section notes" id="notes">
+      <div class="wrap note-box">
+        <div>
+          <span class="kicker">ARCHIVE NOTE</span>
+          <h2>운영자 메모</h2>
+        </div>
+        <div class="note-content">
+            아직 공부겸 실험적인 웹사이트라.. 아쉽지만 볼게 없습니다. 좀더 공부해서 이쁘게 해볼게요 3000일 넘어 10000일에도 볼수있으면 좋겠습니다.
+            ♥ 뽀린걸 화이팅~ ♥
+            <br />
+            ※해당 웹사이트가 문제시 바로 닫힐 예정입니다.
+            <!--
+    <p><b>중요:</b> 공개 자료상 첫 방송일은 2018.07.18로 확인됩니다. 따라서 이 사이트는 '첫 방송일 + 3000일'을 자동 계산하지 않고, 제공해주신 시안에 표시된 <b>2018.07.18 → 2026.10.03</b> 기념 기준을 별도로 표시했습니다.</p>
+    <p>실제 배포 전에는 공식 SOOP/유튜브/팬카페 링크, 방송 일정, 팬아트 저작권·게시 동의 절차를 운영자 정보에 맞게 업데이트하세요.</p>
+          -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div><strong>뽀린걸 FAN SITE</strong><span>비공식 팬사이트 · 팬메이드</span></div>
+      <p>오늘도 함께해줘서 고마워 ♡</p>
+      <span>© 2026 Fan Site AI사용</span>
+    </div>
+  </footer>
+
+  <dialog id="modal">
+    <button class="modal-close" aria-label="닫기">×</button>
+    <div id="modalBody"></div>
+  </dialog>
+
+  <script src="script.js"></script>
 </body>
 </html>
