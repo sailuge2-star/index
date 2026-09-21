@@ -170,3 +170,94 @@ if (!hasBackend) {
 }
 loadGuestbook();
 loadArts();
+
+/* =========================================
+팬아트 이미지 팝업
+========================================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const modal = document.getElementById('artModal');
+    const modalImage = document.getElementById('artModalImage');
+    const closeButton = document.getElementById('artModalClose');
+
+    // 팝업 HTML이 없는 경우
+    if (!modal || !modalImage || !closeButton) {
+        console.error('팬아트 팝업 HTML을 찾을 수 없습니다.');
+        return;
+    }
+
+    // 팬아트 클릭
+    document.addEventListener('click', (event) => {
+
+        const card = event.target.closest('.gallery-card');
+
+        if (!card) return;
+
+        const backgroundImage =
+            window.getComputedStyle(card).backgroundImage;
+
+        console.log('클릭한 카드:', card);
+        console.log('배경 이미지:', backgroundImage);
+
+        // background-image에서 URL 추출
+        const match = backgroundImage.match(
+            /url\(["']?(.*?)["']?\)/
+        );
+
+        if (!match || !match[1]) {
+            console.error('이미지 URL을 찾을 수 없습니다.');
+            return;
+        }
+
+        const imageUrl = match[1];
+
+        modalImage.src = imageUrl;
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+
+        document.body.style.overflow = 'hidden';
+    });
+
+
+    // X 버튼
+    closeButton.addEventListener('click', closeArtModal);
+
+
+    // 어두운 배경 클릭
+    modal.addEventListener('click', (event) => {
+
+        if (event.target === modal) {
+            closeArtModal();
+        }
+
+    });
+
+
+    // ESC 키
+    document.addEventListener('keydown', (event) => {
+
+        if (
+            event.key === 'Escape' &&
+            modal.classList.contains('is-open')
+        ) {
+            closeArtModal();
+        }
+
+    });
+
+
+    function closeArtModal() {
+
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+
+        document.body.style.overflow = '';
+
+        setTimeout(() => {
+            modalImage.src = '';
+        }, 250);
+    }
+
+});

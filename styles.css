@@ -17,7 +17,24 @@ a{text-decoration:none;color:inherit} button{font:inherit}.wrap{width:min(1180px
 .anniversary{padding-bottom:0}.anniversary-banner{border-radius:30px;padding:45px 52px;display:flex;justify-content:space-between;align-items:center;color:#fff;overflow:hidden;position:relative;background:radial-gradient(circle at 75% 35%,#ff9ac4 0,#ff4d96 30%,#714fd7 100%);box-shadow:0 25px 70px rgba(188,66,151,.22)}.anniversary-banner:before,.anniversary-banner:after{content:"♡";position:absolute;color:rgba(255,255,255,.16);font-size:170px;font-weight:900}.anniversary-banner:before{right:15%;top:-80px}.anniversary-banner:after{left:48%;bottom:-120px}.anniversary-banner h2{font-size:35px;margin:7px 0}.anniversary-banner p{margin:0;color:rgba(255,255,255,.82)}.big-number{font-size:110px;line-height:1;font-weight:900;letter-spacing:-.08em;position:relative;z-index:1}.big-number span{font-size:32px;letter-spacing:0;margin-left:8px}
 .milestones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:15px}.milestones article{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;position:relative}.milestones span{color:#d6c9d5;font-weight:900}.milestones b{display:block;font-size:13px;margin-top:15px}.milestones strong{display:block;font-size:17px;margin-top:4px}.milestones p{margin:7px 0 0;color:#9a8d99;font-size:11px}.milestones .accent{border-color:#ffb9d6;background:#fff6fa}.milestones .accent span,.milestones .accent strong{color:var(--pink)}
 .timeline{border-left:2px solid #ffd2e5;margin-left:13px}.timeline-item{width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;padding:20px 20px 20px 30px;display:grid;grid-template-columns:90px 1fr 30px;align-items:center;cursor:pointer;position:relative;color:var(--ink)}.timeline-item:before{content:"";position:absolute;left:-8px;width:14px;height:14px;border-radius:50%;background:#fff;border:4px solid var(--pink)}.timeline-item span{font-size:13px;color:var(--pink);font-weight:900}.timeline-item b{font-size:15px}.timeline-item i{font-style:normal;color:#b2a3ae;font-size:22px}
-.gallery-grid{display:grid;grid-template-columns:1.35fr .65fr .65fr;grid-template-rows:230px 230px;gap:14px}.gallery-card{margin:0;border-radius:22px;overflow:hidden;position:relative;background-size:cover;background-position:center;min-height:180px;box-shadow:var(--shadow)}.gallery-card:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(35,14,35,.62),transparent 55%)}.gallery-card figcaption{position:absolute;left:22px;bottom:18px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.3)}.gallery-card b{display:block;font-size:17px}.gallery-card span{font-size:11px;opacity:.8}
+
+.gallery-grid{display:grid;grid-template-columns:1.35fr .65fr .65fr;grid-template-rows:230px 530px;gap:14px}
+.gallery-card {
+    margin: 0;
+    border-radius: 22px;
+    overflow: hidden;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    min-height: 240px;
+    box-shadow: var(--shadow)
+}
+
+
+.gallery-card:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(35,14,35,.62),transparent 55%)}
+.gallery-card figcaption{position:absolute;left:22px;bottom:18px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.3)}
+.gallery-card b{display:block;font-size:17px}
+.gallery-card span{font-size:11px;opacity:.8}
 .g1 {
     grid-row: 1/3;
     background-image: url("assets/hero-reference.jpg")
@@ -43,9 +60,103 @@ a{text-decoration:none;color:inherit} button{font:inherit}.wrap{width:min(1180px
 dialog{border:0;border-radius:24px;padding:0;max-width:560px;width:calc(100% - 40px);box-shadow:0 30px 100px rgba(50,15,50,.25);color:var(--ink)}dialog::backdrop{background:rgba(30,10,30,.4);backdrop-filter:blur(5px)}#modalBody{padding:38px}.modal-close{position:absolute;right:14px;top:10px;border:0;background:transparent;font-size:28px;color:#8d7e89;cursor:pointer}
 .sparkle-layer{position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.35;background-image:radial-gradient(circle,rgba(255,61,147,.6) 1px,transparent 1px);background-size:80px 80px;mask-image:linear-gradient(to bottom,black,transparent 75%)}
 @media(max-width:1050px){.nav{gap:15px}.nav a{font-size:12px}.header-cta{display:none}.profile-grid{grid-template-columns:1fr}.link-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:780px){.site-header{height:62px;padding:0 16px}.menu-toggle{display:block;margin-left:auto}.nav{display:none;position:absolute;top:62px;left:0;right:0;padding:10px 16px 18px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);box-shadow:var(--shadow);flex-direction:column;gap:0;align-items:stretch}.nav.open{display:flex}.nav a{padding:12px 8px}.nav a.active:after{display:none}.quick-links{grid-template-columns:1fr 1fr;margin-top:-20px}.hero{min-height:610px}.hero-content{padding-top:50px}.hero-copy{font-size:14px}.profile-card{flex-direction:column;text-align:center}.tag-row{justify-content:center}.facts{grid-template-columns:1fr 1fr}.anniversary-banner{padding:32px 26px;display:block}.big-number{font-size:72px;margin-top:22px}.milestones{grid-template-columns:1fr 1fr}.gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:220px 180px 180px}.g1{grid-row:1/3}.g4{grid-column:1/3}.community-grid{display:block}.community-actions{margin-top:25px}.note-box{grid-template-columns:1fr}}
-@media(max-width:500px){.wrap{width:min(100% - 24px,1180px)}.quick-links{grid-template-columns:1fr}.hero h1{font-size:54px}.hero-meta{flex-wrap:wrap;justify-content:center}.section{padding-top:72px}.section-head{display:block}.section-head p{margin-top:10px}.facts{grid-template-columns:1fr}.milestones{grid-template-columns:1fr}.gallery-grid{display:block}.gallery-card{height:210px;margin-bottom:12px}.footer-inner{display:block;text-align:center}.footer p{text-align:center;margin:12px 0}.anniversary-banner h2{font-size:28px}}
+@media(max-width:780px){.site-header{height:62px;padding:0 16px}.menu-toggle{display:block;margin-left:auto}.nav{display:none;position:absolute;top:62px;left:0;right:0;padding:10px 16px 18px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);box-shadow:var(--shadow);flex-direction:column;gap:0;align-items:stretch}.nav.open{display:flex}.nav a{padding:12px 8px}.nav a.active:after{display:none}.quick-links{grid-template-columns:1fr 1fr;margin-top:-20px}.hero{min-height:610px}.hero-content{padding-top:50px}.hero-copy{font-size:14px}.profile-card{flex-direction:column;text-align:center}.tag-row{justify-content:center}.facts{grid-template-columns:1fr 1fr}.anniversary-banner{padding:32px 26px;display:block}.big-number{font-size:72px;margin-top:22px}.milestones{grid-template-columns:1fr 1fr}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+.gallery-grid{grid-template-columns:1fr 1fr;grid-template-rows:220px 180px 180px}.g1{grid-row:1/3}.g4{grid-column:1/3}.community-grid{display:block}.community-actions{margin-top:25px}.note-box{grid-template-columns:1fr}}
+@media(max-width:500px){.wrap{width:min(100% - 24px,1180px)}.quick-links{grid-template-columns:1fr}.hero h1{font-size:54px}.hero-meta{flex-wrap:wrap;justify-content:center}.section{padding-top:72px}.section-head{display:block}.section-head p{margin-top:10px}.facts{grid-template-columns:1fr}.milestones{grid-template-columns:1fr}
+
+.gallery-grid{display:block}
+.gallery-card{height:210px;margin-bottom:12px}.footer-inner{display:block;text-align:center}.footer p{text-align:center;margin:12px 0}.anniversary-banner h2{font-size:28px}}
 
 /* Community features */
 .section-action{text-align:center;margin-top:22px}.guestbook-layout{display:grid;grid-template-columns:380px 1fr;gap:18px}.guestbook-form,.upload-form{padding:26px}.guestbook-form label,.upload-form label{display:block;font-size:12px;font-weight:800;margin-bottom:14px}.guestbook-form input,.guestbook-form textarea,.upload-form input,.upload-form textarea{display:block;width:100%;margin-top:7px;border:1px solid #eadde6;background:#fff;border-radius:14px;padding:12px 13px;outline:0;font:inherit;font-size:13px;color:var(--ink)}.guestbook-form textarea,.upload-form textarea{min-height:120px;resize:vertical}.guestbook-form input:focus,.guestbook-form textarea:focus,.upload-form input:focus,.upload-form textarea:focus{border-color:#ff9ac5;box-shadow:0 0 0 4px rgba(255,61,147,.08)}.form-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#a196a0;font-size:10px}.form-note{font-size:10px;color:#a196a0;margin:12px 0 0}.honeypot{position:absolute!important;left:-10000px!important;opacity:0!important;height:1px!important}.guestbook-list{display:grid;gap:10px;align-content:start;max-height:520px;overflow:auto;padding-right:4px}.guestbook-item{background:#fff;border:1px solid var(--line);border-radius:18px;padding:17px 19px;box-shadow:0 8px 25px rgba(60,20,60,.05)}.guestbook-item header{display:flex;align-items:center;justify-content:space-between;gap:10px}.guestbook-item b{font-size:13px}.guestbook-item time{font-size:10px;color:#b0a4ad}.guestbook-item p{font-size:12px;color:#6f6570;margin:8px 0 0;white-space:pre-wrap;word-break:break-word}.empty-state{padding:45px 20px;text-align:center;background:#fff;border:1px dashed #f0d5e3;border-radius:20px;color:#9d909a;font-size:12px}.upload-form{min-width:min(520px,100%)}.upload-form h2{margin:7px 0 5px;font-size:28px}.upload-form>p{font-size:12px;color:#938691;margin:0 0 22px}.file-drop{border:1px dashed #ffb8d5;padding:14px;border-radius:16px;background:#fff8fc}.file-drop input{border:0;padding:4px 0;background:transparent}.file-drop small{display:block;color:#9c9099;font-size:10px}.art-preview{margin:12px 0;border-radius:15px;overflow:hidden;background:#faf4f8;text-align:center}.art-preview img{max-width:100%;max-height:260px;display:block;margin:auto}.upload-form .form-foot{margin-top:10px}.config-warning{background:#fff7df;color:#856d2e;border:1px solid #f4df9e;border-radius:12px;padding:10px 12px;font-size:11px;margin-bottom:12px}
 @media(max-width:780px){.guestbook-layout{grid-template-columns:1fr}.upload-form{min-width:0}.guestbook-list{max-height:none}}
+
+
+/* =========================
+   팬아트 원본 이미지 팝업
+   ========================= */
+
+.art-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background: rgba(15, 8, 20, 0.88);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+    .art-modal.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+.art-modal-content {
+    position: relative;
+    max-width: 95vw;
+    max-height: 92vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .art-modal-content img {
+        display: block;
+        max-width: 95vw;
+        max-height: 92vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 14px;
+        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.45);
+    }
+
+.art-modal-close {
+    position: fixed;
+    top: 20px;
+    right: 25px;
+    z-index: 10000;
+    width: 46px;
+    height: 46px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: #38233d;
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+    .art-modal-close:hover {
+        transform: scale(1.08);
+        background: #fff;
+    }
+
+
+@media (max-width: 768px) {
+    .art-modal {
+        padding: 15px;
+    }
+
+    .art-modal-content img {
+        max-width: 94vw;
+        max-height: 88vh;
+        border-radius: 10px;
+    }
+
+    .art-modal-close {
+        top: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        font-size: 28px;
+    }
+}
