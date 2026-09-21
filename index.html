@@ -22,9 +22,10 @@
       <a href="#about">뽀린걸 소개</a>
       <a href="#anniversary">3000일 특별전</a>
       <a href="#timeline">방송정보</a>
-      <a href="#gallery">팬 갤러리</a>
+      <a href="#gallery">갤러리</a>
       <a href="#community">커뮤니티</a>
-      <a href="#links">FAN HUB</a>
+      <a href="#links">팬아트</a>
+      <a href="#notes">자료실</a>
     </nav>
     <a class="header-cta" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP 방송 보러가기 ↗</a>
   </header>
@@ -34,15 +35,15 @@
       <div class="hero-bg"></div>
       <div class="hero-shade"></div>
       <div class="hero-content">
-        <p class="eyebrow">BOO RIN GIRL · 3000 DAYS ANNIVERSARY</p>
+        <p class="eyebrow">BBO RIN GIRL · 3000 DAYS ANNIVERSARY</p>
         <h1><span>3000일</span><br>축하합니다 <i>♡</i></h1>
-        <p class="hero-copy">함께 웃고, 함께 떠들고, 함께 쌓아온 시간.<br><b>뽀글스</b>와 <b>뽀린걸</b>의 다음 장면도 계속됩니다.</p>
+        <p class="hero-copy">함께 웃고, 함께 떠들고, 함께 쌓아온 시간.<br><b>뽀글이</b>와 뽀린걸의 다음 장면도 계속됩니다.</p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">♡ SOOP 방송 보러가기</a>
           <a class="btn btn-light" href="#anniversary">3000일 특별전 보기</a>
         </div>
         <div class="hero-meta">
-          <span></span><b>→</b><span>2026.10.03</span>
+          <span>2018.07.18</span><b>→</b><span>2026.10.03</span>
           <em>3000 DAYS</em>
         </div>
       </div>
@@ -117,12 +118,13 @@
         <div><span class="kicker">FAN GALLERY</span><h2>팬아트 & 추억 보관함</h2></div>
         <button class="text-btn" id="shuffleGallery">랜덤 추억 보기 ↻</button>
       </div>
-      <div class="gallery-grid">
+      <div class="gallery-grid" id="galleryGrid">
         <figure class="gallery-card g1"><figcaption><b>3000일 축하</b><span>우리의 시간</span></figcaption></figure>
         <figure class="gallery-card g2"><figcaption><b>뽀글이의 하루</b><span>소통 & 게임</span></figcaption></figure>
         <figure class="gallery-card g3"><figcaption><b>다음 장면</b><span>앞으로도 함께</span></figcaption></figure>
-        <figure class="gallery-card g4"><figcaption><b>팬아트 보관함</b><span>작품을 준비해주세요</span></figcaption></figure>
+        <figure class="gallery-card g4"><figcaption><b>팬아트 보관함</b><span>승인된 팬아트가 여기에 표시됩니다</span></figcaption></figure>
       </div>
+      <div class="section-action"><button class="btn btn-primary" id="fanartOpenBtn">✦ 팬아트 올리기</button></div>
     </section>
 
     <section class="section community" id="community">
@@ -130,25 +132,44 @@
         <div>
           <span class="kicker light">COMMUNITY</span>
           <h2>뽀글이들의 작은 광장</h2>
-          <p>이 사이트는 팬들의 추억, 팬아트, 방송 명장면을 모으는 비공식 팬사이트.</p>
+          <p>축하 메시지는 실제 방명록에 저장되고, 팬아트는 운영자 승인 후 공개됩니다.</p>
         </div>
         <div class="community-actions">
-          <button class="btn btn-light" id="messageBtn">축하 메시지 남기기</button>
+          <button class="btn btn-light" id="messageBtn">♡ 방명록 남기기</button>
           <a class="btn btn-outline" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP으로 이동 ↗</a>
         </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="guestbook">
+      <div class="section-head">
+        <div><span class="kicker">GUESTBOOK</span><h2>뽀글이들의 3000일 축하 방명록</h2></div>
+        <p id="guestbookStatus">최신 메시지를 불러오는 중…</p>
+      </div>
+      <div class="guestbook-layout">
+        <form class="guestbook-form glass" id="guestbookForm">
+          <input class="honeypot" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <label>닉네임<input id="guestNickname" maxlength="30" required placeholder="뽀글이 닉네임"></label>
+          <label>축하 메시지<textarea id="guestMessage" maxlength="500" required placeholder="3000일 축하 한마디를 남겨주세요 ♡"></textarea></label>
+          <div class="form-foot"><span>최대 500자</span><button class="btn btn-primary" type="submit">방명록 등록</button></div>
+          <p class="form-note">비공식 팬사이트 · 개인정보나 연락처는 남기지 말아주세요.</p>
+        </form>
+        <div class="guestbook-list" id="guestbookList"></div>
       </div>
     </section>
 
     <section class="section wrap" id="links">
       <div class="section-head">
         <div><span class="kicker">FAN HUB</span><h2>공식 채널 바로가기</h2></div>
-        <!-- <p>외부 링크는 실제 운영 시 공식 URL을 확인해 교체하세요.</p> -->
+        <!--
+        <p>외부 링크는 실제 운영 시 공식 URL을 확인해 교체하세요.</p>
+        -->
       </div>
       <div class="link-grid">
           <a class="link-card" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer"><span>SOOP</span><b>뽀린걸 방송국</b><small>방송 · VOD · 방송 정보</small><strong>↗</strong></a>
           <a class="link-card" href="https://www.youtube.com/@bboringirl" target="_blank" rel="noreferrer"><span>YOUTUBE</span><b>뽀린걸 YouTube</b><small>YouTube 정보</small><strong>↗</strong></a>
           <a class="link-card" href="https://cafe.naver.com/bboringirl" target="_blank" rel="noreferrer"><span>CAFE</span><b>뽀치장 팬카페</b><small>뽀린걸 공식 팬카페 정보</small><strong>↗</strong></a>
-          <div class="link-card"><span>FAN ART</span><b>팬아트 접수함</b><small>미구현 ㅎㅎ</small><strong>+</strong></div>
+        <div class="link-card"><span>FAN ART</span><b>팬아트 접수함</b><small>이미지 업로드 기능을 연결할 자리</small><strong>+</strong></div>
       </div>
     </section>
 
@@ -163,10 +184,10 @@
             ♥ 뽀린걸 화이팅~ ♥
             <br />
             ※해당 웹사이트가 문제시 바로 닫힐 예정입니다.
-            <!--
-    <p><b>중요:</b> 공개 자료상 첫 방송일은 2018.07.18로 확인됩니다. 따라서 이 사이트는 '첫 방송일 + 3000일'을 자동 계산하지 않고, 제공해주신 시안에 표시된 <b>2018.07.18 → 2026.10.03</b> 기념 기준을 별도로 표시했습니다.</p>
-    <p>실제 배포 전에는 공식 SOOP/유튜브/팬카페 링크, 방송 일정, 팬아트 저작권·게시 동의 절차를 운영자 정보에 맞게 업데이트하세요.</p>
-          -->
+           <!--
+          <p><b>중요:</b> 공개 자료상 첫 방송일은 2018.07.18로 확인됩니다. 따라서 이 사이트는 '첫 방송일 + 3000일'을 자동 계산하지 않고, 제공해주신 시안에 표시된 <b>2018.07.18 → 2026.10.03</b> 기념 기준을 별도로 표시했습니다.</p>
+          <p>실제 배포 전에는 공식 SOOP/유튜브/팬카페 링크, 방송 일정, 팬아트 저작권·게시 동의 절차를 운영자 정보에 맞게 업데이트하세요.</p>
+           -->
         </div>
       </div>
     </section>
@@ -176,7 +197,7 @@
     <div class="wrap footer-inner">
       <div><strong>뽀린걸 FAN SITE</strong><span>비공식 팬사이트 · 팬메이드</span></div>
       <p>오늘도 함께해줘서 고마워 ♡</p>
-      <span>© 2026 Fan Site AI사용</span>
+      <span>© 2026 Fan Site Template</span>
     </div>
   </footer>
 
@@ -185,6 +206,24 @@
     <div id="modalBody"></div>
   </dialog>
 
+  <dialog id="fanartModal">
+    <button class="modal-close" id="fanartClose" aria-label="닫기">×</button>
+    <form id="fanartForm" class="upload-form">
+      <span class="kicker">FAN ART SUBMISSION</span>
+      <h2>팬아트 올리기</h2>
+      <p>이미지는 운영자 승인 후 갤러리에 공개됩니다.</p>
+      <label>닉네임<input id="artNickname" maxlength="30" required placeholder="닉네임"></label>
+      <label>작품 제목<input id="artTitle" maxlength="80" required placeholder="예: 뽀린걸 3000일 축하해! "></label>
+      <label>한마디 <textarea id="artDescription" maxlength="300" placeholder="작품 설명 (선택)"></textarea></label>
+      <label class="file-drop">이미지 파일<input id="artFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" required><small>PNG / JPG / WEBP / GIF · 6MB 이하</small></label>
+      <div id="artPreview" class="art-preview" hidden></div>
+      <div class="form-foot"><span>저작권을 가진 작품만 올려주세요.</span><button class="btn btn-primary" type="submit">검수 요청 보내기</button></div>
+      <p id="artFormStatus" class="form-note"></p>
+    </form>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js"></script>
 </body>
 </html>
