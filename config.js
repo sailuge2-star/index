@@ -9,6 +9,6 @@
  * service_role / secret key는 절대 넣으면 안 됩니다.
  */
 window.BBORINGIRL_CONFIG = {
-  supabaseUrl: "",
-  supabaseKey: ""
+  supabaseUrl: "https://vuwcpbzpzaqimkuyhmwg.supabase.co/rest/v1/",
+  supabaseKey: "sb_publishable_aGEE_yh1dJSeApTUoOF_7g_HX79CDnv"
 };
