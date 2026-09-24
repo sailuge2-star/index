@@ -101,3 +101,7 @@ SOOP 공개 방송 상태 API
 ## 시청자 수 수정
 - SOOP `view_cnt`를 현재 시청자 수로 사용하지 않습니다.
 - `total_view_cnt`(PC+모바일 합산)를 우선 사용하고 `current_view_cnt`를 보조값으로 사용합니다.
+
+
+### 시청자 수 보정
+`player_live_api.php`의 `total_view_cnt`를 현재 동시 시청자 수로 사용하지 않고 `current_view_cnt`를 우선 사용합니다. 모바일 시청자 필드가 함께 제공되면 PC+모바일을 합산합니다.
