@@ -227,3 +227,33 @@ dialog{border:0;border-radius:24px;padding:0;max-width:560px;width:calc(100% - 4
 @media(max-width:500px){
   .soop-live-stats{grid-template-columns:1fr}
 }
+
+/* SOOP 방송 일정 */
+.soop-schedule-card{
+  margin-top:14px;
+  padding:24px 28px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:18px;
+  background:linear-gradient(135deg,#fff,#fff6fb);
+}
+.soop-schedule-icon{
+  width:52px;height:52px;border-radius:17px;
+  display:grid;place-items:center;
+  background:#fff0f7;color:var(--pink);
+  font-size:25px;font-weight:900;
+}
+.soop-schedule-main{min-width:0}
+.soop-schedule-main h3{margin:3px 0 4px;font-size:20px}
+.soop-schedule-main strong{display:block;color:var(--pink);font-size:17px}
+.soop-schedule-main p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.soop-schedule-side{display:flex;align-items:center;gap:12px;text-align:right}
+.soop-schedule-side>span{font-size:12px;color:#8c7d89;font-weight:800;white-space:nowrap}
+.soop-schedule-side .btn-light{color:#6a49c9;background:#fff;border:1px solid #eadff0;padding:10px 15px;font-size:12px}
+@media(max-width:780px){
+  .soop-schedule-card{grid-template-columns:auto 1fr;padding:20px;gap:13px}
+  .soop-schedule-side{grid-column:1/-1;justify-content:space-between;text-align:left}
+  .soop-schedule-main h3{font-size:17px}
+  .soop-schedule-main strong{font-size:15px}
+}
