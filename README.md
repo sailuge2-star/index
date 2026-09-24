@@ -98,10 +98,8 @@ SOOP 공개 방송 상태 API
 참고: SOOP의 캘린더 엔드포인트는 공개 웹 서비스의 내부 채널 API를 사용하는 방식입니다. SOOP에서 엔드포인트나 응답 형식을 변경하면 `api/soop-calendar.js`의 정규화 로직을 조정해야 할 수 있습니다.
 
 
-## 시청자 수 수정
-- SOOP `view_cnt`를 현재 시청자 수로 사용하지 않습니다.
-- `total_view_cnt`(PC+모바일 합산)를 우선 사용하고 `current_view_cnt`를 보조값으로 사용합니다.
-
-
-### 시청자 수 보정
-`player_live_api.php`의 `total_view_cnt`를 현재 동시 시청자 수로 사용하지 않고 `current_view_cnt`를 우선 사용합니다. 모바일 시청자 필드가 함께 제공되면 PC+모바일을 합산합니다.
+## 시청자 수 보정
+- `player_live_api.php`의 `current_view_cnt`가 0으로 반환되거나 `total_view_cnt`가 다른 집계값으로 반환되는 경우가 있어, 해당 응답만으로 시청자 수를 표시하지 않습니다.
+- SOOP 라이브 목록 API(`main_broad_list_api.php`)에서 `bboringirl`의 `total_view_cnt`를 조회하여 현재 시청자 수로 사용합니다.
+- 라이브 목록의 첫 10페이지까지 확인하며 스트리머 ID가 발견되면 그 값을 사용합니다.
+- 목록 API에서 찾지 못한 경우에만 `current_view_cnt` 및 모바일 분량을 보조값으로 사용합니다.
