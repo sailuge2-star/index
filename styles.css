@@ -228,32 +228,62 @@ dialog{border:0;border-radius:24px;padding:0;max-width:560px;width:calc(100% - 4
   .soop-live-stats{grid-template-columns:1fr}
 }
 
-/* SOOP 방송 일정 */
-.soop-schedule-card{
-  margin-top:14px;
-  padding:24px 28px;
-  display:grid;
-  grid-template-columns:auto 1fr auto;
-  align-items:center;
-  gap:18px;
-  background:linear-gradient(135deg,#fff,#fff6fb);
+/* =========================
+   SOOP 방송 일정 캘린더
+   ========================= */
+.soop-calendar-section{padding-top:28px}
+.soop-calendar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.soop-calendar-actions>strong{min-width:145px;text-align:center;font-size:16px;letter-spacing:-.03em}
+.calendar-nav{width:40px;height:40px;border:1px solid var(--line);background:#fff;border-radius:12px;font-size:25px;line-height:1;color:#6e6270;cursor:pointer;transition:.2s}
+.calendar-nav:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(40,20,40,.08)}
+.calendar-today{padding:10px 14px}
+.soop-calendar{overflow:hidden;padding:0;background:rgba(255,255,255,.82)}
+.soop-calendar-weekdays,.soop-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.soop-calendar-weekdays{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fff,#fff8fc)}
+.soop-calendar-weekdays span{padding:15px 10px;text-align:center;font-size:11px;font-weight:900;color:#8f818d;letter-spacing:.08em}
+.soop-calendar-weekdays span:last-child{color:#d85a8d}
+.soop-calendar-day{min-height:155px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.72);padding:12px;overflow:hidden}
+.soop-calendar-day:nth-child(7n){border-right:0}
+.soop-calendar-day.is-empty{background:rgba(248,244,248,.58)}
+.soop-calendar-day.is-today{background:linear-gradient(180deg,#fff4fa,#fff)}
+.soop-calendar-day.is-today .soop-calendar-day-head>span{background:var(--pink);color:#fff;box-shadow:0 7px 16px rgba(255,61,147,.2)}
+.soop-calendar-day.is-sunday .soop-calendar-day-head>span{color:#d85a8d}
+.soop-calendar-day.is-saturday .soop-calendar-day-head>span{color:#8c79c8}
+.soop-calendar-day-head{display:flex;align-items:center;gap:6px;min-height:28px;margin-bottom:8px}
+.soop-calendar-day-head>span{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:999px;font-size:13px;font-weight:900;color:#665b67}
+.soop-calendar-day-head em{font-style:normal;font-size:9px;font-weight:900;color:var(--pink);letter-spacing:.04em}
+.soop-calendar-events{display:flex;flex-direction:column;gap:7px}
+.soop-calendar-empty{font-size:10px;color:#c0b6bf;padding:4px 2px}
+.soop-calendar-event{display:block;padding:9px 10px;border:1px solid #f1dbe7;border-radius:12px;background:linear-gradient(135deg,#fff8fc,#fff);text-decoration:none;color:inherit;transition:.2s;overflow:hidden}
+.soop-calendar-event:hover{transform:translateY(-1px);border-color:#eeb4d0;box-shadow:0 8px 18px rgba(50,25,50,.08)}
+.soop-event-type{display:inline-block;padding:3px 6px;border-radius:999px;background:#fff0f7;color:#e62f7e;font-size:8px;font-weight:900;margin-bottom:5px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.soop-calendar-event strong{display:block;font-size:11px;color:#5d5360;margin-bottom:3px}
+.soop-calendar-event b{display:block;font-size:11px;line-height:1.35;color:#221a26;font-weight:800;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.soop-calendar-note{font-size:11px;color:#9a8d98;margin:12px 4px 0}
+.soop-calendar-loading{grid-column:1/-1;min-height:360px;display:flex;align-items:center;justify-content:center;color:#9a8d98;font-size:13px}
+@media(max-width:900px){
+  .soop-calendar-actions{justify-content:flex-start}
+  .soop-calendar-day{min-height:135px;padding:9px}
+  .soop-calendar-event{padding:7px}
 }
-.soop-schedule-icon{
-  width:52px;height:52px;border-radius:17px;
-  display:grid;place-items:center;
-  background:#fff0f7;color:var(--pink);
-  font-size:25px;font-weight:900;
+@media(max-width:680px){
+  .soop-calendar-actions{display:grid;grid-template-columns:40px 1fr 40px auto;gap:6px;width:100%}
+  .soop-calendar-actions>strong{grid-column:2;grid-row:1;font-size:14px;min-width:0}
+  .soop-calendar-actions .calendar-today{grid-column:1/3;grid-row:2}
+  .soop-calendar-actions .btn-primary{grid-column:3/5;grid-row:2;text-align:center}
+  .soop-calendar-weekdays span{padding:10px 4px;font-size:9px}
+  .soop-calendar-day{min-height:105px;padding:6px 4px}
+  .soop-calendar-day-head{margin-bottom:4px;min-height:24px}
+  .soop-calendar-day-head>span{min-width:24px;height:24px;padding:0 5px;font-size:11px}
+  .soop-calendar-day-head em{display:none}
+  .soop-calendar-events{gap:4px}
+  .soop-calendar-event{padding:5px;border-radius:8px}
+  .soop-event-type{font-size:7px;padding:2px 4px;margin-bottom:3px}
+  .soop-calendar-event strong,.soop-calendar-event b{font-size:8px}
+  .soop-calendar-empty{font-size:8px;text-align:center}
 }
-.soop-schedule-main{min-width:0}
-.soop-schedule-main h3{margin:3px 0 4px;font-size:20px}
-.soop-schedule-main strong{display:block;color:var(--pink);font-size:17px}
-.soop-schedule-main p{margin:3px 0 0;color:var(--muted);font-size:12px}
-.soop-schedule-side{display:flex;align-items:center;gap:12px;text-align:right}
-.soop-schedule-side>span{font-size:12px;color:#8c7d89;font-weight:800;white-space:nowrap}
-.soop-schedule-side .btn-light{color:#6a49c9;background:#fff;border:1px solid #eadff0;padding:10px 15px;font-size:12px}
-@media(max-width:780px){
-  .soop-schedule-card{grid-template-columns:auto 1fr;padding:20px;gap:13px}
-  .soop-schedule-side{grid-column:1/-1;justify-content:space-between;text-align:left}
-  .soop-schedule-main h3{font-size:17px}
-  .soop-schedule-main strong{font-size:15px}
+@media(max-width:420px){
+  .soop-calendar-day{min-height:88px}
+  .soop-calendar-event{padding:4px 3px}
+  .soop-calendar-event strong,.soop-calendar-event b{font-size:7px}
 }

@@ -2,6 +2,9 @@
   "functions": {
     "api/soop.js": {
       "maxDuration": 10
+    },
+    "api/soop-calendar.js": {
+      "maxDuration": 10
     }
   }
 }
