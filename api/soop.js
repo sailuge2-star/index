@@ -71,22 +71,37 @@ function normalizeLiveInfo(liveJson, stationJson) {
     stationData?.station_title ||
     "현재 방송 중";
 
-  // SOOP의 `view_cnt`는 카테고리/추천 영역에서 사용하는 값일 수 있어
-  // 현재 동시 시청자 수로 사용하면 수백만 단위의 잘못된 숫자가 표시될 수 있습니다.
-  // `total_view_cnt`를 PC + 모바일 합산 동시 시청자 수로 우선 사용하고,
-  // 없을 때만 현재 PC 시청자 수(`current_view_cnt`)를 보조값으로 사용합니다.
-  const viewers = numberOrNull(
-    channel.total_view_cnt ??
-    channel.totalViewCnt ??
-    liveInfo?.total_view_cnt ??
-    liveInfo?.totalViewCnt ??
-    stationData?.total_view_cnt ??
-    stationData?.totalViewCnt ??
+  // 중요: player_live_api.php의 `total_view_cnt`는 이 응답에서는
+  // 방송 누적/집계성 숫자로 들어올 수 있으므로 현재 동시 시청자 수로 사용하지 않습니다.
+  // 현재 방송 화면에서 사용하는 실시간 시청자 수는 `current_view_cnt`를 우선합니다.
+  // 모바일 분량 필드가 별도로 제공되는 경우에는 PC + 모바일을 합산합니다.
+  const currentPcViewers = numberOrNull(
     liveInfo?.current_view_cnt ??
     liveInfo?.currentViewCnt ??
     stationData?.current_view_cnt ??
-    stationData?.currentViewCnt
-  ) ?? 0;
+    stationData?.currentViewCnt ??
+    channel.current_view_cnt ??
+    channel.currentViewCnt
+  );
+
+  const mobileViewers = numberOrNull(
+    liveInfo?.mobile_view_cnt ??
+    liveInfo?.mobileViewCnt ??
+    liveInfo?.mobile_viewers ??
+    liveInfo?.mobileViewers ??
+    stationData?.mobile_view_cnt ??
+    stationData?.mobileViewCnt ??
+    stationData?.mobile_viewers ??
+    stationData?.mobileViewers ??
+    channel.mobile_view_cnt ??
+    channel.mobileViewCnt
+  );
+
+  // 현재 동시 시청자 필드가 없으면 잘못된 누적/집계 숫자를 대신 표시하지 않습니다.
+  const viewers =
+    currentPcViewers !== null
+      ? currentPcViewers + (mobileViewers ?? 0)
+      : null;
 
   const thumbnail =
     liveInfo?.thumbnail ||
@@ -98,6 +113,9 @@ function normalizeLiveInfo(liveJson, stationJson) {
     streamerId: STREAMER_ID,
     title,
     viewers,
+    viewerSource: currentPcViewers !== null
+      ? (mobileViewers !== null ? "current_view_cnt+mobile_view_cnt" : "current_view_cnt")
+      : "fallback_total_view_cnt",
     thumbnail,
     broadNo,
     url: broadNo
