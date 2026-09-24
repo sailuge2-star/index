@@ -71,11 +71,21 @@ function normalizeLiveInfo(liveJson, stationJson) {
     stationData?.station_title ||
     "현재 방송 중";
 
+  // SOOP의 `view_cnt`는 카테고리/추천 영역에서 사용하는 값일 수 있어
+  // 현재 동시 시청자 수로 사용하면 수백만 단위의 잘못된 숫자가 표시될 수 있습니다.
+  // `total_view_cnt`를 PC + 모바일 합산 동시 시청자 수로 우선 사용하고,
+  // 없을 때만 현재 PC 시청자 수(`current_view_cnt`)를 보조값으로 사용합니다.
   const viewers = numberOrNull(
-    liveInfo?.view_cnt ??
+    channel.total_view_cnt ??
+    channel.totalViewCnt ??
     liveInfo?.total_view_cnt ??
-    stationData?.view_cnt ??
-    stationData?.total_view_cnt
+    liveInfo?.totalViewCnt ??
+    stationData?.total_view_cnt ??
+    stationData?.totalViewCnt ??
+    liveInfo?.current_view_cnt ??
+    liveInfo?.currentViewCnt ??
+    stationData?.current_view_cnt ??
+    stationData?.currentViewCnt
   ) ?? 0;
 
   const thumbnail =
