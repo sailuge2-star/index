@@ -22,7 +22,46 @@ async function fetchJson(url, options = {}) {
   return response.json();
 }
 
-function normalizeLiveInfo(liveJson, stationJson) {
+
+const MAIN_BROAD_LIST_API =
+  "https://live.sooplive.com/api/main_broad_list_api.php";
+
+async function fetchMainBroadInfo(streamerId) {
+  // SOOP의 라이브 목록 API가 실제 사이트 사이드바에서 사용하는
+  // `total_view_cnt` 값을 가져오도록 보조 조회합니다.
+  // 1페이지에 없는 경우를 대비해 상위 10페이지까지 병렬 조회합니다.
+  const pageNumbers = Array.from({ length: 10 }, (_, index) => index + 1);
+
+  const results = await Promise.allSettled(
+    pageNumbers.map((pageNo) => {
+      const url = new URL(MAIN_BROAD_LIST_API);
+      url.searchParams.set("selectType", "action");
+      url.searchParams.set("selectValue", "all");
+      url.searchParams.set("orderType", "view_cnt");
+      url.searchParams.set("pageNo", String(pageNo));
+      url.searchParams.set("lang", "ko_KR");
+      return fetchJson(url.toString());
+    })
+  );
+
+  for (const result of results) {
+    if (result.status !== "fulfilled") continue;
+
+    const rows = Array.isArray(result.value?.broad)
+      ? result.value.broad
+      : [];
+
+    const match = rows.find(
+      (row) => String(row?.user_id || "").toLowerCase() === String(streamerId).toLowerCase()
+    );
+
+    if (match) return match;
+  }
+
+  return null;
+}
+
+function normalizeLiveInfo(liveJson, stationJson, mainBroadInfo = null) {
   const channel = liveJson?.CHANNEL || {};
   const stationData = stationJson?.data || stationJson?.DATA || stationJson || {};
   const liveList =
@@ -42,6 +81,12 @@ function normalizeLiveInfo(liveJson, stationJson) {
       liveInfo.broadNo ||
       liveInfo.view_cnt !== undefined ||
       liveInfo.broad_title
+    )) ||
+    Boolean(mainBroadInfo && (
+      mainBroadInfo.broad_no ||
+      mainBroadInfo.broadNo ||
+      mainBroadInfo.broad_title ||
+      mainBroadInfo.total_view_cnt !== undefined
     ));
 
   if (!isLive) {
@@ -61,6 +106,8 @@ function normalizeLiveInfo(liveJson, stationJson) {
     channel.broad_no ||
     liveInfo?.broad_no ||
     liveInfo?.broadNo ||
+    mainBroadInfo?.broad_no ||
+    mainBroadInfo?.broadNo ||
     ""
   );
 
@@ -68,6 +115,8 @@ function normalizeLiveInfo(liveJson, stationJson) {
     channel.TITLE ||
     liveInfo?.broad_title ||
     liveInfo?.title ||
+    mainBroadInfo?.broad_title ||
+    mainBroadInfo?.title ||
     stationData?.station_title ||
     "현재 방송 중";
 
@@ -98,10 +147,19 @@ function normalizeLiveInfo(liveJson, stationJson) {
   );
 
   // 현재 동시 시청자 필드가 없으면 잘못된 누적/집계 숫자를 대신 표시하지 않습니다.
+  // 현재 동시 시청자 수는 SOOP 라이브 목록 API의 `total_view_cnt`를
+  // 최우선으로 사용합니다. 이 API는 SOOP 사이트의 라이브 목록/사이드바에서도
+  // 해당 필드를 현재 방송 시청자 수로 사용합니다.
+  const mainListViewers = numberOrNull(mainBroadInfo?.total_view_cnt);
+
   const viewers =
-    currentPcViewers !== null
-      ? currentPcViewers + (mobileViewers ?? 0)
-      : null;
+    mainListViewers !== null
+      ? mainListViewers
+      : (
+          currentPcViewers !== null
+            ? currentPcViewers + (mobileViewers ?? 0)
+            : null
+        );
 
   const thumbnail =
     liveInfo?.thumbnail ||
@@ -113,9 +171,14 @@ function normalizeLiveInfo(liveJson, stationJson) {
     streamerId: STREAMER_ID,
     title,
     viewers,
-    viewerSource: currentPcViewers !== null
-      ? (mobileViewers !== null ? "current_view_cnt+mobile_view_cnt" : "current_view_cnt")
-      : "fallback_total_view_cnt",
+    viewerSource:
+      mainListViewers !== null
+        ? "main_broad_list.total_view_cnt"
+        : (
+            currentPcViewers !== null
+              ? (mobileViewers !== null ? "current_view_cnt+mobile_view_cnt" : "current_view_cnt")
+              : "unavailable"
+          ),
     thumbnail,
     broadNo,
     url: broadNo
@@ -147,23 +210,27 @@ module.exports = async function handler(req, res) {
     }).toString();
 
     // 두 공개 조회를 병렬로 호출합니다.
-    const [stationResult, liveResult] = await Promise.allSettled([
+    const [stationResult, liveResult, mainListResult] = await Promise.allSettled([
       fetchJson(stationUrl),
       fetchJson(liveUrl, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: liveBody
-      })
+      }),
+      fetchMainBroadInfo(STREAMER_ID)
     ]);
 
     const stationJson = stationResult.status === "fulfilled" ? stationResult.value : null;
     const liveJson = liveResult.status === "fulfilled" ? liveResult.value : null;
+    const mainBroadInfo = mainListResult.status === "fulfilled"
+      ? mainListResult.value
+      : null;
 
-    if (!stationJson && !liveJson) {
+    if (!stationJson && !liveJson && !mainBroadInfo) {
       throw new Error("SOOP API 응답을 받을 수 없습니다.");
     }
 
-    const data = normalizeLiveInfo(liveJson, stationJson);
+    const data = normalizeLiveInfo(liveJson, stationJson, mainBroadInfo);
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
