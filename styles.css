@@ -160,3 +160,70 @@ dialog{border:0;border-radius:24px;padding:0;max-width:560px;width:calc(100% - 4
         font-size: 28px;
     }
 }
+
+/* =========================
+   SOOP LIVE 상태 카드
+   ========================= */
+.soop-live-section{padding-top:78px}
+.soop-live-card{
+  display:grid;
+  grid-template-columns:minmax(280px,.85fr) 1.15fr;
+  gap:0;
+  overflow:hidden;
+  min-height:330px;
+}
+.soop-live-thumb-wrap{
+  position:relative;
+  min-height:300px;
+  background:#f5edf4;
+  overflow:hidden;
+}
+.soop-live-thumb{
+  width:100%;
+  height:100%;
+  min-height:300px;
+  display:block;
+  object-fit:cover;
+}
+.soop-live-badge{
+  position:absolute;
+  left:18px;
+  top:18px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.94);
+  color:#7b6b77;
+  font-size:11px;
+  font-weight:900;
+  box-shadow:0 8px 25px rgba(40,20,40,.12);
+}
+.soop-live-badge::before{
+  content:"";
+  width:8px;height:8px;border-radius:50%;background:#aaa;
+}
+.soop-live-badge.is-live{color:#e62f7e}
+.soop-live-badge.is-live::before{background:#ff3d93;box-shadow:0 0 0 5px rgba(255,61,147,.12)}
+.soop-live-badge.is-offline::before{background:#a9a0a9}
+.soop-live-info{padding:34px 36px;display:flex;flex-direction:column;justify-content:center}
+.soop-live-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.soop-live-kicker{font-size:10px;font-weight:900;letter-spacing:.14em;color:var(--pink)}
+.soop-live-info h3{font-size:28px;line-height:1.35;margin:8px 0 24px;letter-spacing:-.04em;word-break:keep-all}
+.soop-live-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.soop-live-stats>div{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px}
+.soop-live-stats span{display:block;color:#a397a1;font-size:10px}
+.soop-live-stats strong{display:block;margin-top:4px;font-size:16px}
+.soop-live-note{font-size:11px;color:#978b96;margin:16px 0 0}
+@media(max-width:780px){
+  .soop-live-card{grid-template-columns:1fr}
+  .soop-live-thumb-wrap,.soop-live-thumb{min-height:220px;height:220px}
+  .soop-live-info{padding:25px 20px}
+  .soop-live-title-row{display:block}
+  .soop-live-title-row .btn{margin-top:4px}
+  .soop-live-info h3{font-size:22px;margin-bottom:18px}
+}
+@media(max-width:500px){
+  .soop-live-stats{grid-template-columns:1fr}
+}

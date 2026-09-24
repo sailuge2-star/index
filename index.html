@@ -19,13 +19,13 @@
         <button class="menu-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false">☰</button>
         <nav class="nav" aria-label="주요 메뉴">
             <a class="active" href="#home">홈</a>
+            <a href="#soop-live">SOOP LIVE</a>
             <a href="#about">뽀린걸 소개</a>
             <a href="#anniversary">3000일 특별전</a>
             <a href="#timeline">방송정보</a>
             <a href="#gallery">갤러리</a>
             <a href="#community">커뮤니티</a>
-            <a href="#links">팬아트</a>
-            <a href="#notes">자료실</a>
+            <a href="#links">방명록</a>
         </nav>
         <a class="header-cta" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP 방송 보러가기 ↗</a>
     </header>
@@ -37,7 +37,7 @@
             <div class="hero-content">
                 <p class="eyebrow">BBO RIN GIRL · 3000 DAYS ANNIVERSARY</p>
                 <h1><span>3000일</span><br>축하합니다 <i>♡</i></h1>
-                <p class="hero-copy">함께 웃고, 함께 떠들고, 함께 쌓아온 시간.<br><b>뽀글이</b>와 뽀린걸의 다음 장면도 계속됩니다.</p>
+                <p class="hero-copy">함께 웃고, 함께 떠들고, 함께 쌓아온 시간.<br><b>뽀글스</b>와 뽀린걸의 다음 장면도 계속됩니다.</p>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">♡ SOOP 방송 보러가기</a>
                     <a class="btn btn-light" href="#anniversary">3000일 특별전 보기</a>
@@ -54,6 +54,38 @@
             <a href="#timeline"><span class="icon">◷</span><div><b>방송 일정</b><small>공식 채널 기준으로 업데이트</small></div><span>›</span></a>
             <a href="#gallery"><span class="icon">▣</span><div><b>팬아트 갤러리</b><small>팬들이 만든 멋진 작품들</small></div><span>›</span></a>
             <a class="featured" href="#anniversary"><span class="icon">★</span><div><b>3000일 특별전</b><small>기념 콘텐츠 모음</small></div><span>›</span></a>
+        </section>
+
+        <section class="section wrap soop-live-section" id="soop-live">
+            <div class="section-head">
+                <div>
+                    <span class="kicker">SOOP LIVE</span>
+                    <h2>지금 뽀린걸 방송 상태</h2>
+                </div>
+                <p id="soopUpdated">방송 정보를 확인하는 중…</p>
+            </div>
+
+            <article class="soop-live-card glass" id="soopLiveCard" aria-live="polite">
+                <div class="soop-live-thumb-wrap">
+                    <img id="soopLiveThumbnail" class="soop-live-thumb" src="assets/hero-reference4.jpg" alt="SOOP 방송 썸네일">
+                    <span class="soop-live-badge" id="soopLiveBadge">확인 중</span>
+                </div>
+                <div class="soop-live-info">
+                    <div class="soop-live-title-row">
+                        <div>
+                            <span class="soop-live-kicker">BBO RINGIRL · SOOP</span>
+                            <h3 id="soopLiveTitle">방송 정보를 불러오는 중…</h3>
+                        </div>
+                        <a id="soopLiveButton" class="btn btn-primary" href="https://play.sooplive.com/bboringirl" target="_blank" rel="noreferrer">SOOP에서 보기 ↗</a>
+                    </div>
+                    <div class="soop-live-stats">
+                        <div><span>상태</span><strong id="soopLiveStatus">확인 중</strong></div>
+                        <div><span>시청자</span><strong id="soopLiveViewers">-</strong></div>
+                        <div><span>방송 번호</span><strong id="soopLiveBroadNo">-</strong></div>
+                    </div>
+                    <p class="soop-live-note" id="soopLiveMessage">SOOP 공개 방송 정보를 자동으로 확인합니다. 약 60초마다 갱신됩니다.</p>
+                </div>
+            </article>
         </section>
 
         <section class="section wrap" id="about">
@@ -169,7 +201,7 @@
                 <a class="link-card" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer"><span>SOOP</span><b>뽀린걸 방송국</b><small>방송 · VOD · 방송 정보</small><strong>↗</strong></a>
                 <a class="link-card" href="https://www.youtube.com/@bboringirl" target="_blank" rel="noreferrer"><span>YOUTUBE</span><b>뽀린걸 YouTube</b><small>YouTube 정보</small><strong>↗</strong></a>
                 <a class="link-card" href="https://cafe.naver.com/bboringirl" target="_blank" rel="noreferrer"><span>CAFE</span><b>뽀치장 팬카페</b><small>뽀린걸 공식 팬카페 정보</small><strong>↗</strong></a>
-                <div class="link-card"><span>FAN ART</span><b>팬아트 접수함</b><small> 건의사항 관련 창구 [현재미구현 ㅎㅎ] </small><strong>+</strong></div>
+                <div class="link-card"><span>건의사항</span><b>건의사항 접수함</b><small> 건의사항 관련 창구 [현재미구현 ㅎㅎ] </small><strong>+</strong></div>
             </div>
         </section>
 
@@ -242,6 +274,7 @@
     <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
+    <script src="soop-live.js"></script>
 
 </body>
 </html>

@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/soop.js": {
+      "maxDuration": 10
+    }
+  }
+}
