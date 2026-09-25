@@ -1,37 +1,79 @@
-# 뽀린걸 FAN SITE — ADMIN 대시보드 버전
+# 뽀린걸 FAN SITE — ADMIN 대시보드 최신 버전
 
-## 이번 버전
-- 첫 접속 시 `게스트` / `ADMIN` 입장 선택
-- ADMIN은 Supabase Auth 이메일/비밀번호로 로그인
+## 포함 기능
+- 첫 접속 시 게스트 / ADMIN 입장 선택
+- ADMIN은 Supabase Authentication 이메일/비밀번호로 로그인
 - `public.admin_users`에 등록된 사용자만 관리자 권한 인정
 - 관리자 페이지에서 방명록 숨김/공개/삭제
 - 관리자 페이지에서 팬아트 승인/반려/삭제
-- 관리자 통계(방명록, 승인 대기 팬아트, 승인 팬아트)
-- SOOP 방송 일정은 SOOP 캘린더에서 자동 조회하며 관리자 페이지에서는 원본 일정 링크 제공
-- 기존 SOOP LIVE / SOOP 캘린더 / Supabase 방명록 / 팬아트 기능 유지
+- 관리자 통계
+- SOOP LIVE / SOOP 캘린더 / 방명록 / 팬아트 기능 유지
 
-## Supabase 설정
-1. Supabase Dashboard > Authentication > Users에서 관리자 이메일/비밀번호 계정을 생성합니다.
-2. `supabase_schema.sql` 전체를 SQL Editor에서 실행합니다. 이미 기존 스키마를 실행했다면 파일의 ADMIN AUTH 부분도 실행하세요.
-3. 생성된 사용자의 UUID를 `public.admin_users`에 등록합니다. 예:
+## 1. config.js 설정
+`config.js`에는 Supabase Project URL과 Publishable key를 넣습니다. 현재 ZIP에는 다음 관리자 이메일이 예시로 설정되어 있습니다.
+
+```js
+window.BBORINGIRL_CONFIG = {
+  supabaseUrl: "https://vuwcpbzpzaqimkuyhmwg.supabase.co",
+  supabaseKey: "sb_publishable_aGEE_yh1dJSeApTUoOF_7g_HX79CDnv",
+  adminEmails: [
+    "pukha@naver.com"
+  ],
+  soopStreamerId: "bboringirl"
+};
+```
+
+`adminEmails`는 브라우저에 노출되는 참고용 목록이며 실제 권한은 `admin_users` + RLS가 결정합니다. 관리자 비밀번호와 service_role/secret key는 절대 `config.js`에 넣지 않습니다.
+
+## 2. Supabase Authentication 관리자 계정 생성
+Supabase Dashboard → **Authentication → Users → Add user / Create user**에서 관리자 이메일과 비밀번호를 생성합니다. 가능하면 생성 시 **Auto Confirm User** 옵션을 사용하세요.
+
+예:
+- 이메일: `pukha@naver.com`
+- 비밀번호: Supabase에서 사용할 관리자 비밀번호
+
+사용자를 만들면 Supabase가 `auth.users`에 계정을 자동으로 생성합니다. `auth.users` 테이블을 직접 만들면 안 됩니다.
+
+## 3. 데이터베이스 / RLS 설정
+Supabase **SQL Editor**에서 `supabase_schema.sql` 전체를 실행합니다.
+
+이 파일은 기존 정책이 있는 경우 해당 정책을 먼저 삭제하고 다시 만드는 방식으로 작성되어 있어, 이전 버전에서 이미 일부 스키마를 실행한 경우에도 재실행할 수 있습니다.
+
+`fanart` Storage bucket은 별도로 만들고 **Public**을 켜야 합니다.
+
+## 4. 관리자 권한 등록
+Authentication에서 계정을 만든 뒤 SQL Editor에서 실행합니다. 이메일은 실제 관리자 계정과 동일해야 합니다.
 
 ```sql
 insert into public.admin_users(user_id)
-select id from auth.users where email = 'admin@example.com'
+select id
+from auth.users
+where email = 'pukha@naver.com'
 on conflict (user_id) do nothing;
 ```
 
-4. `config.js`에는 Project URL과 Publishable key만 넣습니다. 비밀번호나 service_role/secret key는 넣지 않습니다.
+확인:
 
-## 동작
-- 게스트: 로그인 없이 사이트 이용
-- ADMIN: Supabase Auth 로그인 → `admin_users` 권한 확인 → 관리자 페이지 표시
-- 로그아웃하면 다시 입장 선택 화면으로 돌아갑니다.
+```sql
+select a.user_id, u.email
+from public.admin_users a
+join auth.users u on u.id = a.user_id;
+```
 
-## 관리자 기능
-- 방명록: 숨김/공개/삭제
-- 팬아트: 승인/반려/삭제
-- 팬아트 삭제 시 DB 행과 Storage 파일을 함께 삭제 시도
+결과에 관리자 이메일이 나오면 관리자 등록이 완료된 것입니다.
 
-## 주의
-`config.js`에 이메일 목록만 넣어 관리자 권한을 판별하는 방식은 사용하지 않습니다. 실제 관리자 권한은 Supabase의 `admin_users` + RLS 정책으로 보호합니다.
+## 5. 사이트에서 로그인
+첫 화면 → **ADMIN으로 입장** → Supabase Authentication에서 만든 이메일/비밀번호 입력.
+
+로그인 성공 후 `admin_users`에 현재 사용자의 UUID가 있는지 확인하고 관리자 대시보드를 표시합니다.
+
+## 문제 해결
+- `Invalid login credentials`: Authentication → Users에 계정이 존재하는지, 이메일/비밀번호가 맞는지 확인하세요.
+- `관리자 권한이 없는 계정입니다`: `admin_users`에 해당 Auth 사용자의 UUID를 등록하세요.
+- `Supabase 설정이 필요합니다`: 배포된 `config.js`가 최신 파일인지 확인하세요.
+- 방명록/팬아트가 관리자 화면에서 안 보임: `supabase_schema.sql`의 관리자 RLS 정책을 실행했는지 확인하세요.
+
+## 보안
+- Publishable/anon key는 브라우저에 넣을 수 있지만 service_role/secret key는 넣으면 안 됩니다.
+- 관리자 비밀번호는 Supabase Authentication에서만 관리합니다.
+- 실제 관리자 권한은 `admin_users`와 RLS 정책으로 보호합니다.

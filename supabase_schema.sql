@@ -34,6 +34,22 @@ create index if not exists fanart_status_idx on public.fanart(status);
 alter table public.guestbook enable row level security;
 alter table public.fanart enable row level security;
 
+-- 기존에 일부 정책이 이미 만들어져 있어도 이 파일을 다시 실행할 수 있도록
+-- 아래 정책들은 생성 전에 삭제한 뒤 동일한 이름으로 다시 만듭니다.
+drop policy if exists "guestbook_public_read_approved" on public.guestbook;
+drop policy if exists "guestbook_public_insert" on public.guestbook;
+drop policy if exists "fanart_public_read_approved" on public.fanart;
+drop policy if exists "fanart_public_insert_pending" on public.fanart;
+drop policy if exists "fanart_storage_public_upload" on storage.objects;
+drop policy if exists "fanart_storage_public_read" on storage.objects;
+drop policy if exists "guestbook_admin_read_all" on public.guestbook;
+drop policy if exists "guestbook_admin_update" on public.guestbook;
+drop policy if exists "guestbook_admin_delete" on public.guestbook;
+drop policy if exists "fanart_admin_read_all" on public.fanart;
+drop policy if exists "fanart_admin_update" on public.fanart;
+drop policy if exists "fanart_admin_delete" on public.fanart;
+drop policy if exists "fanart_storage_admin_delete" on storage.objects;
+
 -- 공개: 승인된 방명록만 읽기
 create policy "guestbook_public_read_approved"
 on public.guestbook for select
@@ -94,6 +110,8 @@ create table if not exists public.admin_users (
 );
 
 alter table public.admin_users enable row level security;
+
+drop policy if exists "admin_users_self_read" on public.admin_users;
 
 create policy "admin_users_self_read"
 on public.admin_users for select
