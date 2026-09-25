@@ -22,7 +22,7 @@
 
   function monthDays(year, month) {
     const first = new Date(year, month, 1);
-    const startDay = (first.getDay() + 6) % 7; // Monday = 0
+    const startDay = first.getDay(); // Sunday = 0
     const last = new Date(year, month + 1, 0);
     const count = last.getDate();
     const cells = [];
