@@ -77,3 +77,7 @@ join auth.users u on u.id = a.user_id;
 - Publishable/anon key는 브라우저에 넣을 수 있지만 service_role/secret key는 넣으면 안 됩니다.
 - 관리자 비밀번호는 Supabase Authentication에서만 관리합니다.
 - 실제 관리자 권한은 `admin_users`와 RLS 정책으로 보호합니다.
+
+
+## 게스트 로그아웃
+게스트로 입장하면 우측 상단에 `게스트 관리` 메뉴가 표시됩니다. 메뉴의 `게스트 로그아웃`을 누르면 현재 게스트 입장 상태를 sessionStorage에서 제거하고 최초 입장 화면으로 돌아갑니다. 게스트는 Supabase Auth 계정이 아니므로 서버 로그아웃은 수행하지 않습니다.

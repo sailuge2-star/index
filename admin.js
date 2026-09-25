@@ -23,6 +23,10 @@
   const adminDashboardBtn = $('#adminDashboardBtn');
   const adminHeaderLogoutBtn = $('#adminHeaderLogoutBtn');
   const adminUserLabel = $('#adminUserLabel');
+  const guestHeaderMenu = $('#guestHeaderMenu');
+  const guestHeaderBtn = $('#guestHeaderBtn');
+  const guestHeaderDropdown = $('#guestHeaderDropdown');
+  const guestHeaderLogoutBtn = $('#guestHeaderLogoutBtn');
 
   let currentUser = null;
   let isAdmin = false;
@@ -32,6 +36,9 @@
     if (gate) gate.hidden = true;
     document.body.classList.add('site-entered');
     sessionStorage.setItem('bboringirl_entry_role', role);
+    if (guestHeaderMenu) guestHeaderMenu.hidden = role !== 'guest';
+    if (guestHeaderDropdown) guestHeaderDropdown.hidden = true;
+    if (guestHeaderBtn) guestHeaderBtn.setAttribute('aria-expanded', 'false');
   }
 
   function showGate(message='') {
@@ -39,6 +46,9 @@
     if (gate) gate.hidden = false;
     if (entryStatus) entryStatus.textContent = message;
     document.body.classList.remove('site-entered');
+    if (guestHeaderMenu) guestHeaderMenu.hidden = true;
+    if (guestHeaderDropdown) guestHeaderDropdown.hidden = true;
+    if (guestHeaderBtn) guestHeaderBtn.setAttribute('aria-expanded', 'false');
   }
 
   function showAdmin() {
@@ -56,6 +66,8 @@
     if (adminHeaderMenu) adminHeaderMenu.hidden = true;
     if (adminHeaderBtn) { adminHeaderBtn.hidden = true; adminHeaderBtn.setAttribute('aria-expanded', 'false'); }
     if (adminHeaderDropdown) adminHeaderDropdown.hidden = true;
+    if (guestHeaderMenu) guestHeaderMenu.hidden = true;
+    if (guestHeaderDropdown) guestHeaderDropdown.hidden = true;
   }
 
   async function checkAdmin(user) {
@@ -123,11 +135,25 @@
     adminHeaderBtn?.setAttribute('aria-expanded', 'false');
   }
 
+  function closeGuestHeaderMenu() {
+    if (guestHeaderDropdown) guestHeaderDropdown.hidden = true;
+    guestHeaderBtn?.setAttribute('aria-expanded', 'false');
+  }
+
   function toggleAdminHeaderMenu() {
     if (!isAdmin || !adminHeaderDropdown) return;
+    closeGuestHeaderMenu();
     const nextOpen = adminHeaderDropdown.hidden;
     adminHeaderDropdown.hidden = !nextOpen;
     adminHeaderBtn?.setAttribute('aria-expanded', String(nextOpen));
+  }
+
+  function toggleGuestHeaderMenu() {
+    if (isAdmin || !guestHeaderDropdown) return;
+    closeAdminHeaderMenu();
+    const nextOpen = guestHeaderDropdown.hidden;
+    guestHeaderDropdown.hidden = !nextOpen;
+    guestHeaderBtn?.setAttribute('aria-expanded', String(nextOpen));
   }
 
   async function logoutAdmin() {
@@ -141,9 +167,21 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function logoutGuest() {
+    closeGuestHeaderMenu();
+    sessionStorage.removeItem('bboringirl_entry_role');
+    showGate('게스트 로그아웃되었습니다.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   adminHeaderBtn?.addEventListener('click', (event) => {
     event.stopPropagation();
     toggleAdminHeaderMenu();
+  });
+
+  guestHeaderBtn?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleGuestHeaderMenu();
   });
 
   adminDashboardBtn?.addEventListener('click', () => {
@@ -153,13 +191,18 @@
 
   adminHeaderLogoutBtn?.addEventListener('click', logoutAdmin);
   $('#adminLogoutBtn')?.addEventListener('click', logoutAdmin);
+  guestHeaderLogoutBtn?.addEventListener('click', logoutGuest);
 
   document.addEventListener('click', (event) => {
     if (!adminHeaderMenu?.contains(event.target)) closeAdminHeaderMenu();
+    if (!guestHeaderMenu?.contains(event.target)) closeGuestHeaderMenu();
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeAdminHeaderMenu();
+    if (event.key === 'Escape') {
+      closeAdminHeaderMenu();
+      closeGuestHeaderMenu();
+    }
   });
 
   function escapeHtml(value='') {
