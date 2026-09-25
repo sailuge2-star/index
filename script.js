@@ -324,7 +324,6 @@ setInterval(() => {
   const player = $('#bgmPlayer');
   const audio = $('#bgmAudio');
   const playBtn = $('#bgmPlayBtn');
-  const nextBtn = $('#bgmNextBtn');
   const volume = $('#bgmVolume');
   const progress = $('#bgmProgress');
   const currentTimeEl = $('#bgmCurrentTime');
@@ -367,10 +366,9 @@ setInterval(() => {
     const track = playlist[currentIndex];
     if (!track) {
       titleEl.textContent = '재생할 음악이 없습니다';
-      metaEl.textContent = '관리자 페이지에서 음악을 추가해주세요.';
+      metaEl.textContent = '0 / 0';
       playBtn.textContent = '▶';
       playBtn.disabled = true;
-      nextBtn.disabled = true;
       updateProgress();
       return;
     }
@@ -378,7 +376,6 @@ setInterval(() => {
     metaEl.textContent = `${currentIndex + 1} / ${playlist.length}`;
     playBtn.textContent = audio.paused ? '▶' : 'Ⅱ';
     playBtn.disabled = false;
-    nextBtn.disabled = playlist.length < 2;
     updateProgress();
   }
 
@@ -456,7 +453,6 @@ setInterval(() => {
     if (!playlist.length) return;
     if (audio.paused) audio.play().catch(() => {}); else audio.pause();
   });
-  nextBtn?.addEventListener('click', () => setTrack(currentIndex + 1, true));
   audio.addEventListener('ended', () => setTrack(currentIndex + 1, true));
   audio.addEventListener('play', updateUi);
   audio.addEventListener('pause', updateUi);

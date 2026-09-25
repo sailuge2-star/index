@@ -311,21 +311,34 @@ body:not(.site-entered) > *:not(.entry-gate):not(#adminLoginDialog){visibility:h
 /* =========================
    Guest BGM player integrated into the header
    ========================= */
-.bgm-player{position:absolute;right:0;top:0;height:70px;width:470px;z-index:35;display:grid;grid-template-columns:300px 170px;grid-template-rows:70px;align-items:center;padding:0;border:0;border-left:1px solid rgba(255,61,147,.10);border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
+.bgm-player{position:absolute;right:0;top:0;height:70px;width:470px;z-index:35;display:grid;grid-template-columns:300px 170px;grid-template-rows:70px;align-items:center;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
 .bgm-player[hidden]{display:none}
 .bgm-toggle{position:absolute;left:12px;top:16px;width:38px;height:38px;border:0;border-radius:50%;background:var(--pink);color:#fff;font-size:14px;cursor:pointer;box-shadow:0 8px 18px rgba(255,61,147,.18)}
 .bgm-info{position:absolute;left:62px;top:13px;width:175px;min-width:0;display:flex;flex-direction:column;gap:3px;line-height:1.05}
+.bgm-kicker-row{display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap}
 .bgm-kicker{font-size:8px;font-weight:800;letter-spacing:.16em;color:var(--pink)}
+.bgm-track-count{font-size:8px;font-weight:800;color:#8f7f8d;letter-spacing:.02em}
 .bgm-info strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#3f3340}
-.bgm-info span:last-child{font-size:8px;color:#a394a4}
-.bgm-next{position:absolute;right:12px;top:21px;width:28px;height:28px;border:1px solid rgba(255,61,147,.14);border-radius:50%;background:#fff;color:var(--pink);font-size:20px;line-height:1;cursor:pointer}
 .bgm-progress-row{position:absolute;left:62px;top:42px;width:226px;display:grid;grid-template-columns:28px 1fr 28px;align-items:center;gap:5px}
 .bgm-progress,.bgm-volume{width:100%;accent-color:#ff3d93;height:3px}
 .bgm-time{font-size:8px;color:#7e7180;white-space:nowrap}
-.bgm-volume-row{position:absolute;left:300px;top:23px;width:170px;height:28px;padding:0 12px;border-left:1px solid rgba(255,61,147,.10);display:grid;grid-template-columns:18px 1fr;align-items:center;gap:7px}
+.bgm-volume-row{position:absolute;left:300px;top:23px;width:170px;height:28px;padding:0 12px;display:grid;grid-template-columns:18px 1fr;align-items:center;gap:7px}
 .bgm-volume-icon{font-size:12px;line-height:1;text-align:center}
 .bgm-volume{height:4px}
 @media(max-width:1450px){.bgm-player{width:390px;grid-template-columns:250px 140px}.bgm-info{width:135px}.bgm-progress-row{width:176px}.bgm-volume-row{left:250px;width:140px}}
-@media(max-width:1200px){.bgm-player{width:330px;grid-template-columns:215px 115px}.bgm-info{left:58px;width:112px}.bgm-progress-row{left:58px;width:145px}.bgm-volume-row{left:215px;width:115px;padding:0 8px}.bgm-next{right:7px}}
-@media(max-width:1050px){.bgm-player{position:relative;right:auto;top:auto;width:100%;height:62px;grid-template-columns:1fr;grid-template-rows:62px;border-top:1px solid rgba(255,61,147,.08);border-left:0;background:rgba(255,255,255,.96);padding:0}.bgm-toggle{top:12px}.bgm-info{top:9px}.bgm-progress-row{top:38px}.bgm-volume-row{display:none}.site-header{height:auto;min-height:62px;flex-wrap:wrap}.bgm-player[hidden]{display:none}}
-@media(max-width:780px){.bgm-player{width:100%}.bgm-info{width:calc(100% - 145px)}.bgm-progress-row{width:calc(100% - 145px)}}
+@media(max-width:1200px){.bgm-player{width:330px;grid-template-columns:215px 115px}.bgm-info{left:58px;width:112px}.bgm-progress-row{left:58px;width:145px}.bgm-volume-row{left:215px;width:115px;padding:0 8px}}
+@media(max-width:1050px){
+  .bgm-player{position:relative;right:auto;top:auto;width:100%;height:62px;grid-template-columns:1fr;grid-template-rows:62px;border-top:1px solid rgba(255,61,147,.08);border-left:0;background:rgba(255,255,255,.78);padding:0;box-shadow:0 8px 25px rgba(80,35,78,.06);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .bgm-toggle{top:12px}
+  .bgm-info{top:9px}
+  .bgm-progress-row{top:38px}
+  .bgm-volume-row{display:none}
+  .site-header{height:auto;min-height:62px;flex-wrap:wrap}
+  .bgm-player[hidden]{display:none}
+}
+@media(max-width:780px){
+  .bgm-player{width:100%;background:rgba(255,255,255,.72);border-top-color:rgba(255,61,147,.10)}
+  .bgm-info{width:calc(100% - 145px)}
+  .bgm-progress-row{width:calc(100% - 145px)}
+  .nav{top:100%;background:rgba(255,255,255,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:40}
+}
