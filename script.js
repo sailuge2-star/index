@@ -25,11 +25,13 @@ $$('.timeline-item').forEach(btn => btn.addEventListener('click', () => {
 }));
 $('.modal-close')?.addEventListener('click', () => modal.close());
 
-const gallery = $$('.gallery-card');
 $('#shuffleGallery')?.addEventListener('click', () => {
-  gallery.forEach((el, i) => {
-    el.style.transform = `rotate(${(Math.random() - .5) * 1.6}deg)`;
+  // 버튼 클릭 시점에 갤러리 카드를 다시 가져옵니다.
+  // Supabase/데모에서 나중에 추가된 팬아트도 모두 포함됩니다.
+  const galleryCards = $$('.gallery-card');
+  galleryCards.forEach((el, i) => {
     el.style.transition = 'transform .25s ease';
+    el.style.transform = `rotate(${(Math.random() - .5) * 2.4}deg) translateY(${(Math.random() - .5) * 6}px)`;
   });
 });
 
