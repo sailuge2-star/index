@@ -304,10 +304,11 @@
   $('#adminBgmForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!client || !isAdmin) return;
+    const form = event.currentTarget;
     const title = $('#adminBgmTitle')?.value.trim();
     const file = $('#adminBgmFile')?.files?.[0];
     const status = $('#adminBgmStatusText');
-    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const button = form.querySelector('button[type="submit"]');
     if (!title || !file) return;
     if (file.size > 20 * 1024 * 1024) { status.textContent = '음악 파일은 20MB 이하만 올릴 수 있습니다.'; return; }
     const allowed = new Set(['audio/mpeg','audio/ogg','audio/wav','audio/x-wav','audio/mp4','audio/x-m4a','audio/aac']);
@@ -328,7 +329,7 @@
         await client.storage.from('bgm').remove([path]);
         throw rowError;
       }
-      event.currentTarget.reset(); status.textContent = '음악이 플레이리스트에 추가되었습니다.';
+      form.reset(); status.textContent = '음악이 플레이리스트에 추가되었습니다.';
       await loadAdminBgm();
       if (window.loadBgmPlaylist) await window.loadBgmPlaylist();
     } catch (error) {
