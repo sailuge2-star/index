@@ -51,7 +51,13 @@
             <a href="#community">커뮤니티</a>
             <a href="#links">방명록</a>
         </nav>
-        <button class="admin-header-btn" id="adminHeaderBtn" type="button" hidden>ADMIN 관리</button>
+        <div class="admin-header-menu" id="adminHeaderMenu" hidden>
+            <button class="admin-header-btn" id="adminHeaderBtn" type="button" aria-expanded="false" aria-haspopup="menu">ADMIN 관리</button>
+            <div class="admin-header-dropdown" id="adminHeaderDropdown" role="menu">
+                <button type="button" id="adminDashboardBtn" role="menuitem">관리자 대시보드</button>
+                <button type="button" id="adminHeaderLogoutBtn" class="logout-item" role="menuitem">ADMIN 로그아웃</button>
+            </div>
+        </div>
         <a class="header-cta" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP 방송 보러가기 ↗</a>
     </header>
 

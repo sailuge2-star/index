@@ -17,7 +17,11 @@
   const entryStatus = $('#entryStatus');
   const main = document.querySelector('main');
   const adminPanel = $('#adminPanel');
+  const adminHeaderMenu = $('#adminHeaderMenu');
   const adminHeaderBtn = $('#adminHeaderBtn');
+  const adminHeaderDropdown = $('#adminHeaderDropdown');
+  const adminDashboardBtn = $('#adminDashboardBtn');
+  const adminHeaderLogoutBtn = $('#adminHeaderLogoutBtn');
   const adminUserLabel = $('#adminUserLabel');
 
   let currentUser = null;
@@ -40,14 +44,18 @@
   function showAdmin() {
     showMain('admin');
     if (adminPanel) adminPanel.hidden = false;
-    if (adminHeaderBtn) adminHeaderBtn.hidden = false;
+    if (adminHeaderMenu) adminHeaderMenu.hidden = false;
+    if (adminHeaderBtn) { adminHeaderBtn.hidden = false; adminHeaderBtn.setAttribute('aria-expanded', 'false'); }
+    if (adminHeaderDropdown) adminHeaderDropdown.hidden = true;
     if (adminUserLabel) adminUserLabel.textContent = currentUser?.email || '';
     loadAdminData();
   }
 
   function hideAdmin() {
     if (adminPanel) adminPanel.hidden = true;
-    if (adminHeaderBtn) adminHeaderBtn.hidden = true;
+    if (adminHeaderMenu) adminHeaderMenu.hidden = true;
+    if (adminHeaderBtn) { adminHeaderBtn.hidden = true; adminHeaderBtn.setAttribute('aria-expanded', 'false'); }
+    if (adminHeaderDropdown) adminHeaderDropdown.hidden = true;
   }
 
   async function checkAdmin(user) {
@@ -110,17 +118,48 @@
     }
   });
 
-  adminHeaderBtn?.addEventListener('click', () => {
-    if (isAdmin) adminPanel?.scrollIntoView({ behavior: 'smooth' });
-  });
+  function closeAdminHeaderMenu() {
+    if (adminHeaderDropdown) adminHeaderDropdown.hidden = true;
+    adminHeaderBtn?.setAttribute('aria-expanded', 'false');
+  }
 
-  $('#adminLogoutBtn')?.addEventListener('click', async () => {
+  function toggleAdminHeaderMenu() {
+    if (!isAdmin || !adminHeaderDropdown) return;
+    const nextOpen = adminHeaderDropdown.hidden;
+    adminHeaderDropdown.hidden = !nextOpen;
+    adminHeaderBtn?.setAttribute('aria-expanded', String(nextOpen));
+  }
+
+  async function logoutAdmin() {
     if (client) await client.auth.signOut();
     currentUser = null;
     isAdmin = false;
+    closeAdminHeaderMenu();
     hideAdmin();
     sessionStorage.removeItem('bboringirl_entry_role');
     showGate('로그아웃되었습니다.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  adminHeaderBtn?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleAdminHeaderMenu();
+  });
+
+  adminDashboardBtn?.addEventListener('click', () => {
+    closeAdminHeaderMenu();
+    if (isAdmin) adminPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  adminHeaderLogoutBtn?.addEventListener('click', logoutAdmin);
+  $('#adminLogoutBtn')?.addEventListener('click', logoutAdmin);
+
+  document.addEventListener('click', (event) => {
+    if (!adminHeaderMenu?.contains(event.target)) closeAdminHeaderMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAdminHeaderMenu();
   });
 
   function escapeHtml(value='') {
