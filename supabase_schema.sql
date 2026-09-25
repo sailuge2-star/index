@@ -81,3 +81,68 @@ to anon, authenticated
 using (bucket_id = 'fanart');
 
 -- 중요: service_role / secret key는 절대 브라우저 코드에 넣지 마세요.
+
+-- =========================================
+-- ADMIN AUTH / DASHBOARD
+-- =========================================
+-- 1) Supabase Authentication > Users에서 관리자 계정을 먼저 생성하세요.
+-- 2) 아래 INSERT에서 이메일을 관리자 계정 이메일로 바꾸고 실행하세요.
+-- 3) 관리자 페이지는 이 테이블에 등록된 auth.users만 접근할 수 있습니다.
+create table if not exists public.admin_users (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_users enable row level security;
+
+create policy "admin_users_self_read"
+on public.admin_users for select
+to authenticated
+using (user_id = auth.uid());
+
+-- 예: insert into public.admin_users(user_id)
+-- select id from auth.users where email = 'admin@example.com'
+-- on conflict (user_id) do nothing;
+
+-- 관리자만 전체 방명록을 읽고 수정/삭제할 수 있도록 허용
+create policy "guestbook_admin_read_all"
+on public.guestbook for select
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+create policy "guestbook_admin_update"
+on public.guestbook for update
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()))
+with check (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+create policy "guestbook_admin_delete"
+on public.guestbook for delete
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+-- 관리자만 전체 팬아트를 읽고 검수/삭제할 수 있도록 허용
+create policy "fanart_admin_read_all"
+on public.fanart for select
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+create policy "fanart_admin_update"
+on public.fanart for update
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()))
+with check (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+create policy "fanart_admin_delete"
+on public.fanart for delete
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+-- 팬아트 Storage 파일 삭제는 관리자만 가능
+create policy "fanart_storage_admin_delete"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'fanart'
+  and exists (select 1 from public.admin_users a where a.user_id = auth.uid())
+);

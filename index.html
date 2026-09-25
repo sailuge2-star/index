@@ -9,6 +9,30 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="entry-gate" id="entryGate">
+        <div class="entry-card glass">
+            <span class="kicker">BBORINGIRL FAN SITE</span>
+            <h1>사이트에 입장해주세요</h1>
+            <p>관리자 또는 게스트로 입장할 수 있습니다.</p>
+            <div class="entry-actions">
+                <button class="btn btn-primary" id="guestEntryBtn" type="button">게스트로 입장</button>
+                <button class="btn btn-outline" id="adminEntryBtn" type="button">ADMIN으로 입장</button>
+            </div>
+            <p class="entry-status" id="entryStatus"></p>
+        </div>
+    </div>
+    <dialog id="adminLoginDialog" class="admin-login-dialog">
+        <form method="dialog" class="admin-login-card" id="adminLoginForm">
+            <button class="modal-close" id="adminLoginClose" type="button" aria-label="닫기">×</button>
+            <span class="kicker">ADMIN LOGIN</span>
+            <h2>관리자 로그인</h2>
+            <p>Supabase Auth에 등록된 관리자 계정으로 로그인하세요.</p>
+            <label>이메일<input id="adminEmail" type="email" autocomplete="username" required></label>
+            <label>비밀번호<input id="adminPassword" type="password" autocomplete="current-password" required></label>
+            <button class="btn btn-primary" type="submit">로그인</button>
+            <p class="entry-status" id="adminLoginStatus"></p>
+        </form>
+    </dialog>
     <div class="sparkle-layer" aria-hidden="true"></div>
 
     <header class="site-header">
@@ -27,6 +51,7 @@
             <a href="#community">커뮤니티</a>
             <a href="#links">방명록</a>
         </nav>
+        <button class="admin-header-btn" id="adminHeaderBtn" type="button" hidden>ADMIN 관리</button>
         <a class="header-cta" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP 방송 보러가기 ↗</a>
     </header>
 
@@ -230,6 +255,32 @@
             </div>
         </section>
 
+        <section class="section wrap admin-section" id="adminPanel" hidden>
+            <div class="section-head">
+                <div><span class="kicker">ADMIN DASHBOARD</span><h2>사이트 관리자 페이지</h2></div>
+                <div class="admin-head-actions"><span id="adminUserLabel"></span><button class="btn btn-outline" id="adminLogoutBtn" type="button">로그아웃</button></div>
+            </div>
+            <div class="admin-stats" id="adminStats">
+                <div class="admin-stat glass"><span>방명록</span><strong id="adminGuestCount">-</strong><small>전체 공개/숨김 포함</small></div>
+                <div class="admin-stat glass"><span>팬아트 대기</span><strong id="adminPendingArtCount">-</strong><small>승인 대기</small></div>
+                <div class="admin-stat glass"><span>승인 팬아트</span><strong id="adminApprovedArtCount">-</strong><small>현재 공개</small></div>
+            </div>
+            <div class="admin-grid">
+                <article class="admin-panel-card glass">
+                    <div class="admin-panel-title"><div><span class="kicker">GUESTBOOK</span><h3>방명록 관리</h3></div><button class="btn btn-outline" id="adminRefreshGuestbook" type="button">새로고침</button></div>
+                    <div class="admin-list" id="adminGuestbookList"><div class="admin-empty">불러오는 중…</div></div>
+                </article>
+                <article class="admin-panel-card glass">
+                    <div class="admin-panel-title"><div><span class="kicker">FAN ART</span><h3>팬아트 검수</h3></div><button class="btn btn-outline" id="adminRefreshFanart" type="button">새로고침</button></div>
+                    <div class="admin-list" id="adminFanartList"><div class="admin-empty">불러오는 중…</div></div>
+                </article>
+            </div>
+            <article class="admin-panel-card glass admin-schedule-card">
+                <div class="admin-panel-title"><div><span class="kicker">SOOP SCHEDULE</span><h3>방송 일정</h3></div><a class="btn btn-primary" href="https://www.sooplive.com/station/bboringirl/calendar" target="_blank" rel="noreferrer">SOOP 캘린더 ↗</a></div>
+                <p>방송 일정은 SOOP 캘린더에서 자동으로 가져오므로 이 관리자 페이지에서는 원본 일정을 직접 수정하지 않습니다.</p>
+            </article>
+        </section>
+
         <section class="section notes" id="notes">
             <div class="wrap note-box">
                 <div>
@@ -301,6 +352,7 @@
     <script src="script.js"></script>
     <script src="soop-live.js"></script>
     <script src="soop-calendar.js"></script>
+    <script src="admin.js"></script>
 
 </body>
 </html>

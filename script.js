@@ -168,6 +168,8 @@ if (!hasBackend) {
   const note=document.createElement('div'); note.className='config-warning'; note.innerHTML='현재 <b>데모 모드</b>입니다. <code>config.js</code>에 Supabase URL/Publishable key를 입력하면 실제 방명록과 팬아트 접수함으로 전환됩니다.';
   document.querySelector('#guestbook .section-head')?.after(note);
 }
+window.loadGuestbook = loadGuestbook;
+window.loadArts = loadArts;
 loadGuestbook();
 loadArts();
 

@@ -11,7 +11,9 @@
 window.BBORINGIRL_CONFIG = {
   supabaseUrl: "https://vuwcpbzpzaqimkuyhmwg.supabase.co",
   supabaseKey: "sb_publishable_aGEE_yh1dJSeApTUoOF_7g_HX79CDnv",
-
+adminEmails: [
+  "pukha@naver.com"
+]
   // SOOP 공개 방송 상태 조회에 사용할 스트리머 ID
   soopStreamerId: "bboringirl"
 };
