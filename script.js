@@ -326,6 +326,9 @@ setInterval(() => {
   const playBtn = $('#bgmPlayBtn');
   const nextBtn = $('#bgmNextBtn');
   const volume = $('#bgmVolume');
+  const progress = $('#bgmProgress');
+  const currentTimeEl = $('#bgmCurrentTime');
+  const durationEl = $('#bgmDuration');
   const titleEl = $('#bgmTrackTitle');
   const metaEl = $('#bgmTrackMeta');
   if (!player || !audio) return;
@@ -334,11 +337,31 @@ setInterval(() => {
   let currentIndex = 0;
   let guestMode = false;
   let loading = false;
+  let seeking = false;
   const volumeKey = 'bboringirl_bgm_volume';
+
+  const formatTime = (seconds) => {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    const total = Math.floor(seconds);
+    const mins = Math.floor(total / 60);
+    const secs = String(total % 60).padStart(2, '0');
+    return `${mins}:${secs}`;
+  };
 
   const savedVolume = Number(localStorage.getItem(volumeKey));
   audio.volume = Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 1 ? savedVolume : 0.35;
   if (volume) volume.value = String(audio.volume);
+
+  function updateProgress() {
+    const current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+    const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+    if (currentTimeEl) currentTimeEl.textContent = formatTime(current);
+    if (durationEl) durationEl.textContent = formatTime(duration);
+    if (progress && !seeking) {
+      progress.max = String(duration || 0);
+      progress.value = String(Math.min(current, duration || 0));
+    }
+  }
 
   function updateUi() {
     const track = playlist[currentIndex];
@@ -348,6 +371,7 @@ setInterval(() => {
       playBtn.textContent = '▶';
       playBtn.disabled = true;
       nextBtn.disabled = true;
+      updateProgress();
       return;
     }
     titleEl.textContent = track.title || 'BGM';
@@ -355,6 +379,7 @@ setInterval(() => {
     playBtn.textContent = audio.paused ? '▶' : 'Ⅱ';
     playBtn.disabled = false;
     nextBtn.disabled = playlist.length < 2;
+    updateProgress();
   }
 
   function setTrack(index, autoplay=false) {
@@ -362,6 +387,9 @@ setInterval(() => {
     currentIndex = (index + playlist.length) % playlist.length;
     audio.src = playlist[currentIndex].url;
     audio.load();
+    if (progress) { progress.max = '0'; progress.value = '0'; }
+    if (currentTimeEl) currentTimeEl.textContent = '0:00';
+    if (durationEl) durationEl.textContent = '0:00';
     updateUi();
     if (autoplay && guestMode) audio.play().catch(() => {});
   }
@@ -432,6 +460,16 @@ setInterval(() => {
   audio.addEventListener('ended', () => setTrack(currentIndex + 1, true));
   audio.addEventListener('play', updateUi);
   audio.addEventListener('pause', updateUi);
+  audio.addEventListener('loadedmetadata', updateProgress);
+  audio.addEventListener('durationchange', updateProgress);
+  audio.addEventListener('timeupdate', updateProgress);
+  progress?.addEventListener('pointerdown', () => { seeking = true; });
+  progress?.addEventListener('pointerup', () => { seeking = false; });
+  progress?.addEventListener('input', () => {
+    if (!Number.isFinite(audio.duration)) return;
+    audio.currentTime = Number(progress.value);
+    if (currentTimeEl) currentTimeEl.textContent = formatTime(audio.currentTime);
+  });
   volume?.addEventListener('input', () => {
     audio.volume = Number(volume.value);
     localStorage.setItem(volumeKey, String(audio.volume));

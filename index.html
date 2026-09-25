@@ -75,7 +75,15 @@
             <span id="bgmTrackMeta">관리자 페이지에서 음악을 추가해주세요.</span>
         </div>
         <button class="bgm-next" id="bgmNextBtn" type="button" aria-label="다음 곡">›</button>
-        <input id="bgmVolume" class="bgm-volume" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="음량">
+        <div class="bgm-progress-row">
+            <span id="bgmCurrentTime" class="bgm-time">0:00</span>
+            <input id="bgmProgress" class="bgm-progress" type="range" min="0" max="0" step="0.1" value="0" aria-label="재생 위치">
+            <span id="bgmDuration" class="bgm-time">0:00</span>
+        </div>
+        <div class="bgm-volume-row">
+            <span class="bgm-volume-icon" aria-hidden="true">🔊</span>
+            <input id="bgmVolume" class="bgm-volume" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="음량">
+        </div>
         <audio id="bgmAudio" preload="metadata"></audio>
     </aside>
 
