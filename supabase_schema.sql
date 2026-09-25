@@ -164,3 +164,96 @@ using (
   bucket_id = 'fanart'
   and exists (select 1 from public.admin_users a where a.user_id = auth.uid())
 );
+
+-- =========================================
+-- BGM PLAYLIST
+-- =========================================
+-- 관리자 페이지에서 업로드한 음악을 게스트 페이지의 플레이리스트로 사용합니다.
+create table if not exists public.bgm_tracks (
+  id uuid primary key default gen_random_uuid(),
+  title varchar(100) not null,
+  storage_path text not null unique,
+  sort_order integer not null default 0,
+  enabled boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists bgm_tracks_sort_order_idx on public.bgm_tracks(sort_order, created_at);
+create index if not exists bgm_tracks_enabled_idx on public.bgm_tracks(enabled, sort_order);
+
+alter table public.bgm_tracks enable row level security;
+
+drop policy if exists "bgm_public_read_enabled" on public.bgm_tracks;
+drop policy if exists "bgm_admin_read_all" on public.bgm_tracks;
+drop policy if exists "bgm_admin_insert" on public.bgm_tracks;
+drop policy if exists "bgm_admin_update" on public.bgm_tracks;
+drop policy if exists "bgm_admin_delete" on public.bgm_tracks;
+
+create policy "bgm_public_read_enabled"
+on public.bgm_tracks for select
+to anon, authenticated
+using (enabled = true);
+
+create policy "bgm_admin_read_all"
+on public.bgm_tracks for select
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+create policy "bgm_admin_insert"
+on public.bgm_tracks for insert
+to authenticated
+with check (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+create policy "bgm_admin_update"
+on public.bgm_tracks for update
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()))
+with check (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+create policy "bgm_admin_delete"
+on public.bgm_tracks for delete
+to authenticated
+using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+-- 공개 읽기용 BGM Storage 버킷
+insert into storage.buckets (id, name, public)
+values ('bgm', 'bgm', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "bgm_storage_public_read" on storage.objects;
+drop policy if exists "bgm_storage_admin_insert" on storage.objects;
+drop policy if exists "bgm_storage_admin_update" on storage.objects;
+drop policy if exists "bgm_storage_admin_delete" on storage.objects;
+
+create policy "bgm_storage_public_read"
+on storage.objects for select
+to anon, authenticated
+using (bucket_id = 'bgm');
+
+create policy "bgm_storage_admin_insert"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'bgm'
+  and exists (select 1 from public.admin_users a where a.user_id = auth.uid())
+);
+
+create policy "bgm_storage_admin_update"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'bgm'
+  and exists (select 1 from public.admin_users a where a.user_id = auth.uid())
+)
+with check (
+  bucket_id = 'bgm'
+  and exists (select 1 from public.admin_users a where a.user_id = auth.uid())
+);
+
+create policy "bgm_storage_admin_delete"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'bgm'
+  and exists (select 1 from public.admin_users a where a.user_id = auth.uid())
+);

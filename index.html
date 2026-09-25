@@ -67,6 +67,18 @@
         <a class="header-cta" href="https://play.sooplive.com/bboringirl/284297162" target="_blank" rel="noreferrer">SOOP 방송 보러가기 ↗</a>
     </header>
 
+    <aside class="bgm-player" id="bgmPlayer" hidden aria-label="배경음악 플레이어">
+        <button class="bgm-toggle" id="bgmPlayBtn" type="button" aria-label="음악 재생">▶</button>
+        <div class="bgm-info">
+            <span class="bgm-kicker">BGM PLAYLIST</span>
+            <strong id="bgmTrackTitle">재생할 음악이 없습니다</strong>
+            <span id="bgmTrackMeta">관리자 페이지에서 음악을 추가해주세요.</span>
+        </div>
+        <button class="bgm-next" id="bgmNextBtn" type="button" aria-label="다음 곡">›</button>
+        <input id="bgmVolume" class="bgm-volume" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="음량">
+        <audio id="bgmAudio" preload="metadata"></audio>
+    </aside>
+
     <main id="home">
         <section class="hero">
             <div class="hero-bg"></div>
@@ -287,6 +299,21 @@
                     <div class="admin-list" id="adminFanartList"><div class="admin-empty">불러오는 중…</div></div>
                 </article>
             </div>
+            <article class="admin-panel-card glass admin-music-card">
+                <div class="admin-panel-title">
+                    <div><span class="kicker">BGM PLAYLIST</span><h3>배경음악 관리</h3></div>
+                    <span class="admin-badge ok" id="adminBgmStatus">게스트 재생용</span>
+                </div>
+                <p>음악 파일을 업로드하고 순서를 정하면 게스트 페이지에서 플레이리스트가 자동으로 재생됩니다. MP3, OGG, WAV, M4A / 파일당 20MB까지 지원합니다.</p>
+                <form class="admin-bgm-form" id="adminBgmForm">
+                    <label>곡 제목<input id="adminBgmTitle" type="text" maxlength="100" placeholder="예: 3000일 기념곡" required></label>
+                    <label>음악 파일<input id="adminBgmFile" type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/x-wav,audio/mp4,audio/*" required></label>
+                    <button class="btn btn-primary" type="submit">음악 추가</button>
+                    <p class="entry-status" id="adminBgmStatusText"></p>
+                </form>
+                <div class="admin-list admin-bgm-list" id="adminBgmList"><div class="admin-empty">불러오는 중…</div></div>
+            </article>
+
             <article class="admin-panel-card glass admin-schedule-card">
                 <div class="admin-panel-title"><div><span class="kicker">SOOP SCHEDULE</span><h3>방송 일정</h3></div><a class="btn btn-primary" href="https://www.sooplive.com/station/bboringirl/calendar" target="_blank" rel="noreferrer">SOOP 캘린더 ↗</a></div>
                 <p>방송 일정은 SOOP 캘린더에서 자동으로 가져오므로 이 관리자 페이지에서는 원본 일정을 직접 수정하지 않습니다.</p>

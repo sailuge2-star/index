@@ -39,6 +39,8 @@
     if (guestHeaderMenu) guestHeaderMenu.hidden = role !== 'guest';
     if (guestHeaderDropdown) guestHeaderDropdown.hidden = true;
     if (guestHeaderBtn) guestHeaderBtn.setAttribute('aria-expanded', 'false');
+    if (role === 'guest') window.enterGuestBgm?.();
+    else window.leaveGuestBgm?.();
   }
 
   function showGate(message='') {
@@ -49,6 +51,7 @@
     if (guestHeaderMenu) guestHeaderMenu.hidden = true;
     if (guestHeaderDropdown) guestHeaderDropdown.hidden = true;
     if (guestHeaderBtn) guestHeaderBtn.setAttribute('aria-expanded', 'false');
+    window.leaveGuestBgm?.();
   }
 
   function showAdmin() {
@@ -218,7 +221,7 @@
 
   async function loadAdminData() {
     if (!client || !isAdmin) return;
-    await Promise.all([loadAdminStats(), loadAdminGuestbook(), loadAdminFanart()]);
+    await Promise.all([loadAdminStats(), loadAdminGuestbook(), loadAdminFanart(), loadAdminBgm()]);
   }
 
   async function loadAdminStats() {
@@ -267,6 +270,110 @@
       </div>`;
     }).join('');
   }
+
+  async function loadAdminBgm() {
+    const target = $('#adminBgmList');
+    if (!target) return;
+    target.innerHTML = '<div class="admin-empty">불러오는 중…</div>';
+    const { data, error } = await client
+      .from('bgm_tracks')
+      .select('id,title,storage_path,sort_order,enabled,created_at')
+      .order('sort_order', { ascending:true })
+      .order('created_at', { ascending:true });
+    if (error) return adminError(target, 'BGM 목록을 불러오지 못했습니다. SQL/RLS 설정을 확인해주세요.');
+    if (!data?.length) { target.innerHTML = '<div class="admin-empty">등록된 음악이 없습니다. 첫 곡을 추가해주세요.</div>'; return; }
+    target.innerHTML = data.map((row, index) => {
+      const url = client.storage.from('bgm').getPublicUrl(row.storage_path).data.publicUrl;
+      return `<div class="admin-row bgm-admin-row">
+        <div class="bgm-admin-icon">♪</div>
+        <div class="admin-row-main">
+          <div><b>${escapeHtml(row.title)}</b><span class="admin-badge ${row.enabled ? 'ok' : 'muted'}">${row.enabled ? '게스트 공개' : '숨김'}</span></div>
+          <small>순서 ${index + 1} · ${date(row.created_at)}</small>
+          <audio controls preload="none" src="${escapeHtml(url)}"></audio>
+        </div>
+        <div class="admin-row-actions">
+          ${index > 0 ? `<button class="btn btn-small" data-action="bgm-up" data-id="${row.id}">▲</button>` : ''}
+          ${index < data.length - 1 ? `<button class="btn btn-small" data-action="bgm-down" data-id="${row.id}">▼</button>` : ''}
+          <button class="btn btn-small ${row.enabled ? '' : 'btn-primary'}" data-action="bgm-toggle" data-id="${row.id}" data-enabled="${row.enabled}">${row.enabled ? '숨김' : '공개'}</button>
+          <button class="btn btn-small btn-danger" data-action="bgm-delete" data-id="${row.id}" data-path="${escapeHtml(row.storage_path)}">삭제</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('#adminBgmForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!client || !isAdmin) return;
+    const title = $('#adminBgmTitle')?.value.trim();
+    const file = $('#adminBgmFile')?.files?.[0];
+    const status = $('#adminBgmStatusText');
+    const button = event.currentTarget.querySelector('button[type="submit"]');
+    if (!title || !file) return;
+    if (file.size > 20 * 1024 * 1024) { status.textContent = '음악 파일은 20MB 이하만 올릴 수 있습니다.'; return; }
+    const allowed = new Set(['audio/mpeg','audio/ogg','audio/wav','audio/x-wav','audio/mp4','audio/x-m4a','audio/aac']);
+    const ext = (file.name.split('.').pop() || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!allowed.has(file.type) && !['mp3','ogg','wav','m4a','aac'].includes(ext)) {
+      status.textContent = 'MP3, OGG, WAV, M4A, AAC 파일만 올릴 수 있습니다.'; return;
+    }
+    button.disabled = true; status.textContent = '업로드 중…';
+    let path = '';
+    try {
+      const { data: maxRow } = await client.from('bgm_tracks').select('sort_order').order('sort_order', {ascending:false}).limit(1).maybeSingle();
+      const nextOrder = Number(maxRow?.sort_order ?? -1) + 1;
+      path = `playlist/${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`}.${ext || 'mp3'}`;
+      const { error: uploadError } = await client.storage.from('bgm').upload(path, file, { contentType:file.type || 'audio/mpeg', cacheControl:'3600', upsert:false });
+      if (uploadError) throw uploadError;
+      const { error: rowError } = await client.from('bgm_tracks').insert({ title, storage_path:path, sort_order:nextOrder, enabled:true });
+      if (rowError) {
+        await client.storage.from('bgm').remove([path]);
+        throw rowError;
+      }
+      event.currentTarget.reset(); status.textContent = '음악이 플레이리스트에 추가되었습니다.';
+      await loadAdminBgm();
+      if (window.loadBgmPlaylist) await window.loadBgmPlaylist();
+    } catch (error) {
+      console.error(error);
+      status.textContent = error.message || '음악 업로드에 실패했습니다. Storage/RLS 설정을 확인해주세요.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('#adminBgmList')?.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const id = button.dataset.id;
+    const action = button.dataset.action;
+    button.disabled = true;
+    try {
+      const { data: rows, error: listError } = await client.from('bgm_tracks').select('id,storage_path,sort_order,enabled').order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+      if (listError) throw listError;
+      const index = rows.findIndex(r => r.id === id);
+      if (index < 0) throw new Error('음악을 찾을 수 없습니다.');
+      const row = rows[index];
+      if (action === 'bgm-delete') {
+        if (!confirm('이 음악과 업로드 파일을 삭제할까요?')) return;
+        const { error } = await client.from('bgm_tracks').delete().eq('id', id);
+        if (error) throw error;
+        if (row.storage_path) await client.storage.from('bgm').remove([row.storage_path]);
+      } else if (action === 'bgm-toggle') {
+        const { error } = await client.from('bgm_tracks').update({enabled:!row.enabled}).eq('id', id);
+        if (error) throw error;
+      } else if (action === 'bgm-up' || action === 'bgm-down') {
+        const targetIndex = action === 'bgm-up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= rows.length) return;
+        const other = rows[targetIndex];
+        const { error: firstError } = await client.from('bgm_tracks').update({sort_order:other.sort_order}).eq('id', row.id);
+        if (firstError) throw firstError;
+        const { error: secondError } = await client.from('bgm_tracks').update({sort_order:row.sort_order}).eq('id', other.id);
+        if (secondError) throw secondError;
+      }
+      await loadAdminBgm();
+      if (window.loadBgmPlaylist) await window.loadBgmPlaylist();
+    } catch (error) {
+      console.error(error); alert(error.message || 'BGM 처리에 실패했습니다.');
+    } finally { button.disabled = false; }
+  });
 
   $('#adminRefreshGuestbook')?.addEventListener('click', loadAdminGuestbook);
   $('#adminRefreshFanart')?.addEventListener('click', loadAdminFanart);

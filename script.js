@@ -316,3 +316,129 @@ document.addEventListener('DOMContentLoaded', () => {
 setInterval(() => {
   if (document.visibilityState === 'visible') loadArts();
 }, 60000);
+
+/* =========================================
+   Guest BGM playlist
+   ========================================= */
+(() => {
+  const player = $('#bgmPlayer');
+  const audio = $('#bgmAudio');
+  const playBtn = $('#bgmPlayBtn');
+  const nextBtn = $('#bgmNextBtn');
+  const volume = $('#bgmVolume');
+  const titleEl = $('#bgmTrackTitle');
+  const metaEl = $('#bgmTrackMeta');
+  if (!player || !audio) return;
+
+  let playlist = [];
+  let currentIndex = 0;
+  let guestMode = false;
+  let loading = false;
+  const volumeKey = 'bboringirl_bgm_volume';
+
+  const savedVolume = Number(localStorage.getItem(volumeKey));
+  audio.volume = Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 1 ? savedVolume : 0.35;
+  if (volume) volume.value = String(audio.volume);
+
+  function updateUi() {
+    const track = playlist[currentIndex];
+    if (!track) {
+      titleEl.textContent = '재생할 음악이 없습니다';
+      metaEl.textContent = '관리자 페이지에서 음악을 추가해주세요.';
+      playBtn.textContent = '▶';
+      playBtn.disabled = true;
+      nextBtn.disabled = true;
+      return;
+    }
+    titleEl.textContent = track.title || 'BGM';
+    metaEl.textContent = `${currentIndex + 1} / ${playlist.length}`;
+    playBtn.textContent = audio.paused ? '▶' : 'Ⅱ';
+    playBtn.disabled = false;
+    nextBtn.disabled = playlist.length < 2;
+  }
+
+  function setTrack(index, autoplay=false) {
+    if (!playlist.length) { updateUi(); return; }
+    currentIndex = (index + playlist.length) % playlist.length;
+    audio.src = playlist[currentIndex].url;
+    audio.load();
+    updateUi();
+    if (autoplay && guestMode) audio.play().catch(() => {});
+  }
+
+  async function loadBgmPlaylist() {
+    if (!hasBackend || loading) return;
+    loading = true;
+    try {
+      const { data, error } = await sb.from('bgm_tracks')
+        .select('id,title,storage_path,sort_order,created_at')
+        .eq('enabled', true)
+        .order('sort_order', {ascending:true})
+        .order('created_at', {ascending:true});
+      if (error) throw error;
+      const next = (data || []).map(row => ({
+        ...row,
+        url: sb.storage.from('bgm').getPublicUrl(row.storage_path).data.publicUrl
+      }));
+      const previousId = playlist[currentIndex]?.id;
+      playlist = next;
+      const found = playlist.findIndex(item => item.id === previousId);
+      currentIndex = found >= 0 ? found : 0;
+      if (playlist.length) {
+        if (!audio.src || !playlist[currentIndex] || !audio.src.includes(encodeURIComponent(playlist[currentIndex].storage_path))) {
+          setTrack(currentIndex, false);
+        } else {
+          updateUi();
+        }
+      } else {
+        audio.pause(); audio.removeAttribute('src'); audio.load(); updateUi();
+      }
+      player.hidden = !guestMode || !playlist.length;
+    } catch (error) {
+      console.error('BGM playlist load failed', error);
+      playlist = [];
+      audio.pause();
+      player.hidden = true;
+      updateUi();
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function enterGuestBgm() {
+    guestMode = true;
+    await loadBgmPlaylist();
+    if (!playlist.length) return;
+    player.hidden = false;
+    if (!audio.src) setTrack(0, false);
+    audio.play().then(updateUi).catch(() => {
+      // 브라우저 자동재생 정책으로 실패하면 플레이 버튼으로 시작할 수 있습니다.
+      updateUi();
+    });
+  }
+
+  function leaveGuestBgm() {
+    guestMode = false;
+    audio.pause();
+    player.hidden = true;
+    updateUi();
+  }
+
+  playBtn?.addEventListener('click', () => {
+    if (!playlist.length) return;
+    if (audio.paused) audio.play().catch(() => {}); else audio.pause();
+  });
+  nextBtn?.addEventListener('click', () => setTrack(currentIndex + 1, true));
+  audio.addEventListener('ended', () => setTrack(currentIndex + 1, true));
+  audio.addEventListener('play', updateUi);
+  audio.addEventListener('pause', updateUi);
+  volume?.addEventListener('input', () => {
+    audio.volume = Number(volume.value);
+    localStorage.setItem(volumeKey, String(audio.volume));
+  });
+
+  window.loadBgmPlaylist = loadBgmPlaylist;
+  window.enterGuestBgm = enterGuestBgm;
+  window.leaveGuestBgm = leaveGuestBgm;
+  loadBgmPlaylist();
+})();
