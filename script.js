@@ -128,18 +128,64 @@ $('#artFile')?.addEventListener('change', () => {
 });
 function demoArts() { try { return JSON.parse(localStorage.getItem(demoArtKey) || '[]'); } catch { return []; } }
 function saveDemoArt(row) { const rows=[row,...demoArts()].slice(0,20); localStorage.setItem(demoArtKey,JSON.stringify(rows)); return rows; }
-function renderArts(rows) {
-  if (!rows.length) return;
+function renderArts(rows=[]) {
   const grid = $('#galleryGrid');
-  const cards = rows.map(row => `<figure class="gallery-card" style="background-image:url('${escapeHtml(row.image_url)}')"><figcaption><b>${escapeHtml(row.title)}</b><span>by ${escapeHtml(row.nickname)}</span></figcaption></figure>`).join('');
-  grid.insertAdjacentHTML('afterbegin', cards);
+  if (!grid) return;
+
+  // 기본 갤러리 4장은 항상 유지하고, 이전에 렌더링한 동적 팬아트만 새로 교체합니다.
+  grid.querySelectorAll('.gallery-card[data-dynamic-gallery="true"]').forEach(el => el.remove());
+
+  if (!rows.length) return;
+
+  const fragment = document.createDocumentFragment();
+  rows.forEach(row => {
+    const card = document.createElement('figure');
+    card.className = 'gallery-card';
+    card.dataset.dynamicGallery = 'true';
+    card.style.backgroundImage = `url("${String(row.image_url || '').replace(/"/g, '&quot;')}")`;
+
+    const caption = document.createElement('figcaption');
+    const title = document.createElement('b');
+    title.textContent = row.title || '팬아트';
+    const author = document.createElement('span');
+    author.textContent = `by ${row.nickname || '익명'}`;
+    caption.append(title, author);
+    card.appendChild(caption);
+    fragment.appendChild(card);
+  });
+  grid.appendChild(fragment);
 }
+
+async function fetchAllApprovedArts() {
+  const rows = [];
+  const pageSize = 1000;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await sb
+      .from('fanart')
+      .select('id,nickname,title,description,image_path,created_at')
+      .eq('status','approved')
+      .order('created_at',{ascending:false})
+      .range(offset, offset + pageSize - 1);
+
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return rows;
+}
+
 async function loadArts() {
   if (!hasBackend) { renderArts(demoArts()); return; }
-  const {data,error}=await sb.from('fanart').select('id,nickname,title,description,image_path,created_at').eq('status','approved').order('created_at',{ascending:false}).limit(12);
-  if(error){console.error(error);return;}
-  const rows=data.map(row=>({...row,image_url:sb.storage.from('fanart').getPublicUrl(row.image_path).data.publicUrl}));
-  renderArts(rows);
+  try {
+    const data = await fetchAllApprovedArts();
+    const rows = data.map(row => ({
+      ...row,
+      image_url: sb.storage.from('fanart').getPublicUrl(row.image_path).data.publicUrl
+    }));
+    renderArts(rows);
+  } catch (error) {
+    console.error(error);
+  }
 }
 fanartForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -152,8 +198,9 @@ fanartForm?.addEventListener('submit', async (e) => {
     if(!hasBackend){
       const image_url=URL.createObjectURL(file);
       const demoRow={id:crypto.randomUUID?.()||String(Date.now()),nickname,title,description,image_url,created_at:new Date().toISOString()};
-      alert('데모 팬아트가 현재 브라우저 화면에 추가됩니다. Supabase 연결 후에는 운영자 승인 절차를 거칩니다.');
-      fanartForm.reset(); artPreview.hidden=true; renderArts([demoRow]); fanartModal.close(); return;
+      const savedRows = saveDemoArt(demoRow);
+      alert('데모 팬아트가 현재 브라우저에 추가됩니다. Supabase 연결 후에는 운영자 승인 절차를 거칩니다.');
+      fanartForm.reset(); artPreview.hidden=true; renderArts(savedRows); fanartModal.close(); return;
     }
     const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
     const path=`submissions/${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`}.${ext}`;
@@ -265,3 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+// 승인된 새 팬아트가 추가되면 페이지를 새로고침하지 않아도 갤러리에 반영합니다.
+setInterval(() => {
+  if (document.visibilityState === 'visible') loadArts();
+}, 60000);
