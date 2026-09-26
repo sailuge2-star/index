@@ -116,6 +116,9 @@
       if (!response.ok || !result.ok) throw new Error(result.error || "SOOP 일정 API 오류");
       events = Array.isArray(result.data?.events) ? result.data.events : [];
       render();
+      window.dispatchEvent(new CustomEvent("soop:calendar-month-changed", {
+        detail: { year, month }
+      }));
       status.textContent = events.length
         ? `SOOP 캘린더에서 ${events.length}개의 일정을 불러왔습니다. 약 2분마다 자동 갱신됩니다.`
         : "이 달에는 SOOP 캘린더에 등록된 일정이 없습니다. 일정이 등록되면 자동으로 표시됩니다.";

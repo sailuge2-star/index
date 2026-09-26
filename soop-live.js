@@ -66,6 +66,26 @@
     );
   }
 
+  async function saveViewerSample(data) {
+    const config = window.BBORINGIRL_CONFIG || {};
+    if (!window.supabase || !config.supabaseUrl || !config.supabaseKey) return;
+    const viewers = Number(data?.viewers);
+    if (!Number.isFinite(viewers) || viewers < 0) return;
+
+    try {
+      const sb = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+      await sb.from("soop_viewer_samples").insert({
+        streamer_id: config.soopStreamerId || "bboringirl",
+        broad_no: data.broadNo || null,
+        viewers: Math.round(viewers),
+        sampled_at: new Date().toISOString()
+      });
+    } catch (error) {
+      // 통계 저장 실패가 LIVE 표시 자체를 방해하지 않도록 조용히 처리합니다.
+      console.warn("[SOOP STATS SAVE]", error);
+    }
+  }
+
   async function loadSoopLive() {
     try {
       const response = await fetch("/api/soop", { cache: "no-store" });
@@ -76,6 +96,10 @@
       }
 
       render(result.data);
+      if (result.data?.isLive) {
+        await saveViewerSample(result.data);
+      }
+      window.dispatchEvent(new CustomEvent("soop:live-updated", { detail: result.data }));
     } catch (error) {
       console.error("[SOOP LIVE]", error);
       setText(badge, "연결 오류");

@@ -172,6 +172,48 @@
             <p class="soop-calendar-note" id="soopCalendarStatus">SOOP 캘린더에 등록된 일정을 기준으로 표시합니다. 약 2분마다 새로 확인합니다.</p>
         </section>
 
+        <section class="section wrap soop-stats-section" id="soop-stats">
+            <div class="section-head">
+                <div>
+                    <span class="kicker">VIEWER STATISTICS</span>
+                    <h2>SOOP 시청자 통계</h2>
+                </div>
+                <p>사이트에서 수집한 방송 시청자 데이터를 기준으로 표시합니다.</p>
+            </div>
+
+            <div class="soop-stats-grid">
+                <article class="soop-stat-card glass">
+                    <div class="soop-stat-card-head">
+                        <div>
+                            <span class="soop-stat-kicker">PEAK VIEWERS</span>
+                            <h3>최고 시청자 수</h3>
+                        </div>
+                        <strong id="soopPeakTotal">-</strong>
+                    </div>
+                    <div class="soop-chart-wrap">
+                        <svg id="soopPeakChart" class="soop-stat-chart" viewBox="0 0 720 250" role="img" aria-label="일자별 최고 시청자 수 그래프"></svg>
+                    </div>
+                    <p class="soop-stat-note" id="soopPeakNote">방송 시청자 데이터가 쌓이면 일자별 최고 시청자 수가 표시됩니다.</p>
+                </article>
+
+                <article class="soop-stat-card glass">
+                    <div class="soop-stat-card-head">
+                        <div>
+                            <span class="soop-stat-kicker">AVERAGE VIEWERS</span>
+                            <h3>평균 시청자 수</h3>
+                        </div>
+                        <strong id="soopAverageTotal">-</strong>
+                    </div>
+                    <div class="soop-chart-wrap">
+                        <svg id="soopAverageChart" class="soop-stat-chart" viewBox="0 0 720 250" role="img" aria-label="일자별 평균 시청자 수 그래프"></svg>
+                    </div>
+                    <p class="soop-stat-note" id="soopAverageNote">방송 시청자 데이터가 쌓이면 일자별 평균 시청자 수가 표시됩니다.</p>
+                </article>
+            </div>
+
+            <p class="soop-stats-status" id="soopStatsStatus">시청자 통계를 불러오는 중…</p>
+        </section>
+
         <section class="section wrap" id="about">
             <div class="section-head">
                 <div><span class="kicker">PROFILE</span><h2>뽀린걸을 소개합니다</h2></div>
@@ -400,7 +442,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
     <script src="soop-live.js"></script>
-    <script src="soop-calendar.js"></script>
+    <script src="soop-calendar.js"></script>\n    <script src="soop-stats.js"></script>
     <script src="admin.js"></script>
 
 </body>
