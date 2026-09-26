@@ -66,6 +66,41 @@
     );
   }
 
+  const config = window.BBORINGIRL_CONFIG || {};
+  const hasSupabase = Boolean(window.supabase && config.supabaseUrl && config.supabaseKey);
+  const sb = hasSupabase
+    ? window.supabase.createClient(config.supabaseUrl, config.supabaseKey)
+    : null;
+
+  // 방문자가 사이트를 열어 둔 동안 방송 중 시청자 수를 1분 단위로 저장합니다.
+  // 여러 방문자가 동시에 수집해도 같은 방송/같은 분은 DB unique index로 중복을 막습니다.
+  async function saveViewerSample(data) {
+    const viewers = Number(data?.viewers);
+    if (!sb || !data?.isLive || !Number.isFinite(viewers) || viewers < 0) return;
+
+    const sampledAtDate = new Date();
+    sampledAtDate.setSeconds(0, 0);
+
+    try {
+      const { error } = await sb
+        .from("soop_viewer_samples")
+        .upsert({
+          streamer_id: config.soopStreamerId || "bboringirl",
+          broad_no: data.broadNo || "",
+          viewers: Math.round(viewers),
+          sampled_at: sampledAtDate.toISOString()
+        }, {
+          onConflict: "streamer_id,broad_no,sampled_at",
+          ignoreDuplicates: true
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      // 통계 수집 실패가 메인 방송 정보 표시를 막지 않도록 조용히 처리합니다.
+      console.warn("[SOOP VIEWER SAMPLE]", error);
+    }
+  }
+
   async function loadSoopLive() {
     try {
       const response = await fetch("/api/soop", { cache: "no-store" });
@@ -76,6 +111,7 @@
       }
 
       render(result.data);
+      await saveViewerSample(result.data);
       window.dispatchEvent(new CustomEvent("soop:live-updated", { detail: result.data }));
     } catch (error) {
       console.error("[SOOP LIVE]", error);

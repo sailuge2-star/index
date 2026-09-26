@@ -5,16 +5,7 @@
     },
     "api/soop-calendar.js": {
       "maxDuration": 10
-    },
-    "api/soop-collector.js": {
-      "maxDuration": 10
     }
   },
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [
-    {
-      "path": "/api/soop-collector",
-      "schedule": "* * * * *"
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }
