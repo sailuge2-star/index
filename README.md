@@ -115,3 +115,55 @@ Supabase SQL Editor에서 `supabase_schema.sql`의 `SOOP VIEWER STATISTICS` 섹�
 사이트가 LIVE 정보를 확인할 때 현재 시청자 수를 자동 저장하며, 통계 그래프는 최근 30일의
 일자별 최고/평균 시청자 수를 표시합니다. 통계 수집은 팬사이트가 열려 있고 LIVE 상태를 확인하는
 동안 이루어집니다.
+
+## SOOP 시청자 자동 수집 — Vercel Cron
+
+최신 버전에서는 브라우저 방문자에게 의존하지 않고 Vercel Cron이 `/api/soop-collector`를 자동 호출하여 방송 중 시청자 수를 저장합니다.
+
+### 중요: Vercel 플랜
+
+현재 자동 수집은 `* * * * *`(1분마다)로 설정되어 있습니다. Vercel 공식 문서 기준으로 Hobby 플랜은 Cron을 하루 1회만 실행할 수 있고, 1분 단위 Cron은 Pro/Enterprise에서 사용할 수 있습니다. 따라서 1분 단위 자동 수집을 사용하려면 Vercel Pro 또는 Enterprise가 필요합니다.
+
+### Vercel Environment Variables
+
+Vercel 프로젝트 → Settings → Environment Variables에 Production으로 다음 3개를 등록하세요.
+
+```text
+CRON_SECRET=랜덤한_긴_문자열
+SUPABASE_URL=https://vuwcpbzpzaqimkuyhmwg.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=Supabase의_서버용_secret_service_role_key
+```
+
+`SUPABASE_SERVICE_ROLE_KEY`는 절대로 `config.js`나 브라우저 코드에 넣지 마세요. Vercel 서버 환경변수에만 저장합니다.
+
+`CRON_SECRET`도 브라우저에 노출하지 않습니다. Vercel Cron이 Authorization Bearer 헤더로 자동 전달합니다.
+
+### Supabase SQL
+
+최신 `supabase_schema.sql`의 `SOOP VIEWER STATISTICS / VERCEL CRON` 부분을 실행하세요.
+
+이 버전에서는 브라우저가 시청자 샘플을 INSERT하지 않습니다. 공개 사용자는 SELECT만 가능하고, 서버의 service_role key를 가진 Vercel Cron만 INSERT합니다.
+
+### 작동 흐름
+
+```text
+Vercel Cron (1분마다)
+      ↓
+/api/soop-collector
+      ↓
+/api/soop → SOOP 현재 방송/시청자 확인
+      ↓
+방송 중이면 Supabase에 해당 분의 시청자 수 저장
+      ↓
+soop_viewer_samples
+      ↓
+캘린더에서 선택한 월의 최고/평균 그래프에 반영
+```
+
+방송이 꺼져 있으면 샘플을 저장하지 않습니다.
+
+### 배포 후 확인
+
+Vercel Dashboard → Project → Settings → Cron Jobs에서 `/api/soop-collector`가 등록되어 있는지 확인합니다.
+
+또한 Cron Jobs의 View Logs에서 실행 결과를 확인할 수 있습니다.
