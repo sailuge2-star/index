@@ -1,0 +1,1199 @@
+(() => {
+  'use strict';
+
+  const GAME_W = 1920;
+  const GAME_H = 1080;
+  // 화면에 보이는 영역과 별개로 실제 전투 맵은 4200×2400으로 확장합니다.
+  const MAP_W = 4200;
+  const MAP_H = 2400;
+  const BASE_MAP_W = 3000;
+  const BASE_MAP_H = 1800;
+  const MAP_SX = MAP_W / BASE_MAP_W;
+  const MAP_SY = MAP_H / BASE_MAP_H;
+  const mapX = x => MAP_W / 2 + (x - BASE_MAP_W / 2) * MAP_SX;
+  const mapY = y => MAP_H / 2 + (y - BASE_MAP_H / 2) * MAP_SY;
+  const mapRect = (x, y, w, h) => new Phaser.Geom.Rectangle(
+    mapX(x), mapY(y), w * MAP_SX, h * MAP_SY
+  );
+  const SURVIVAL_SECONDS = 300;
+
+  const COLORS = {
+    pink: 0xff3d93,
+    pinkLight: 0xff9bcf,
+    purple: 0x7954e9,
+    green: 0x315f3a,
+    green2: 0x3f7647,
+    white: 0xffffff,
+    ink: 0x241d29,
+    red: 0xff536d,
+    yellow: 0xffd45c,
+    blue: 0x68a7ff,
+    bat: 0x5d4a79
+  };
+
+  const UPGRADES = [
+    { id:'power', title:'응원 파워', desc:'공격력 +20%', icon:'♡', apply:p => p.damage += Math.max(3, Math.round(p.damage * .2)) },
+    { id:'speed', title:'뽀글스의 응원', desc:'이동속도 +12%', icon:'»', apply:p => p.moveSpeed *= 1.12 },
+    { id:'rapid', title:'방송 텐션', desc:'공격속도 +18%', icon:'⚡', apply:p => p.fireDelay = Math.max(170, p.fireDelay * .82) },
+    { id:'maxhp', title:'팬들의 사랑', desc:'최대 HP +25 / 회복', icon:'♥', apply:p => { p.maxHp += 25; p.hp = p.maxHp; } },
+    { id:'magnet', title:'추억의 자석', desc:'경험치 획득 범위 +35%', icon:'✦', apply:p => p.pickupRadius *= 1.35 },
+    { id:'multishot', title:'하트 발사', desc:'투사체 +1개', icon:'✧', apply:p => p.projectiles += 1 }
+  ];
+
+  class MenuScene extends Phaser.Scene {
+    constructor() {
+      super('MenuScene');
+    }
+
+    create() {
+      const topButton = document.getElementById('restartTop');
+      if (topButton) { topButton.style.display = 'none'; topButton.onclick = null; }
+
+      this.cameras.main.setBackgroundColor(0x120d18);
+
+      // Full-screen menu backdrop.
+      this.add.rectangle(GAME_W/2, GAME_H/2, GAME_W, GAME_H, 0x120d18);
+      this.add.rectangle(GAME_W/2, GAME_H*0.24, GAME_W, GAME_H*0.48, 0x29142a, .72);
+      this.add.rectangle(GAME_W/2, GAME_H*0.78, GAME_W, GAME_H*0.44, 0x172b1b, .9);
+
+      const glow = this.add.graphics();
+      for (let r=360;r>30;r-=28) {
+        glow.fillStyle(0xff3d93, 0.008 + (360-r)/50000);
+        glow.fillCircle(GAME_W/2, 220, r);
+      }
+
+      const stars = this.add.graphics();
+      for (let i=0;i<130;i++) {
+        const x=Phaser.Math.Between(0,GAME_W);
+        const y=Phaser.Math.Between(0,GAME_H);
+        const size=Phaser.Math.Between(1,3);
+        stars.fillStyle(i%4===0?0xffb6d5:0xffffff, Phaser.Math.FloatBetween(.12,.5));
+        stars.fillCircle(x,y,size);
+      }
+
+      // Soft drifting particles make the menu feel alive without external assets.
+      this.menuParticles=[];
+      for(let i=0;i<18;i++) {
+        const p=this.add.circle(
+          Phaser.Math.Between(20,GAME_W-20),
+          Phaser.Math.Between(80,GAME_H-30),
+          Phaser.Math.Between(2,6),
+          i%2?0xff79b5:0x7954e9,
+          .22
+        );
+        this.menuParticles.push(p);
+        this.tweens.add({
+          targets:p,
+          y:p.y-Phaser.Math.Between(30,90),
+          alpha:{from:.05,to:.35},
+          duration:Phaser.Math.Between(1800,3200),
+          yoyo:true,
+          repeat:-1,
+          ease:'Sine.inOut',
+          delay:Phaser.Math.Between(0,1200)
+        });
+      }
+
+      const badge = this.add.rectangle(GAME_W/2, 185, 94, 94, 0xff3d93, 1)
+        .setStrokeStyle(3, 0xffc1dd, .65);
+      this.add.text(GAME_W/2,185,'뽀',{
+        fontFamily:'Noto Sans KR',fontSize:'54px',fontStyle:'900',color:'#ffffff'
+      }).setOrigin(.5);
+      this.tweens.add({targets:badge,scale:1.04,duration:1200,yoyo:true,repeat:-1,ease:'Sine.inOut'});
+
+      this.add.text(GAME_W/2, 285, '뽀린걸 생존전', {
+        fontFamily:'Noto Sans KR', fontSize:'46px', fontStyle:'900', color:'#ffffff'
+      }).setOrigin(.5);
+      this.add.text(GAME_W/2, 334, '3000 DAYS SURVIVAL', {
+        fontFamily:'Noto Sans KR', fontSize:'13px', fontStyle:'800', color:'#ff9dca', letterSpacing:4
+      }).setOrigin(.5);
+      this.add.text(GAME_W/2, 370, '끝없이 몰려오는 적을 물리치고 3000일을 기념하세요.', {
+        fontFamily:'Noto Sans KR', fontSize:'13px', color:'#d9cbd8'
+      }).setOrigin(.5);
+
+      this.createMenuButton(GAME_W/2, 455, 420, 72, '게임 시작', true, () => {
+        this.scene.start('MainScene');
+      });
+
+      this.createMenuButton(GAME_W/2, 545, 420, 58, '조작 방법', false, () => {
+        this.showHowTo();
+      });
+
+      const home = this.add.text(GAME_W/2, 630, '← 뽀린걸 팬사이트로 돌아가기', {
+        fontFamily:'Noto Sans KR',fontSize:'12px',fontStyle:'700',color:'#b9abb8'
+      }).setOrigin(.5).setInteractive({useHandCursor:true});
+      home.on('pointerover',()=>home.setColor('#ff9dca'));
+      home.on('pointerout',()=>home.setColor('#b9abb8'));
+      home.on('pointerdown',()=>{ window.location.href='index.html'; });
+
+      this.add.text(GAME_W/2, 850, 'WASD / 방향키 이동 · 공격 자동 · 5분 생존 목표', {
+        fontFamily:'Noto Sans KR',fontSize:'10px',color:'#8f858f'
+      }).setOrigin(.5);
+    }
+
+    createMenuButton(x,y,w,h,label,primary,onClick) {
+      const bg=this.add.rectangle(x,y,w,h,primary?0xff3d93:0x241b2b,.98)
+        .setStrokeStyle(2,primary?0xffa9cf:0x6d566c,.75)
+        .setInteractive({useHandCursor:true});
+      const text=this.add.text(x,y,label,{
+        fontFamily:'Noto Sans KR',fontSize:primary?'18px':'13px',fontStyle:'800',color:'#ffffff'
+      }).setOrigin(.5).setDepth(2);
+      bg.on('pointerover',()=>{
+        bg.setStrokeStyle(3,primary?0xffd2e4:0xff3d93,1);
+        this.tweens.add({targets:[bg,text],scale:1.02,duration:100});
+      });
+      bg.on('pointerout',()=>{
+        bg.setStrokeStyle(2,primary?0xffa9cf:0x6d566c,.75);
+        this.tweens.add({targets:[bg,text],scale:1,duration:100});
+      });
+      bg.on('pointerdown',onClick);
+      return {bg,text};
+    }
+
+    showHowTo() {
+      if(this.howTo) return;
+
+      // Keep every popup element inside one managed group so nothing remains
+      // on the main menu after the popup is closed.
+      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x08060b,.78)
+        .setDepth(50).setInteractive();
+      const boxW=700, boxH=500;
+      const box=this.add.rectangle(GAME_W/2,GAME_H/2,boxW,boxH,0x211825,.99)
+        .setStrokeStyle(2,0xff3d93,.65).setDepth(51);
+
+      const title=this.add.text(GAME_W/2,365,'조작 방법',{
+        fontFamily:'Noto Sans KR',fontSize:'27px',fontStyle:'900',color:'#ffffff'
+      }).setOrigin(.5).setDepth(52);
+
+      const body=this.add.text(GAME_W/2,515,
+        '이동\nW A S D  /  방향키\n\n공격\n가장 가까운 적에게 자동 공격\n\n성장\n경험치를 모으면 레벨업 카드 3개 중 하나 선택\n\n목표\n5분 생존 · 3분에 보스 출현',{
+          fontFamily:'Noto Sans KR',fontSize:'13px',color:'#ddd1dc',align:'center',
+          lineSpacing:8, wordWrap:{width:boxW-100,useAdvancedWrap:true}
+        }).setOrigin(.5).setDepth(52);
+
+      const close=this.add.text(GAME_W/2,690,'닫기',{
+        fontFamily:'Noto Sans KR',fontSize:'13px',fontStyle:'800',color:'#ff9dca'
+      }).setOrigin(.5).setInteractive({useHandCursor:true}).setDepth(52);
+      close.on('pointerdown',()=>this.closeHowTo());
+
+      // All elements are explicitly tracked and destroyed together.
+      this.howTo={overlay,box,title,body,close};
+    }
+
+    closeHowTo() {
+      if(!this.howTo) return;
+      const popup=this.howTo;
+      Object.keys(popup).forEach(key=>{
+        const obj=popup[key];
+        if(obj && typeof obj.destroy==='function') obj.destroy();
+      });
+      this.howTo=null;
+    }
+  }
+
+  class MainScene extends Phaser.Scene {
+    constructor() {
+      super('MainScene');
+      this.state = null;
+    }
+
+    create() {
+      const topButton = document.getElementById('restartTop');
+      if (topButton) {
+        topButton.style.display = 'block';
+        topButton.textContent = '☰ 메뉴';
+      }
+      this.resetState();
+      this.createTextures();
+      this.createWorld();
+      this.createPlayer();
+      this.createGroups();
+      this.createInput();
+      this.createUi();
+      this.createCombatHud();
+      this.createMobileControls();
+      this.bindEvents();
+
+      this.spawnTimer = this.time.addEvent({
+        delay: 900,
+        loop: true,
+        callback: this.spawnEnemy,
+        callbackScope: this
+      });
+
+      this.attackTimer = this.time.addEvent({
+        delay: 180,
+        loop: true,
+        callback: this.autoAttack,
+        callbackScope: this
+      });
+
+      this.time.addEvent({
+        delay: 1000,
+        loop: true,
+        callback: this.tickSecond,
+        callbackScope: this
+      });
+
+      this.spawnInitialEnemies();
+      this.updateUi();
+    }
+
+    resetState() {
+      this.state = {
+        running: true,
+        elapsed: 0,
+        kills: 0,
+        wave: 1,
+        bossSpawned: false,
+        level: 1,
+        xp: 0,
+        nextXp: 25,
+        pausedForLevel: false
+      };
+    }
+
+    createTextures() {
+      const make = (key, draw) => {
+        if (this.textures.exists(key)) return;
+        const g = this.make.graphics({x:0,y:0,add:false});
+        draw(g);
+        g.generateTexture(key, 64, 64);
+        g.destroy();
+      };
+
+      make('player', g => {
+        g.fillStyle(COLORS.pink, 1);
+        g.fillCircle(32, 32, 22);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(24, 25, 6);
+        g.fillCircle(40, 25, 6);
+        g.fillStyle(COLORS.purple, 1);
+        g.fillCircle(24, 26, 2);
+        g.fillCircle(40, 26, 2);
+        g.lineStyle(3, 0x8e1e60, 1);
+        g.arc(32, 32, 10, .15, Math.PI-.15, false);
+      });
+
+      make('enemy', g => {
+        g.fillStyle(0xb9d9c0, 1);
+        g.fillCircle(32, 34, 20);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(25, 29, 5);
+        g.fillCircle(39, 29, 5);
+        g.fillStyle(0x3b4b40, 1);
+        g.fillCircle(25, 30, 2);
+        g.fillCircle(39, 30, 2);
+      });
+
+      make('bat', g => {
+        g.fillStyle(COLORS.bat, 1);
+        g.fillTriangle(8,34,25,20,27,43);
+        g.fillTriangle(56,34,39,20,37,43);
+        g.fillCircle(32, 34, 15);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(27,31,3);
+        g.fillCircle(37,31,3);
+      });
+
+      make('elite', g => {
+        g.fillStyle(0x7397c7, 1);
+        g.fillCircle(32, 32, 24);
+        g.lineStyle(4, 0xffffff, .7);
+        g.strokeCircle(32,32,24);
+      });
+
+      make('boss', g => {
+        g.fillStyle(0x8f315e, 1);
+        g.fillCircle(32, 32, 29);
+        g.fillStyle(0xff6aa8, 1);
+        g.fillCircle(32, 32, 17);
+        g.lineStyle(3, 0x351b32, 1);
+        for (let i=0;i<8;i++) {
+          const a=i*Math.PI/4;
+          g.lineBetween(32+Math.cos(a)*15,32+Math.sin(a)*15,32+Math.cos(a)*28,32+Math.sin(a)*28);
+        }
+      });
+
+      make('orb', g => {
+        g.fillStyle(COLORS.pink, 1);
+        g.fillCircle(32,32,9);
+        g.fillStyle(0xffffff, .8);
+        g.fillCircle(29,29,3);
+      });
+
+      make('bullet', g => {
+        g.fillStyle(0xffd6e8, 1);
+        g.fillCircle(32,32,7);
+        g.fillStyle(COLORS.pink, 1);
+        g.fillCircle(32,32,4);
+      });
+
+      make('spark', g => {
+        g.fillStyle(0xffffff, 1);
+        g.fillTriangle(32,3,39,27,61,32);
+        g.fillTriangle(61,32,39,37,32,61);
+        g.fillTriangle(32,61,25,37,3,32);
+        g.fillTriangle(3,32,25,27,32,3);
+      });
+
+      make('tree', g => {
+        g.fillStyle(0x6b432d, 1); g.fillRect(27, 36, 10, 22);
+        g.fillStyle(0x214b2b, 1); g.fillCircle(32, 25, 18);
+        g.fillStyle(0x2f6b3a, 1); g.fillCircle(20, 31, 13); g.fillCircle(44, 31, 13);
+        g.fillStyle(0x4e8b4c, 1); g.fillCircle(30, 18, 8);
+      });
+      make('rock', g => {
+        g.fillStyle(0x667277, 1); g.fillRoundedRect(10, 22, 44, 27, 8);
+        g.fillStyle(0x879398, 1); g.fillTriangle(17, 25, 30, 12, 42, 25);
+        g.fillStyle(0xb2b9bb, .55); g.fillCircle(25, 27, 5);
+      });
+      make('house', g => {
+        g.fillStyle(0xb8755d, 1); g.fillRect(8, 24, 48, 32);
+        g.fillStyle(0x7d3d43, 1); g.fillTriangle(4, 25, 32, 5, 60, 25);
+        g.fillStyle(0x5a3a31, 1); g.fillRect(27, 38, 11, 18);
+        g.fillStyle(0xaed0d9, 1); g.fillRect(15, 33, 9, 9); g.fillRect(40, 33, 9, 9);
+      });
+    }
+
+    createWorld() {
+      this.cameras.main.setBackgroundColor(0x1f4328);
+
+      // 넓은 실제 전투 필드
+      this.add.rectangle(MAP_W/2, MAP_H/2, MAP_W, MAP_H, 0x275633).setDepth(-20);
+
+      const ground = this.add.graphics().setDepth(-19);
+      ground.fillStyle(0x2b5b36, 1);
+      ground.fillRect(0, 0, MAP_W, MAP_H);
+
+      // 길: 중앙 광장 → 동/서/남/북으로 이어지는 비포장 도로
+      const path = this.add.graphics().setDepth(-18);
+      path.fillStyle(0x8c765c, 1);
+      path.fillRect(MAP_W/2-92, 0, 184, MAP_H);
+      path.fillRect(0, MAP_H/2-82, MAP_W, 164);
+      path.fillCircle(MAP_W/2, MAP_H/2, 230);
+      path.fillStyle(0x9c8669, .7);
+      path.fillRect(MAP_W/2-58, 0, 116, MAP_H);
+      path.fillRect(0, MAP_H/2-50, MAP_W, 100);
+
+      // 물가/호수: 플레이어는 통과할 수 있지만 느려지는 지역
+      this.waterZones = [
+        mapRect(235, 180, 560, 250),
+        mapRect(2110, 1120, 610, 310),
+        mapRect(1180, 35, 410, 190),
+        mapRect(90, 1380, 470, 250),
+        mapRect(2550, 1350, 520, 260),
+        mapRect(1180, 1510, 520, 210)
+      ];
+      const water = this.add.graphics().setDepth(-17);
+      this.waterZones.forEach((r, idx) => {
+        water.fillStyle(0x2f7890, .96); water.fillRoundedRect(r.x,r.y,r.width,r.height,38);
+        water.lineStyle(5, 0x74b9c4, .55); water.strokeRoundedRect(r.x,r.y,r.width,r.height,38);
+        for(let y=r.y+30;y<r.y+r.height-10;y+=34){
+          for(let x=r.x+25;x<r.x+r.width-20;x+=95){
+            water.lineStyle(2,0xb2e1df,.28);
+            water.arc(x,y,16,Math.PI,Math.PI*2,false);
+          }
+        }
+      });
+
+      // 중앙 광장
+      const plaza = this.add.graphics().setDepth(-16);
+      plaza.fillStyle(0x9a8060, 1); plaza.fillCircle(MAP_W/2, MAP_H/2, 210);
+      plaza.lineStyle(8,0xc1a27b,.55); plaza.strokeCircle(MAP_W/2,MAP_H/2,210);
+      plaza.fillStyle(0x6c7b70,.9); plaza.fillCircle(MAP_W/2,MAP_H/2,72);
+      plaza.fillStyle(0x9fb0a6,.7); plaza.fillCircle(MAP_W/2,MAP_H/2,48);
+
+      // 잔디 디테일
+      const grass = this.add.graphics().setDepth(-15);
+      for (let i=0;i<1200;i++) {
+        const x=Phaser.Math.Between(15,MAP_W-15), y=Phaser.Math.Between(15,MAP_H-15);
+        let inWater=false; for(const r of this.waterZones){if(r.contains(x,y)){inWater=true;break;}}
+        if(inWater) continue;
+        grass.lineStyle(2, i%3===0?0x86b678:0x6f9e66, .25);
+        grass.lineBetween(x,y,x+Phaser.Math.Between(-4,4),y-Phaser.Math.Between(4,10));
+      }
+
+      // 지도 위 실제 오브젝트. 중앙 길과 물을 피해 배치합니다.
+      this.terrain = this.physics.add.staticGroup();
+      const treeSpots = [
+        [330,620],[480,760],[720,650],[920,920],[1160,690],[1430,760],[1710,600],[1980,760],[2280,620],[2630,760],
+        [350,1330],[650,1190],[930,1450],[1370,1260],[1640,1450],[1960,1280],[2500,1500],[2750,1160],
+        [1080,330],[1700,300],[2350,340],[2700,420]
+      ];
+      const rockSpots = [
+        [260,540],[620,520],[820,1180],[1080,1120],[1520,520],[1840,1050],[2180,900],[2850,970],
+        [480,1510],[1180,1540],[1770,1570],[2240,1550],[2720,1360]
+      ];
+      const houseSpots = [
+        [430,300],[900,300],[2010,310],[2570,300],
+        [430,1030],[830,1040],[2050,1010],[2570,1030],
+        [520,1550],[1510,1510],[2390,1540]
+      ];
+      const addObstacle=(key,x,y,scale=1,bodyW=48,bodyH=48)=>{
+        const o=this.terrain.create(x,y,key).setDepth(2).setScale(scale);
+        o.refreshBody();
+        o.body.setSize(bodyW,bodyH,true);
+        return o;
+      };
+      treeSpots.forEach(([x,y],i)=>addObstacle('tree',mapX(x),mapY(y),.9+(i%3)*.08,38,34));
+      rockSpots.forEach(([x,y],i)=>addObstacle('rock',mapX(x),mapY(y),.75+(i%2)*.15,44,28));
+      houseSpots.forEach(([x,y])=>addObstacle('house',mapX(x),mapY(y),.95,50,42));
+
+      // 확장된 4200×2400 전장을 채우는 추가 오브젝트. 기존 배치와 겹치지 않도록
+      // 일정한 간격의 패턴으로 배치해 넓어진 맵에서도 빈 공간이 과도하게 남지 않게 합니다.
+      const extraTreeSpots = [
+        [120,520],[120,820],[120,1100],[120,1880],[120,2160],
+        [600,220],[920,190],[1320,190],[1700,190],[2100,190],[2500,190],[2920,190],[3400,190],[3900,300],
+        [600,2140],[1000,2220],[1450,2140],[1850,2220],[2300,2140],[2750,2220],[3200,2140],[3650,2220],[4050,2000],
+        [4050,650],[4050,980],[4050,1320],[4050,1660]
+      ];
+      const extraRockSpots = [
+        [360,180],[760,460],[1040,1880],[1450,420],[1860,1900],[2280,460],[2700,1850],[3150,460],[3550,1880],[3880,1120],
+        [380,1980],[760,1560],[3460,1450],[3820,520]
+      ];
+      const extraHouseSpots = [
+        [260,760],[820,480],[1160,2080],[1880,520],[2320,2040],[3050,520],[3500,2060],[3920,820],
+        [300,1760],[980,1720],[3300,1720],[3900,1840]
+      ];
+      extraTreeSpots.forEach(([x,y],i)=>addObstacle('tree',x,y,.88+(i%3)*.07,38,34));
+      extraRockSpots.forEach(([x,y],i)=>addObstacle('rock',x,y,.72+(i%2)*.12,44,28));
+      extraHouseSpots.forEach(([x,y])=>addObstacle('house',x,y,.92,50,42));
+
+      // 길 안내 표지와 지역명
+      const labelStyle={fontFamily:'Noto Sans KR',fontSize:'12px',fontStyle:'800',color:'#f3e6d5',stroke:'#3c2c24',strokeThickness:4};
+      this.add.text(MAP_W/2, MAP_H/2-125, '3000일 기념 중앙 광장', labelStyle).setOrigin(.5).setDepth(-10);
+      this.add.text(mapX(430), mapY(455), '서쪽 호숫가', labelStyle).setOrigin(.5).setDepth(-10);
+      this.add.text(mapX(2415), mapY(1480), '남동쪽 물가', labelStyle).setOrigin(.5).setDepth(-10);
+      this.add.text(mapX(3300), mapY(500), '동쪽 숲길', labelStyle).setOrigin(.5).setDepth(-10);
+      this.add.text(mapX(700), mapY(1900), '남서쪽 초원', labelStyle).setOrigin(.5).setDepth(-10);
+
+      // 은은한 격자는 길/지형 위에서만 최소한으로 보이게 합니다.
+      const grid=this.add.graphics().setDepth(-14);
+      grid.lineStyle(1,0x6d9b68,.10);
+      for(let x=0;x<=MAP_W;x+=100) grid.lineBetween(x,0,x,MAP_H);
+      for(let y=0;y<=MAP_H;y+=100) grid.lineBetween(0,y,MAP_W,y);
+
+      // ─────────────────────────────────────────────────────────────
+      // 무한 맵 레이어
+      // 현재 4200×2400 맵 한 장을 하나의 타일 텍스처로 굳힌 뒤
+      // 주변 8장을 복제합니다. 플레이어는 맵 경계를 넘을 때 같은
+      // 위치의 반대편으로 재배치되므로 화면에서는 맵 끝이 보이지 않습니다.
+      // ─────────────────────────────────────────────────────────────
+      this.createInfiniteMapLayer();
+
+      this.worldBounds=new Phaser.Geom.Rectangle(-MAP_W+15,-MAP_H+15,MAP_W*3-30,MAP_H*3-30);
+      this.physics.world.setBounds(-MAP_W,-MAP_H,MAP_W*3,MAP_H*3);
+      // 무한 월드에서는 카메라의 유한 bounds를 사용하지 않습니다.
+      this.cameras.main.removeBounds();
+    }
+
+    createInfiniteMapLayer() {
+      // RenderTexture로 기존 월드 전체를 캡처하면 Phaser 버전에 따라 Graphics가
+      // 잘리거나 좌표가 어긋나는 문제가 생길 수 있습니다. 그래서 배경은 별도의
+      // Graphics 텍스처로 생성하고, 오브젝트는 실제 Sprite를 타일마다 복제합니다.
+      const bg = this.add.graphics();
+      bg.fillStyle(0x2b5b36, 1);
+      bg.fillRect(0, 0, MAP_W, MAP_H);
+      bg.fillStyle(0x8c765c, 1);
+      bg.fillRect(MAP_W/2-92, 0, 184, MAP_H);
+      bg.fillRect(0, MAP_H/2-82, MAP_W, 164);
+      bg.fillCircle(MAP_W/2, MAP_H/2, 230);
+      bg.fillStyle(0x9c8669, .7);
+      bg.fillRect(MAP_W/2-58, 0, 116, MAP_H);
+      bg.fillRect(0, MAP_H/2-50, MAP_W, 100);
+
+      // 물은 맵의 가장자리에서 충분히 떨어뜨려 배치해 타일 경계에서 잘리지 않게 합니다.
+      const safeWater = [
+        mapRect(280, 220, 500, 220),
+        mapRect(2130, 1160, 560, 270),
+        mapRect(1220, 120, 360, 170),
+        mapRect(150, 1430, 390, 210),
+        mapRect(2640, 1390, 430, 220),
+        mapRect(1230, 1580, 430, 180)
+      ];
+      this.waterZones = safeWater;
+      safeWater.forEach(r => {
+        bg.fillStyle(0x2f7890, .96);
+        bg.fillRoundedRect(r.x,r.y,r.width,r.height,38);
+        bg.lineStyle(5,0x74b9c4,.55);
+        bg.strokeRoundedRect(r.x,r.y,r.width,r.height,38);
+        for(let y=r.y+30;y<r.y+r.height-10;y+=34){
+          for(let x=r.x+25;x<r.x+r.width-20;x+=95){
+            bg.lineStyle(2,0xb2e1df,.28);
+            bg.arc(x,y,16,Math.PI,Math.PI*2,false);
+          }
+        }
+      });
+
+      bg.fillStyle(0x9a8060, 1); bg.fillCircle(MAP_W/2, MAP_H/2, 210);
+      bg.lineStyle(8,0xc1a27b,.55); bg.strokeCircle(MAP_W/2,MAP_H/2,210);
+      bg.fillStyle(0x6c7b70,.9); bg.fillCircle(MAP_W/2,MAP_H/2,72);
+      bg.fillStyle(0x9fb0a6,.7); bg.fillCircle(MAP_W/2,MAP_H/2,48);
+
+      // 타일 가장자리까지 같은 방식으로 반복되므로 잔디 패턴도 타일마다 정확히 이어집니다.
+      for (let i=0;i<900;i++) {
+        const x=Phaser.Math.Between(20,MAP_W-20), y=Phaser.Math.Between(20,MAP_H-20);
+        if (safeWater.some(r=>r.contains(x,y))) continue;
+        bg.lineStyle(2, i%3===0?0x86b678:0x6f9e66, .25);
+        bg.lineBetween(x,y,x+Phaser.Math.Between(-4,4),y-Phaser.Math.Between(4,10));
+      }
+      bg.lineStyle(1,0x6d9b68,.10);
+      for(let x=0;x<=MAP_W;x+=100) bg.lineBetween(x,0,x,MAP_H);
+      for(let y=0;y<=MAP_H;y+=100) bg.lineBetween(0,y,MAP_W,y);
+      bg.generateTexture('bboringirl-infinite-map', MAP_W, MAP_H);
+      bg.destroy();
+
+      // 기존 월드 장식 Graphics/Text는 숨기고, 실제 Sprite 오브젝트만 타일마다 복제합니다.
+      this.children.list.forEach(o => {
+        if (o && o !== this.player && o !== this.terrain && o.setVisible &&
+            o.depth < 0) o.setVisible(false);
+      });
+
+      const labelStyle={fontFamily:'Noto Sans KR',fontSize:'12px',fontStyle:'800',color:'#f3e6d5',stroke:'#3c2c24',strokeThickness:4};
+      this.mapLabelData = [
+        [MAP_W/2, MAP_H/2-125, '3000일 기념 중앙 광장'],
+        [mapX(520), mapY(500), '서쪽 호숫가'],
+        [mapX(2500), mapY(1500), '남동쪽 물가'],
+        [mapX(3300), mapY(500), '동쪽 숲길'],
+        [mapX(700), mapY(1900), '남서쪽 초원']
+      ];
+
+      const originals = this.terrain.getChildren().slice();
+      originals.forEach(o => { o.setVisible(false); if(o.body) o.body.enable=false; });
+      this.infiniteMapImages = [];
+      this.terrainWrapObstacles = [];
+      this.infiniteMapLabels = [];
+
+      // 플레이어가 어느 타일에 있든 항상 주변 3×3 타일을 유지합니다.
+      for (let ty=-1; ty<=1; ty++) {
+        for (let tx=-1; tx<=1; tx++) {
+          const image=this.add.image(MAP_W/2 + tx*MAP_W, MAP_H/2 + ty*MAP_H,
+            'bboringirl-infinite-map').setOrigin(.5).setDepth(-30);
+          this.infiniteMapImages.push({obj:image,tx,ty});
+          for(const [lx,ly,text] of this.mapLabelData){
+            const label=this.add.text(lx + tx*MAP_W, ly + ty*MAP_H, text, labelStyle)
+              .setOrigin(.5).setDepth(-10);
+            this.infiniteMapLabels.push({obj:label,tx,ty,lx,ly});
+          }
+        }
+      }
+
+      // 원본 장애물의 Sprite를 3×3으로 복제합니다. 이제 오브젝트가 RenderTexture에
+      // 합쳐지지 않기 때문에 나무/바위/집이 흐려지거나 사라지지 않습니다.
+      originals.forEach(original => {
+        // 물 한가운데 놓인 기존 오브젝트는 타일 반복 때 잘려 보일 수 있으므로
+        // 중심점이 물에 들어가는 오브젝트는 복제하지 않습니다.
+        if(this.isInWater(original.x, original.y)) return;
+        for(let ty=-1;ty<=1;ty++) for(let tx=-1;tx<=1;tx++) {
+          const clone=this.terrain.create(original.x + tx*MAP_W, original.y + ty*MAP_H, original.texture.key);
+          clone.setScale(original.scaleX, original.scaleY).setDepth(2).setVisible(true);
+          clone.body.setSize(original.body.width, original.body.height, true);
+          this.terrainWrapObstacles.push({obj:clone,tx,ty,baseX:original.x,baseY:original.y});
+        }
+      });
+      this.infiniteTileX=0;
+      this.infiniteTileY=0;
+      this.updateInfiniteTiles(true);
+    }
+
+    updateInfiniteTiles(force=false) {
+      if(!this.player || !this.infiniteMapImages) return;
+      const tileX=Math.floor(this.player.x / MAP_W);
+      const tileY=Math.floor(this.player.y / MAP_H);
+      if(!force && tileX===this.infiniteTileX && tileY===this.infiniteTileY) return;
+      this.infiniteTileX=tileX; this.infiniteTileY=tileY;
+      this.infiniteMapImages.forEach(({obj,tx,ty})=>{
+        obj.x=(tileX+tx)*MAP_W + MAP_W/2;
+        obj.y=(tileY+ty)*MAP_H + MAP_H/2;
+      });
+      this.infiniteMapLabels.forEach(({obj,tx,ty,lx,ly})=>{
+        obj.x=lx+(tileX+tx)*MAP_W;
+        obj.y=ly+(tileY+ty)*MAP_H;
+      });
+      this.terrainWrapObstacles.forEach(({obj,tx,ty,baseX,baseY})=>{
+        obj.x=baseX+(tileX+tx)*MAP_W;
+        obj.y=baseY+(tileY+ty)*MAP_H;
+        if(obj.body) obj.body.reset(obj.x,obj.y);
+      });
+    }
+
+    wrapCoordinate(value, size) {
+      return ((value % size) + size) % size;
+    }
+
+    isInWater(x, y) {
+      const nx = this.wrapCoordinate(x, MAP_W);
+      const ny = this.wrapCoordinate(y, MAP_H);
+      for (const r of (this.waterZones || [])) {
+        if (r.contains(nx, ny)) return true;
+      }
+      return false;
+    }
+
+    wrapInfiniteWorld() {
+      if (!this.player) return;
+
+      let shiftX = 0;
+      let shiftY = 0;
+
+      // 중앙 타일 [0..MAP_W) × [0..MAP_H)를 기준으로 좌표를 반복합니다.
+      if (this.player.x < 0) shiftX = MAP_W;
+      else if (this.player.x >= MAP_W) shiftX = -MAP_W;
+      if (this.player.y < 0) shiftY = MAP_H;
+      else if (this.player.y >= MAP_H) shiftY = -MAP_H;
+
+      if (!shiftX && !shiftY) return;
+
+      // 플레이어와 모든 동적 오브젝트를 같은 양만큼 이동시켜 상대적인 위치를 유지합니다.
+      this.player.x += shiftX;
+      this.player.y += shiftY;
+      this.player.body.reset(this.player.x, this.player.y);
+
+      const groups = [this.enemies, this.projectiles, this.xpOrbs];
+      groups.forEach(group => {
+        group?.children?.iterate(obj => {
+          if (!obj || !obj.active) return;
+          obj.x += shiftX;
+          obj.y += shiftY;
+          if (obj.body) obj.body.reset(obj.x, obj.y);
+        });
+      });
+    }
+
+    createGroups() {
+      this.enemies = this.physics.add.group();
+      this.projectiles = this.physics.add.group();
+      this.xpOrbs = this.physics.add.group();
+
+      this.physics.add.overlap(this.projectiles, this.enemies, this.hitEnemy, null, this);
+      this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
+      this.physics.add.overlap(this.player, this.xpOrbs, this.collectXp, null, this);
+      // 나무/바위/건물은 실제 장애물로 작동합니다. 적은 장애물을 통과해 플레이어를 추적합니다.
+      this.physics.add.collider(this.player, this.terrain);
+    }
+
+    createPlayer() {
+      this.player = this.physics.add.sprite(MAP_W/2, MAP_H/2, 'player');
+      this.player.setCollideWorldBounds(false);
+      this.player.body.setCircle(20,12,12);
+      this.player.moveSpeed = 250;
+      this.player.damage = 18;
+      this.player.fireDelay = 650;
+      this.player.lastHit = 0;
+      this.player.hp = 100;
+      this.player.maxHp = 100;
+      this.player.projectiles = 1;
+      this.player.pickupRadius = 75;
+      this.player.invulnerableUntil = 0;
+      this.player.setDepth(20);
+
+      // 화면이 플레이어를 따라가도록 해서 넓어진 맵을 실제로 탐험할 수 있게 합니다.
+      // 플레이어가 화면 중심을 기준으로 실제 월드를 계속 이동합니다.
+      // 맵 타일만 플레이어의 타일 좌표에 맞춰 뒤에서 교체하므로 카메라가 순간이동하지 않습니다.
+      this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+      this.cameras.main.setDeadzone(0, 0);
+    }
+
+    createInput() {
+      this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
+    }
+
+    createUi() {
+      const style = {fontFamily:'Noto Sans KR', fontSize:'16px', fontStyle:'700', color:'#ffffff'};
+      const small = {fontFamily:'Noto Sans KR', fontSize:'12px', color:'#e9dfe9'};
+
+      this.ui = {
+        top: this.add.rectangle(18,18,GAME_W-36,104,0x17121c,.82).setOrigin(0).setDepth(100),
+        title: this.add.text(35,30,'뽀린걸 로그라이크',{...style,fontSize:'18px'}).setDepth(101),
+        level: this.add.text(35,58,'LV 1',{...style,fontSize:'13px'}).setDepth(101),
+        hpText: this.add.text(105,58,'HP 100 / 100',{...small}).setDepth(101),
+        xpText: this.add.text(105,80,'EXP 0 / 25',{...small}).setDepth(101),
+        time: this.add.text(GAME_W-38,32,'00:00',{...style,fontSize:'18px'}).setOrigin(1,0).setDepth(101),
+        wave: this.add.text(GAME_W-38,58,'WAVE 1',{...small}).setOrigin(1,0).setDepth(101),
+        kills: this.add.text(GAME_W-38,80,'KILLS 0',{...small}).setOrigin(1,0).setDepth(101),
+        hpBg: this.add.rectangle(35,84,55,7,0x4a263a).setOrigin(0,.5).setDepth(101),
+        hpBar: this.add.rectangle(35,84,55,7,COLORS.pink).setOrigin(0,.5).setDepth(102),
+        xpBg: this.add.rectangle(105,98,520,6,0x4a263a).setOrigin(0,.5).setDepth(101),
+        xpBar: this.add.rectangle(105,98,0,6,0xffb6d5).setOrigin(0,.5).setDepth(102),
+        hint: this.add.text(GAME_W/2, GAME_H-18,'WASD / 방향키 이동 · 공격은 자동 · 레벨업 카드를 선택하세요',{...small,color:'#e6dce6'}).setOrigin(.5,1).setDepth(101)
+      };
+      Object.values(this.ui).forEach(o => o.setScrollFactor(0));
+    }
+
+    createCombatHud() {
+      const panel = this.add.rectangle(18, 122, 220, 235, 0x121820, .88)
+        .setOrigin(0).setDepth(100).setStrokeStyle(1, 0x7d8d92, .35);
+      const title = this.add.text(34, 138, '뽀린걸 생존 정보', {
+        fontFamily:'Noto Sans KR', fontSize:'13px', fontStyle:'800', color:'#ffffff'
+      }).setDepth(101);
+      const sub = this.add.text(34, 160, 'SURVIVAL STATUS', {
+        fontFamily:'Noto Sans KR', fontSize:'8px', color:'#91a0a5', letterSpacing:1
+      }).setDepth(101);
+      const hpBg = this.add.rectangle(34, 188, 180, 12, 0x422a38).setOrigin(0).setDepth(101);
+      const hp = this.add.rectangle(34, 188, 180, 12, COLORS.pink).setOrigin(0).setDepth(102);
+      const hpText = this.add.text(124, 194, '100 / 100', {
+        fontFamily:'Noto Sans KR',fontSize:'9px',fontStyle:'800',color:'#ffffff'
+      }).setOrigin(.5).setDepth(103);
+      const labels = [
+        ['공격력','18'],['공격속도','1.54/s'],['이동속도','250'],['흡수범위','75']
+      ];
+      const statTexts=[];
+      const statLabels=[];
+      labels.forEach((row,i)=>{
+        const y=222+i*23;
+        statLabels.push(this.add.text(35,y,row[0],{fontFamily:'Noto Sans KR',fontSize:'10px',color:'#9aa5a8'}).setDepth(101));
+        statTexts.push(this.add.text(210,y,row[1],{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'800',color:'#ffffff'}).setOrigin(1,0).setDepth(101));
+      });
+      const passiveTitle=this.add.text(34,316,'패시브 효과',{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'800',color:'#ff9bc8'}).setDepth(101);
+      const passive = this.add.text(34,335,'♡ 팬들의 사랑\n⚡ 방송 텐션\n✦ 추억의 자석',{fontFamily:'Noto Sans KR',fontSize:'9px',color:'#ddd1dc',lineSpacing:6}).setDepth(101);
+      this.combatHud={panel,hp,hpText,statTexts,passive};
+
+      this.bossBg=this.add.rectangle(GAME_W/2,122,520,13,0x311c2b,.92).setDepth(100).setVisible(false);
+      this.bossBar=this.add.rectangle(GAME_W/2-260,122,520,13,0xff526e,.95).setOrigin(0,.5).setDepth(101).setVisible(false);
+      this.bossText=this.add.text(GAME_W/2,101,'BOSS',{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'900',color:'#ffd6e4'}).setOrigin(.5).setDepth(101).setVisible(false);
+      [panel,title,sub,hpBg,hp,hpText,...statLabels,...statTexts,passiveTitle,passive,this.bossBg,this.bossBar,this.bossText].forEach(o => o.setScrollFactor(0));
+    }
+
+    createMobileControls() {
+      this.joy = {
+        active:false,
+        id:null,
+        baseX:100,
+        baseY:GAME_H-105,
+        radius:62,
+        dx:0,
+        dy:0
+      };
+      this.joyGraphics = this.add.graphics().setDepth(110).setScrollFactor(0);
+      this.drawJoystick();
+
+      this.input.on('pointerdown', p => {
+        if (p.y < GAME_H-190) return;
+        if (p.x > GAME_W-190) return;
+        this.joy.active = true;
+        this.joy.id = p.id;
+        this.updateJoystick(p);
+      });
+      this.input.on('pointermove', p => {
+        if (this.joy.active && p.id === this.joy.id) this.updateJoystick(p);
+      });
+      this.input.on('pointerup', p => {
+        if (this.joy.active && p.id === this.joy.id) {
+          this.joy.active=false;
+          this.joy.dx=0; this.joy.dy=0;
+          this.drawJoystick();
+        }
+      });
+    }
+
+    drawJoystick() {
+      const g=this.joyGraphics;
+      g.clear();
+      g.fillStyle(0x000000,.18);
+      g.fillCircle(this.joy.baseX,this.joy.baseY,this.joy.radius);
+      g.lineStyle(2,0xffffff,.25);
+      g.strokeCircle(this.joy.baseX,this.joy.baseY,this.joy.radius);
+      g.fillStyle(COLORS.pink,.72);
+      g.fillCircle(this.joy.baseX+this.joy.dx*35,this.joy.baseY+this.joy.dy*35,22);
+    }
+
+    updateJoystick(p) {
+      const dx=p.x-this.joy.baseX, dy=p.y-this.joy.baseY;
+      const len=Math.hypot(dx,dy);
+      const scale=len>this.joy.radius ? this.joy.radius/len : 1;
+      this.joy.dx=dx/this.joy.radius*scale;
+      this.joy.dy=dy/this.joy.radius*scale;
+      this.drawJoystick();
+    }
+
+    bindEvents() {
+      const top = document.getElementById('restartTop');
+      if (top) top.onclick = () => this.scene.start('MenuScene');
+    }
+
+    spawnInitialEnemies() {
+      for(let i=0;i<8;i++) this.spawnEnemy();
+    }
+
+    getSpawnPosition() {
+      // 무한 맵에서는 화면 밖의 사방에서 적이 들어오는 방식으로 생성합니다.
+      const angle=Phaser.Math.FloatBetween(0,Math.PI*2);
+      const distance=Phaser.Math.Between(780,1050);
+      return {
+        x:this.player.x + Math.cos(angle)*distance,
+        y:this.player.y + Math.sin(angle)*distance
+      };
+    }
+
+    spawnEnemy() {
+      if(!this.state.running) return;
+      const p=this.getSpawnPosition();
+      const t=this.state.elapsed;
+      let type='normal';
+      const roll=Math.random();
+      if(t>=120 && roll<.12) type='elite';
+      else if(t>=45 && roll<.22) type='bat';
+
+      let enemy=this.enemies.create(p.x,p.y,type==='elite'?'elite':type==='bat'?'bat':'enemy');
+      enemy.type=type;
+      enemy.setDepth(10);
+
+      if(type==='elite'){
+        enemy.maxHp=90+this.state.wave*15;
+        enemy.hp=enemy.maxHp;
+        enemy.speed=75+this.state.wave*3;
+        enemy.damage=14;
+        enemy.scale=1.05;
+      } else if(type==='bat'){
+        enemy.maxHp=32+this.state.wave*5;
+        enemy.hp=enemy.maxHp;
+        enemy.speed=125+this.state.wave*4;
+        enemy.damage=8;
+      } else {
+        enemy.maxHp=25+this.state.wave*5;
+        enemy.hp=enemy.maxHp;
+        enemy.speed=70+this.state.wave*4;
+        enemy.damage=10;
+      }
+      enemy.lastHit=0;
+      enemy.setCollideWorldBounds(false);
+    }
+
+    spawnBoss() {
+      if(this.state.bossSpawned) return;
+      this.state.bossSpawned=true;
+      const boss=this.enemies.create(this.player.x, this.player.y-650, 'boss');
+      boss.type='boss';
+      boss.maxHp=1800;
+      boss.hp=1800;
+      boss.speed=48;
+      boss.damage=24;
+      boss.setScale(1.55);
+      boss.setDepth(15);
+      boss.setData('isBoss',true);
+
+      this.showBanner('BOSS 출현!', '300초까지 살아남으세요');
+    }
+
+    autoAttack() {
+      if(!this.state.running || this.state.pausedForLevel) return;
+      const now=this.time.now;
+      if(now-this.player.lastAttack < this.player.fireDelay) return;
+      const target=this.getNearestEnemy();
+      if(!target) return;
+
+      this.player.lastAttack=now;
+      const base=Phaser.Math.Angle.Between(this.player.x,this.player.y,target.x,target.y);
+      const count=this.player.projectiles;
+      const spread=count===1 ? 0 : .22;
+
+      for(let i=0;i<count;i++){
+        const offset=(i-(count-1)/2)*spread;
+        const angle=base+offset;
+        const bullet=this.projectiles.create(this.player.x,this.player.y,'bullet');
+        bullet.setDepth(18);
+        bullet.damage=this.player.damage;
+        bullet.speed=470;
+        bullet.life=1000;
+        bullet.setVelocity(Math.cos(angle)*bullet.speed,Math.sin(angle)*bullet.speed);
+        bullet.setScale(.65);
+      }
+    }
+
+    getNearestEnemy() {
+      let nearest=null, best=Infinity;
+      this.enemies.children.iterate(e=>{
+        if(!e || !e.active) return;
+        const d=Phaser.Math.Distance.Between(this.player.x,this.player.y,e.x,e.y);
+        if(d<best){best=d;nearest=e;}
+      });
+      return nearest;
+    }
+
+    hitEnemy(bullet, enemy) {
+      if(!bullet.active || !enemy.active) return;
+      bullet.destroy();
+      enemy.hp-=bullet.damage;
+      enemy.setTint(0xffffff);
+      this.time.delayedCall(70,()=>enemy.active&&enemy.clearTint());
+
+      const spark=this.add.sprite(enemy.x,enemy.y,'spark').setScale(.28).setDepth(30);
+      this.tweens.add({targets:spark,scale:.75,alpha:0,duration:180,onComplete:()=>spark.destroy()});
+
+      if(enemy.hp<=0) this.killEnemy(enemy);
+    }
+
+    killEnemy(enemy) {
+      const value=enemy.type==='boss'?40:enemy.type==='elite'?8:enemy.type==='bat'?3:2;
+      this.state.kills++;
+      if(enemy.type==='boss'){
+        this.dropXp(enemy.x,enemy.y,value, true);
+        this.showBanner('보스 격파!', '마지막까지 잘 버텼어요 ♡');
+      } else {
+        this.dropXp(enemy.x,enemy.y,value, false);
+      }
+      enemy.destroy();
+    }
+
+    dropXp(x,y,value,big=false) {
+      for(let i=0;i<value;i++){
+        const orb=this.xpOrbs.create(
+          x+Phaser.Math.Between(-18,18),
+          y+Phaser.Math.Between(-18,18),
+          'orb'
+        );
+        orb.xp=big?10:1;
+        orb.setScale(big?.85:.42);
+        orb.setDepth(8);
+        orb.setVelocity(Phaser.Math.Between(-45,45),Phaser.Math.Between(-45,45));
+        this.time.delayedCall(400,()=>orb.active&&orb.setVelocity(0,0));
+      }
+    }
+
+    collectXp(player,orb) {
+      if(!orb.active) return;
+      const dist=Phaser.Math.Distance.Between(player.x,player.y,orb.x,orb.y);
+      if(dist>player.pickupRadius) return;
+      this.gainXp(orb.xp);
+      orb.destroy();
+    }
+
+    gainXp(amount) {
+      this.state.xp+=amount;
+      while(this.state.xp>=this.state.nextXp){
+        this.state.xp-=this.state.nextXp;
+        this.state.level++;
+        this.state.nextXp=Math.floor(this.state.nextXp*1.28+8);
+        this.openLevelUp();
+      }
+      this.updateUi();
+    }
+
+    openLevelUp() {
+      if(!this.state.running) return;
+      this.state.pausedForLevel=true;
+      this.physics.world.isPaused=true;
+
+      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x160e19,.76).setDepth(200).setScrollFactor(0);
+      const title=this.add.text(GAME_W/2,300,'LEVEL UP!',{
+        fontFamily:'Noto Sans KR',fontSize:'42px',fontStyle:'900',color:'#ffffff'
+      }).setOrigin(.5).setDepth(201).setScrollFactor(0);
+      const sub=this.add.text(GAME_W/2,350,'강화할 능력을 하나 선택하세요',{
+        fontFamily:'Noto Sans KR',fontSize:'15px',color:'#f1e7ef'
+      }).setOrigin(.5).setDepth(201).setScrollFactor(0);
+
+      const choices=Phaser.Utils.Array.Shuffle([...UPGRADES]).slice(0,3);
+      const cards=[];
+
+      choices.forEach((u,i)=>{
+        const x=GAME_W/2-250+i*250;
+        const bg=this.add.rectangle(x,550,220,230,0x2b2131,.98).setStrokeStyle(2,0x8c5c80,.7).setDepth(201).setScrollFactor(0).setInteractive({useHandCursor:true});
+        const icon=this.add.text(x,495,u.icon,{fontSize:'34px',color:'#ff9bc7'}).setOrigin(.5).setDepth(202).setScrollFactor(0);
+        const name=this.add.text(x,540,u.title,{fontFamily:'Noto Sans KR',fontSize:'17px',fontStyle:'800',color:'#ffffff',align:'center',wordWrap:{width:190}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
+        const desc=this.add.text(x,595,u.desc,{fontFamily:'Noto Sans KR',fontSize:'12px',color:'#d3c5d2',align:'center',wordWrap:{width:180}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
+        bg.on('pointerover',()=>bg.setStrokeStyle(3,COLORS.pink,1));
+        bg.on('pointerout',()=>bg.setStrokeStyle(2,0x8c5c80,.7));
+        bg.on('pointerdown',()=> {
+          u.apply(this.player);
+          cards.forEach(c=>c.destroy());
+          overlay.destroy(); title.destroy(); sub.destroy();
+          this.state.pausedForLevel=false;
+          this.physics.world.isPaused=false;
+          this.updateUi();
+        });
+        cards.push(bg,icon,name,desc);
+      });
+    }
+
+    playerHit(player,enemy) {
+      if(!enemy.active || !this.state.running) return;
+      const now=this.time.now;
+      if(now<player.invulnerableUntil) return;
+
+      player.invulnerableUntil=now+650;
+      player.hp-=enemy.damage;
+      player.setTint(0xffffff);
+      this.time.delayedCall(120,()=>player.active&&player.clearTint());
+
+      const push=Phaser.Math.Angle.Between(enemy.x,enemy.y,player.x,player.y);
+      player.x += Math.cos(push)*28;
+      player.y += Math.sin(push)*28;
+      this.updateInfiniteTiles();
+
+      if(player.hp<=0) this.gameOver();
+      this.updateUi();
+    }
+
+    update(time,delta) {
+      if(!this.state?.running || this.state.pausedForLevel) return;
+
+      let x=0,y=0;
+      if(this.keys.A.isDown||this.keys.LEFT.isDown) x-=1;
+      if(this.keys.D.isDown||this.keys.RIGHT.isDown) x+=1;
+      if(this.keys.W.isDown||this.keys.UP.isDown) y-=1;
+      if(this.keys.S.isDown||this.keys.DOWN.isDown) y+=1;
+
+      if(this.joy?.active){
+        x=this.joy.dx; y=this.joy.dy;
+      }
+
+      const inWater=this.isInWater(this.player.x,this.player.y);
+      const terrainSpeed=inWater ? this.player.moveSpeed*0.58 : this.player.moveSpeed;
+      if(x||y){
+        const len=Math.hypot(x,y)||1;
+        this.player.setVelocity((x/len)*terrainSpeed,(y/len)*terrainSpeed);
+      }else{
+        this.player.setVelocity(0,0);
+      }
+
+      // 플레이어 좌표는 그대로 유지하고, 주변 맵 타일만 재배치합니다.
+      // 따라서 카메라는 좌우뿐 아니라 상하/대각선으로도 실제 월드를 계속 이동합니다.
+      this.updateInfiniteTiles();
+
+      this.enemies.children.iterate(e=>{
+        if(!e||!e.active) return;
+        const angle=Phaser.Math.Angle.Between(e.x,e.y,this.player.x,this.player.y);
+        e.setVelocity(Math.cos(angle)*e.speed,Math.sin(angle)*e.speed);
+      });
+
+      this.projectiles.children.iterate(b=>{
+        if(!b||!b.active) return;
+        b.life-=delta;
+        if(b.life<=0) b.destroy();
+      });
+
+      this.xpOrbs.children.iterate(o=>{
+        if(!o||!o.active) return;
+        const d=Phaser.Math.Distance.Between(o.x,o.y,this.player.x,this.player.y);
+        if(d<this.player.pickupRadius){
+          const a=Phaser.Math.Angle.Between(o.x,o.y,this.player.x,this.player.y);
+          const speed=220+Math.max(0,(this.player.pickupRadius-d)*2);
+          o.setVelocity(Math.cos(a)*speed,Math.sin(a)*speed);
+        }
+      });
+
+      if(this.state.elapsed>=180 && !this.state.bossSpawned) this.spawnBoss();
+      if(this.state.elapsed>=SURVIVAL_SECONDS) this.victory();
+    }
+
+    tickSecond() {
+      if(!this.state.running || this.state.pausedForLevel) return;
+      this.state.elapsed++;
+      this.state.wave=Math.min(10,1+Math.floor(this.state.elapsed/30));
+      if(this.state.elapsed===180) this.spawnBoss();
+      this.updateUi();
+    }
+
+    updateUi() {
+      if(!this.ui || !this.player) return;
+      const seconds=this.state.elapsed;
+      const mm=String(Math.floor(seconds/60)).padStart(2,'0');
+      const ss=String(seconds%60).padStart(2,'0');
+      this.ui.level.setText(`LV ${this.state.level}`);
+      this.ui.hpText.setText(`HP ${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
+      this.ui.xpText.setText(`EXP ${this.state.xp} / ${this.state.nextXp}`);
+      this.ui.time.setText(`${mm}:${ss}`);
+      this.ui.wave.setText(`WAVE ${this.state.wave}${this.state.bossSpawned?' · BOSS':''}`);
+      this.ui.kills.setText(`KILLS ${this.state.kills}`);
+      this.ui.hpBar.width=55*Math.max(0,this.player.hp/this.player.maxHp);
+      this.ui.xpBar.width=520*Math.max(0,Math.min(1,this.state.xp/this.state.nextXp));
+      if(this.combatHud){
+        this.combatHud.hp.width=180*Math.max(0,this.player.hp/this.player.maxHp);
+        this.combatHud.hpText.setText(`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
+        this.combatHud.statTexts[0].setText(String(Math.round(this.player.damage)));
+        this.combatHud.statTexts[1].setText(`${(1000/this.player.fireDelay).toFixed(2)}/s`);
+        this.combatHud.statTexts[2].setText(String(Math.round(this.player.moveSpeed)));
+        this.combatHud.statTexts[3].setText(String(Math.round(this.player.pickupRadius)));
+      }
+      if(this.bossBar){
+        let boss=null; this.enemies.children.iterate(e=>{if(e&&e.active&&e.type==='boss') boss=e;});
+        const visible=Boolean(boss);
+        this.bossBg.setVisible(visible); this.bossBar.setVisible(visible); this.bossText.setVisible(visible);
+        if(boss){ this.bossBar.width=520*Math.max(0,boss.hp/boss.maxHp); this.bossText.setText(`BOSS · ${Math.ceil(boss.hp)} / ${boss.maxHp}`); }
+      }
+    }
+
+    showBanner(title,sub) {
+      const box=this.add.rectangle(GAME_W/2,155,420,95,0x241727,.92).setStrokeStyle(2,COLORS.pink,.8).setDepth(150).setScrollFactor(0);
+      const t=this.add.text(GAME_W/2,138,title,{fontFamily:'Noto Sans KR',fontSize:'27px',fontStyle:'900',color:'#ffffff'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
+      const s=this.add.text(GAME_W/2,174,sub,{fontFamily:'Noto Sans KR',fontSize:'11px',color:'#f3dce9'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
+      this.tweens.add({targets:[box,t,s],alpha:0,duration:2600,delay:700,onComplete:()=>[box,t,s].forEach(o=>o.destroy())});
+    }
+
+    gameOver() {
+      if(!this.state.running) return;
+      this.state.running=false;
+      this.spawnTimer?.remove();
+      this.attackTimer?.remove();
+      this.physics.world.isPaused=true;
+
+      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x100b13,.78).setDepth(300).setScrollFactor(0);
+      this.add.text(GAME_W/2,420,'GAME OVER',{
+        fontFamily:'Noto Sans KR',fontSize:'52px',fontStyle:'900',color:'#ffffff'
+      }).setOrigin(.5).setDepth(301).setScrollFactor(0);
+      this.add.text(GAME_W/2,490,`생존 ${Math.floor(this.state.elapsed/60)}분 ${this.state.elapsed%60}초 · 처치 ${this.state.kills}마리`,{
+        fontFamily:'Noto Sans KR',fontSize:'15px',color:'#e8dce7'
+      }).setOrigin(.5).setDepth(301).setScrollFactor(0);
+      this.add.text(GAME_W/2,560,'화면을 클릭하면 다시 시작',{
+        fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart());
+    }
+
+    victory() {
+      if(!this.state.running) return;
+      this.state.running=false;
+      this.spawnTimer?.remove();
+      this.attackTimer?.remove();
+      this.physics.world.isPaused=true;
+
+      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x180f1b,.8).setDepth(300).setScrollFactor(0);
+      this.add.text(GAME_W/2,420,'3000 DAYS CLEAR!',{
+        fontFamily:'Noto Sans KR',fontSize:'46px',fontStyle:'900',color:'#ffffff'
+      }).setOrigin(.5).setDepth(301).setScrollFactor(0);
+      this.add.text(GAME_W/2,490,'5분 생존 성공 · 축하합니다 ♡',{
+        fontFamily:'Noto Sans KR',fontSize:'17px',color:'#ffd5e7'
+      }).setOrigin(.5).setDepth(301).setScrollFactor(0);
+      this.add.text(GAME_W/2,535,`LV ${this.state.level} · 처치 ${this.state.kills}마리`,{
+        fontFamily:'Noto Sans KR',fontSize:'13px',color:'#e6dce6'
+      }).setOrigin(.5).setDepth(301).setScrollFactor(0);
+      this.add.text(GAME_W/2,605,'화면을 클릭하면 다시 플레이',{
+        fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart());
+    }
+  }
+
+  const config = {
+    type: Phaser.AUTO,
+    parent: 'game-container',
+    width: GAME_W,
+    height: GAME_H,
+    backgroundColor: '#1f4328',
+    scale: {
+      // 중요: width/height는 '브라우저 크기'가 아니라 게임의 기준 좌표계입니다.
+      // 부모 컨테이너 전체를 기준으로 ENVELOP 방식으로 확대하여
+      // 1920×1080 게임 화면을 기준으로 브라우저 전체에 맞춰 확대/축소합니다.
+      mode: Phaser.Scale.ENVELOP,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: GAME_W,
+      height: GAME_H,
+      expandParent: true
+    },
+    render: {
+      antialias: true,
+      pixelArt: false
+    },
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: {x:0,y:0},
+        debug: false
+      }
+    },
+    scene: [MenuScene, MainScene]
+  };
+
+  window.addEventListener('load', () => {
+    window.bboringirlGame = new Phaser.Game(config);
+  });
+})();
