@@ -705,7 +705,7 @@
       // 화면이 플레이어를 따라가도록 해서 넓어진 맵을 실제로 탐험할 수 있게 합니다.
       // 플레이어가 화면 중심을 기준으로 실제 월드를 계속 이동합니다.
       // 맵 타일만 플레이어의 타일 좌표에 맞춰 뒤에서 교체하므로 카메라가 순간이동하지 않습니다.
-      this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+      this.cameras.main.startFollow(this.player, false, 1, 1);
       this.cameras.main.setDeadzone(0, 0);
     }
 
@@ -1213,6 +1213,8 @@
       default: 'arcade',
       arcade: {
         gravity: {x:0,y:0},
+        // Update motion at render cadence to avoid uneven fixed-step sprite positions.
+        fixedStep: false,
         debug: false
       }
     },
