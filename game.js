@@ -691,6 +691,7 @@
       this.player.setDisplaySize(64,64);
       this.player.body.setCircle(20,12,12);
       this.player.moveSpeed = 250;
+      this.player.body.setMaxVelocity(400, 400);
       this.player.damage = 18;
       this.player.fireDelay = 650;
       this.player.lastHit = 0;
@@ -1052,17 +1053,25 @@
         x=this.joy.dx; y=this.joy.dy;
       }
 
-      if(x < -0.01 && this.player.texture.key !== 'playerLeft') this.player.setTexture('playerLeft');
-      else if(x > 0.01 && this.player.texture.key !== 'playerRight') this.player.setTexture('playerRight');
+      // Ignore tiny joystick drift so the character keeps its last facing direction.
+      if(x < -0.15 && this.player.texture.key !== 'playerLeft') this.player.setTexture('playerLeft');
+      else if(x > 0.15 && this.player.texture.key !== 'playerRight') this.player.setTexture('playerRight');
 
       const inWater=this.isInWater(this.player.x,this.player.y);
       const terrainSpeed=inWater ? this.player.moveSpeed*0.58 : this.player.moveSpeed;
-      if(x||y){
-        const len=Math.hypot(x,y)||1;
-        this.player.setVelocity((x/len)*terrainSpeed,(y/len)*terrainSpeed);
-      }else{
-        this.player.setVelocity(0,0);
-      }
+      const inputLength=Math.hypot(x,y);
+      // Keyboard diagonals keep the same total speed; joystick retains analog speed.
+      const inputScale=inputLength > 1 ? 1/inputLength : 1;
+      const targetX=x*inputScale*terrainSpeed;
+      const targetY=y*inputScale*terrainSpeed;
+      const dt=Math.min(delta,50)/1000;
+      const response=inputLength > 0.03 ? 0.075 : 0.065;
+      const blend=1-Math.exp(-dt/response);
+      const velocity=this.player.body.velocity;
+      let nextX=velocity.x+(targetX-velocity.x)*blend;
+      let nextY=velocity.y+(targetY-velocity.y)*blend;
+      if(inputLength <= 0.03 && Math.hypot(nextX,nextY) < 1){ nextX=0; nextY=0; }
+      this.player.setVelocity(nextX,nextY);
 
       // 플레이어 좌표는 그대로 유지하고, 주변 맵 타일만 재배치합니다.
       // 따라서 카메라는 좌우뿐 아니라 상하/대각선으로도 실제 월드를 계속 이동합니다.
