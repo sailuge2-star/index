@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#ff3d93">
   <meta name="description" content="뽀린걸 3000일 기념 팬메이드 로그라이크 게임">
   <title>뽀린걸 로그라이크 · 3000일</title>
-  <link rel="stylesheet" href="game.css?v=6">
+  <link rel="stylesheet" href="game.css?v=8">
 </head>
 <body>
   <div class="game-page">
     <header class="game-header">
       <a class="back-link" href="index.html">← 팬사이트로 돌아가기</a>
       <div class="game-title">
-        <span class="game-mark">뽀</span>
+        <span class="game-mark"><img src="assets/bbo_profile.png?v=8" alt="뽀린걸 프로필"></span>
         <div>
           <strong>뽀린걸 로그라이크</strong>
           <small>3000 DAYS SURVIVAL</small>
@@ -23,12 +23,30 @@
     </header>
 
     <main class="game-shell">
+      <div class="game-overlay" id="gameOverlay" aria-label="게임 상태">
+        <div class="game-xp-track" id="gameXpTrack" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuenow="0" aria-valuemax="25"><span id="gameXpFill"></span></div>
+        <aside class="game-status-popup" aria-label="상태 및 스탯">
+          <div class="status-heading">뽀린걸 생존 정보<small>SURVIVAL STATUS</small></div>
+          <div class="status-health"><span>♥</span><div class="status-health-info"><div class="status-health-track"><span id="gameHpFill"></span></div><strong id="gameHp">100 / 100</strong></div></div>
+          <div class="status-level-time"><strong id="gameLevel">LV 1</strong><strong id="gameTime">00:00</strong></div>
+          <div class="status-stage"><span id="gameWave">WAVE 1</span><span id="gameKills">KILLS 0</span></div>
+          <div class="status-xp-text" id="gameXp">EXP 0 / 25</div>
+          <div class="status-divider"></div>
+          <div class="status-heading status-subheading">능력치</div>
+          <dl class="status-stats"><div><dt>공격력</dt><dd id="gameDamage">18</dd></div><div><dt>공격속도</dt><dd id="gameAttackSpeed">1.54/s</dd></div><div><dt>이동속도</dt><dd id="gameMoveSpeed">250</dd></div><div><dt>흡수범위</dt><dd id="gamePickup">75</dd></div></dl>
+          <div class="status-divider"></div>
+          <div class="status-heading status-subheading">패시브 효과</div>
+          <div class="status-passives">♡ 팬들의 사랑<br>⚡ 방송 텐션<br>✦ 추억의 자석</div>
+          <div class="status-boss" id="gameBossStatus" hidden>BOSS 등장</div>
+        </aside>
+        <button class="game-overlay-menu" id="gameMenuButton" type="button">☰ 메뉴</button>
+      </div>
       <div id="game-container" aria-label="뽀린걸 로그라이크 게임"></div>
     </main>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js"></script>
-  <script src="game.js?v=7"></script>
+  <script src="game.js?v=8"></script>
 </body>
 </html>

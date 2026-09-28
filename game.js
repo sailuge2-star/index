@@ -46,6 +46,7 @@
     }
 
     create() {
+      document.body.classList.remove('game-playing');
       const topButton = document.getElementById('restartTop');
       if (topButton) { topButton.style.display = 'none'; topButton.onclick = null; }
 
@@ -212,6 +213,8 @@
         topButton.style.display = 'block';
         topButton.textContent = '☰ 메뉴';
       }
+      document.body.classList.add('game-playing');
+      document.getElementById('gameMenuButton').onclick=()=>this.scene.start('MenuScene');
       this.resetState();
       this.createTextures();
       this.createWorld();
@@ -736,7 +739,7 @@
         xpBar: this.add.rectangle(105,98,0,6,0xffb6d5).setOrigin(0,.5).setDepth(102),
         hint: this.add.text(GAME_W/2, GAME_H-18,'WASD / 방향키 이동 · 공격은 자동 · 레벨업 카드를 선택하세요',{...small,color:'#e6dce6'}).setOrigin(.5,1).setDepth(101)
       };
-      Object.values(this.ui).forEach(o => o.setScrollFactor(0));
+      Object.values(this.ui).forEach(o => o.setScrollFactor(0).setVisible(false));
     }
 
     createCombatHud() {
@@ -771,7 +774,7 @@
       this.bossBar=this.add.rectangle(GAME_W/2-260,122,520,13,0xff526e,.95).setOrigin(0,.5).setDepth(101).setVisible(false);
       this.bossText=this.add.text(GAME_W/2,101,'BOSS',{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'900',color:'#ffd6e4'}).setOrigin(.5).setDepth(101).setVisible(false);
       const combatItems=[panel,title,sub,hpBg,hp,hpText,...statLabels,...statTexts,passiveTitle,passive,this.bossBg,this.bossBar,this.bossText];
-      combatItems.forEach(o => o.setScrollFactor(0));
+      combatItems.forEach(o => { o.setScrollFactor(0); if(o!==this.bossBg && o!==this.bossBar && o!==this.bossText) o.setVisible(false); });
       this.hudTopItems=[...Object.values(this.ui).filter(o=>o!==this.ui.hint),...combatItems];
       this.hudBaseY=new Map(this.hudTopItems.map(o=>[o,o.y]));
     }
@@ -1146,6 +1149,24 @@
       this.ui.kills.setText(`KILLS ${this.state.kills}`);
       this.ui.hpBar.width=55*Math.max(0,this.player.hp/this.player.maxHp);
       this.ui.xpBar.width=520*Math.max(0,Math.min(1,this.state.xp/this.state.nextXp));
+      const byId=id=>document.getElementById(id);
+      const hpRatio=Math.max(0,Math.min(1,this.player.hp/this.player.maxHp));
+      const xpRatio=Math.max(0,Math.min(1,this.state.xp/this.state.nextXp));
+      byId('gameHp').textContent=`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`;
+      byId('gameHpFill').style.width=`${hpRatio*100}%`;
+      byId('gameXp').textContent=`EXP ${this.state.xp} / ${this.state.nextXp}`;
+      byId('gameXpFill').style.width=`${xpRatio*100}%`;
+      byId('gameXpTrack').setAttribute('aria-valuenow',String(this.state.xp));
+      byId('gameXpTrack').setAttribute('aria-valuemax',String(this.state.nextXp));
+      byId('gameLevel').textContent=`LV ${this.state.level}`;
+      byId('gameTime').textContent=`${mm}:${ss}`;
+      byId('gameWave').textContent=`WAVE ${this.state.wave}${this.state.bossSpawned?' · BOSS':''}`;
+      byId('gameKills').textContent=`KILLS ${this.state.kills}`;
+      byId('gameDamage').textContent=String(Math.round(this.player.damage));
+      byId('gameAttackSpeed').textContent=`${(1000/this.player.fireDelay).toFixed(2)}/s`;
+      byId('gameMoveSpeed').textContent=String(Math.round(this.player.moveSpeed));
+      byId('gamePickup').textContent=String(Math.round(this.player.pickupRadius));
+      byId('gameBossStatus').hidden=!this.state.bossSpawned;
       if(this.combatHud){
         this.combatHud.hp.width=180*Math.max(0,this.player.hp/this.player.maxHp);
         this.combatHud.hpText.setText(`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
