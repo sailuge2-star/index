@@ -37,10 +37,11 @@
           <dl class="status-stats"><div><dt>공격력</dt><dd id="gameDamage">18</dd></div><div><dt>공격속도</dt><dd id="gameAttackSpeed">1.54/s</dd></div><div><dt>이동속도</dt><dd id="gameMoveSpeed">250</dd></div><div><dt>흡수범위</dt><dd id="gamePickup">75</dd></div></dl>
           <div class="status-divider"></div>
           <div class="status-heading status-subheading">패시브 효과</div>
-          <div class="status-passives">♡ 팬들의 사랑<br>⚡ 방송 텐션<br>✦ 추억의 자석</div>
+          <div class="status-passives" id="gamePassives">선택한 능력 없음</div>
           <div class="status-boss" id="gameBossStatus" hidden>BOSS 등장</div>
         </aside>
-        <button class="game-overlay-menu" id="gameMenuButton" type="button">☰ 메뉴</button>
+        <div class="game-overlay-actions"><button class="game-overlay-pause" id="gamePauseButton" type="button" aria-pressed="false">⏸ 일시정지</button><button class="game-overlay-menu" id="gameMenuButton" type="button">☰ 메뉴</button></div>
+        <div class="game-pause-notice" id="gamePauseNotice" hidden>일시정지 · 계속 버튼을 눌러 재개하세요</div>
       </div>
       <div id="game-container" aria-label="뽀린걸 로그라이크 게임"></div>
     </main>
@@ -48,6 +49,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=14"></script>
-  <script src="game.js?v=16"></script>
+  <script src="game.js?v=18"></script>
 </body>
 </html>

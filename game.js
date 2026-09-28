@@ -305,6 +305,12 @@
       this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.containerObserver.disconnect());
       this.cameras.main.setBackgroundColor(0x2b5b36);
       document.getElementById('gameMenuButton').onclick=()=>this.scene.start('MenuScene');
+      this.pauseButton=document.getElementById('gamePauseButton');
+      this.pauseButton.onclick=()=>{
+        if(!this.state.running || this.state.pausedForLevel) return;
+        this.state.pausedForUser=!this.state.pausedForUser;
+        this.syncPauseState();
+      };
       this.resetState();
       this.createTextures();
       this.createWorld();
@@ -339,13 +345,15 @@
         callbackScope: this
       });
 
-      this.time.addEvent({
+      this.tickTimer = this.time.addEvent({
         delay: 1000,
         loop: true,
         callback: this.tickSecond,
         callbackScope: this
       });
 
+      this.pauseNotice=document.getElementById('gamePauseNotice');
+      this.syncPauseState();
       this.spawnInitialEnemies();
       this.updateUi();
     }
@@ -357,12 +365,16 @@
         kills: 0,
         wave: 1,
         stage: 1,
-        bossSpawned: false,
+        bossRound: 0,
+        bossActive: false,
+        upgrades: {},
         level: 1,
         xp: 0,
         nextXp: 25,
-        pausedForLevel: false
+        pausedForLevel: false,
+        pausedForUser: false
       };
+      this.physics.world.isPaused=false;
     }
 
     createTextures() {
@@ -882,7 +894,7 @@
         statTexts.push(this.add.text(210,y,row[1],{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'800',color:'#ffffff'}).setOrigin(1,0).setDepth(101));
       });
       const passiveTitle=this.add.text(34,316,'패시브 효과',{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'800',color:'#ff9bc8'}).setDepth(101);
-      const passive = this.add.text(34,335,'♡ 팬들의 사랑\n⚡ 방송 텐션\n✦ 추억의 자석',{fontFamily:'Noto Sans KR',fontSize:'9px',color:'#ddd1dc',lineSpacing:6}).setDepth(101);
+      const passive = this.add.text(34,335,'선택한 능력 없음',{fontFamily:'Noto Sans KR',fontSize:'9px',color:'#ddd1dc',lineSpacing:6}).setDepth(101);
       this.combatHud={panel,hp,hpText,statTexts,passive};
 
       this.bossBg=this.add.rectangle(GAME_W/2,122,520,13,0x311c2b,.92).setDepth(100).setVisible(false);
@@ -973,6 +985,20 @@
       if (top) top.onclick = () => this.scene.start('MenuScene');
     }
 
+    syncPauseState() {
+      const paused=this.state.pausedForLevel || this.state.pausedForUser;
+      this.physics.world.isPaused=paused;
+      for(const timer of [this.spawnTimer,this.attackTimer,this.tickTimer]){
+        if(timer) timer.paused=paused;
+      }
+      if(this.pauseButton){
+        this.pauseButton.textContent=this.state.pausedForUser?'▶ 계속':'⏸ 일시정지';
+        this.pauseButton.setAttribute('aria-pressed',String(this.state.pausedForUser));
+        this.pauseButton.disabled=this.state.pausedForLevel || !this.state.running;
+      }
+      if(this.pauseNotice) this.pauseNotice.hidden=!this.state.pausedForUser;
+    }
+
     spawnInitialEnemies() {
       for(let i=0;i<8;i++) this.spawnEnemy();
     }
@@ -988,7 +1014,8 @@
     }
 
     spawnEnemy() {
-      if(!this.state.running) return;
+      if(!this.state.running || this.state.pausedForUser || this.state.pausedForLevel ||
+         this.state.bossActive || this.state.elapsed>=SURVIVAL_SECONDS) return;
       const p=this.getSpawnPosition();
       const t=this.state.elapsed;
       let type='normal';
@@ -1026,28 +1053,28 @@
       enemy.setCollideWorldBounds(false);
     }
 
-    spawnBoss() {
-      if(this.state.bossSpawned) return;
-      this.state.bossSpawned=true;
+    spawnBoss(round) {
+      if(this.state.bossActive || round!==this.state.bossRound+1 || round>TOTAL_STAGES) return;
+      this.state.bossRound=round;
+      this.state.bossActive=true;
       const boss=this.enemies.create(this.player.x, this.player.y-650, 'boss');
       boss.type='boss';
-      boss.maxHp=1800;
-      boss.hp=1800;
-      boss.speed=48;
-      boss.damage=24;
+      boss.bossRound=round;
+      // Each five-minute boss grows from the previous boss, alongside stage/difficulty scaling.
       const multiplier=this.enemyStatMultiplier();
-      boss.maxHp=Math.round(boss.maxHp*multiplier);
+      boss.maxHp=Math.round(1800*Math.pow(1.5,round-1)*multiplier);
       boss.hp=boss.maxHp;
-      boss.damage=Math.round(boss.damage*multiplier*10)/10;
+      boss.speed=48*Math.pow(1.25,round-1);
+      boss.damage=Math.round(24*Math.pow(1.5,round-1)*multiplier*10)/10;
       boss.setDisplaySize(99.2,99.2);
       boss.setDepth(15);
       boss.setData('isBoss',true);
-
-      this.showBanner('BOSS 출현!', '30분까지 살아남으세요');
+      this.showBanner(`BOSS ${round}/${TOTAL_STAGES} 출현!`, '보스를 쓰러뜨릴 때까지 시간이 멈춥니다');
+      this.updateUi();
     }
 
     autoAttack() {
-      if(!this.state.running || this.state.pausedForLevel) return;
+      if(!this.state.running || this.state.pausedForLevel || this.state.pausedForUser) return;
       const now=this.time.now;
       if(now-this.player.lastAttack < this.player.fireDelay) return;
       const target=this.getNearestEnemy();
@@ -1099,7 +1126,13 @@
       this.state.kills++;
       if(enemy.type==='boss'){
         this.dropXp(enemy.x,enemy.y,value, true);
-        this.showBanner('보스 격파!', '마지막까지 잘 버텼어요 ♡');
+        this.state.bossActive=false;
+        if(this.state.elapsed>=SURVIVAL_SECONDS && this.state.bossRound===TOTAL_STAGES){
+          enemy.destroy();
+          this.victory();
+          return;
+        }
+        this.showBanner('보스 격파!', '시간이 다시 흐르고 적들이 등장합니다 ♡');
       } else {
         this.dropXp(enemy.x,enemy.y,value, false);
       }
@@ -1139,7 +1172,7 @@
     openLevelUp() {
       if(!this.state.running || this.state.pausedForLevel) return;
       this.state.pausedForLevel=true;
-      this.physics.world.isPaused=true;
+      this.syncPauseState();
 
       const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x160e19,.76).setDepth(200).setScrollFactor(0);
       const title=this.add.text(this.scale.width/2,this.scale.height/2-240,'LEVEL UP!',{
@@ -1162,13 +1195,14 @@
         bg.on('pointerout',()=>bg.setStrokeStyle(2,0x8c5c80,.7));
         bg.on('pointerdown',()=> {
           u.apply(this.player);
+          this.state.upgrades[u.id]=(this.state.upgrades[u.id]||0)+1;
           cards.forEach(c=>c.destroy());
           overlay.destroy(); title.destroy(); sub.destroy();
           this.state.xp-=this.state.nextXp;
           this.state.level++;
           this.state.nextXp=Math.floor(this.state.nextXp*1.28+8);
           this.state.pausedForLevel=false;
-          this.physics.world.isPaused=false;
+          this.syncPauseState();
           this.updateUi();
           if(this.state.xp>=this.state.nextXp) this.openLevelUp();
         });
@@ -1196,7 +1230,7 @@
     }
 
     update(time,delta) {
-      if(!this.state?.running || this.state.pausedForLevel) return;
+      if(!this.state?.running || this.state.pausedForLevel || this.state.pausedForUser) return;
 
       let x=0,y=0;
       if(this.keys.A.isDown||this.keys.LEFT.isDown) x-=1;
@@ -1268,17 +1302,17 @@
         }
       });
 
-      if(this.state.elapsed>=180 && !this.state.bossSpawned) this.spawnBoss();
-      if(this.state.elapsed>=SURVIVAL_SECONDS) this.victory();
     }
 
     tickSecond() {
-      if(!this.state.running || this.state.pausedForLevel) return;
+      if(!this.state.running || this.state.pausedForLevel || this.state.pausedForUser || this.state.bossActive) return;
+      if(this.state.elapsed>=SURVIVAL_SECONDS) return;
       this.state.elapsed++;
       this.state.wave=Math.min(10,1+Math.floor(this.state.elapsed/30));
+      // Stage 6 starts at 25:00, and its boss arrives at 30:00.
       const nextStage=Math.min(TOTAL_STAGES,1+Math.floor(this.state.elapsed/STAGE_SECONDS));
       if(nextStage>this.state.stage && this.state.elapsed<SURVIVAL_SECONDS) this.advanceStage(nextStage);
-      if(this.state.elapsed===180) this.spawnBoss();
+      if(this.state.elapsed%STAGE_SECONDS===0) this.spawnBoss(this.state.elapsed/STAGE_SECONDS);
       this.updateUi();
     }
 
@@ -1314,10 +1348,13 @@
       byId('gameAttackSpeed').textContent=`${(1000/this.player.fireDelay).toFixed(2)}/s`;
       byId('gameMoveSpeed').textContent=String(Math.round(this.player.moveSpeed));
       byId('gamePickup').textContent=String(Math.round(this.player.pickupRadius));
+      const passiveLines=UPGRADES.filter(u=>this.state.upgrades[u.id])
+        .map(u=>`${u.icon} ${u.title} ×${this.state.upgrades[u.id]}`);
+      byId('gamePassives').textContent=passiveLines.length?passiveLines.join('\n'):'선택한 능력 없음';
       const bossStatus=byId('gameBossStatus');
-      bossStatus.hidden=!this.state.bossSpawned;
-      bossStatus.textContent=this.state.bossSpawned
-        ? (this.enemies.getChildren().some(e=>e.active&&e.type==='boss')?'BOSS 등장':'BOSS 격파') : '';
+      bossStatus.hidden=!this.state.bossActive;
+      bossStatus.textContent=this.state.bossActive
+        ? `BOSS ${this.state.bossRound}/${TOTAL_STAGES} · 시간 정지` : '';
       if(this.combatHud){
         this.combatHud.hp.width=180*Math.max(0,this.player.hp/this.player.maxHp);
         this.combatHud.hpText.setText(`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
@@ -1325,12 +1362,13 @@
         this.combatHud.statTexts[1].setText(`${(1000/this.player.fireDelay).toFixed(2)}/s`);
         this.combatHud.statTexts[2].setText(String(Math.round(this.player.moveSpeed)));
         this.combatHud.statTexts[3].setText(String(Math.round(this.player.pickupRadius)));
+        this.combatHud.passive.setText(passiveLines.length?passiveLines.join('\n'):'선택한 능력 없음');
       }
       if(this.bossBar){
         let boss=null; this.enemies.children.iterate(e=>{if(e&&e.active&&e.type==='boss') boss=e;});
         const visible=Boolean(boss);
         this.bossBg.setVisible(visible); this.bossBar.setVisible(visible); this.bossText.setVisible(visible);
-        if(boss){ this.bossBar.width=520*Math.max(0,boss.hp/boss.maxHp); this.bossText.setText(`BOSS · ${Math.max(0,Math.ceil(boss.hp))} / ${boss.maxHp}`); }
+        if(boss){ this.bossBar.width=520*Math.max(0,boss.hp/boss.maxHp); this.bossText.setText(`BOSS ${boss.bossRound}/${TOTAL_STAGES} · ${Math.max(0,Math.ceil(boss.hp))} / ${boss.maxHp}`); }
       }
     }
 
@@ -1344,6 +1382,7 @@
     gameOver() {
       if(!this.state.running) return;
       this.state.running=false;
+      this.syncPauseState();
       this.spawnTimer?.remove();
       this.attackTimer?.remove();
       this.physics.world.isPaused=true;
@@ -1363,6 +1402,7 @@
     victory() {
       if(!this.state.running) return;
       this.state.running=false;
+      this.syncPauseState();
       this.spawnTimer?.remove();
       this.attackTimer?.remove();
       this.physics.world.isPaused=true;
@@ -1371,7 +1411,7 @@
       this.add.text(this.scale.width/2,this.scale.height/2-120,'3000 DAYS CLEAR!',{
         fontFamily:'Noto Sans KR',fontSize:'46px',fontStyle:'900',color:'#ffffff'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(this.scale.width/2,this.scale.height/2-50,'30분 생존 성공 · 6스테이지 클리어! ♡',{
+      this.add.text(this.scale.width/2,this.scale.height/2-50,'30분 생존 · 보스 6명 격파 · 6스테이지 클리어! ♡',{
         fontFamily:'Noto Sans KR',fontSize:'17px',color:'#ffd5e7'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2-5,`LV ${this.state.level} · 처치 ${this.state.kills}마리`,{
