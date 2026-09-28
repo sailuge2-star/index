@@ -197,6 +197,15 @@
       this.state = null;
     }
 
+    preload() {
+      // 캐릭터 이미지는 assets/roguelike/characters/ 폴더의 파일로 교체할 수 있습니다.
+      // PNG/JPG 모두 사용 가능하며, 아래 파일명을 그대로 덮어쓰면 됩니다.
+      const assets = window.BBORINGIRL_CHARACTER_ASSETS || {};
+      Object.entries(assets).forEach(([key, path]) => {
+        if (path) this.load.image(key, path);
+      });
+    }
+
     create() {
       const topButton = document.getElementById('restartTop');
       if (topButton) {
@@ -254,6 +263,8 @@
     }
 
     createTextures() {
+      // 캐릭터 5종은 외부 이미지 파일을 사용합니다.
+      // preload()에서 불러온 이미지가 없을 경우를 대비해 기존 도형 텍스처를 fallback으로 유지합니다.
       const make = (key, draw) => {
         if (this.textures.exists(key)) return;
         const g = this.make.graphics({x:0,y:0,add:false});
@@ -315,6 +326,7 @@
         }
       });
 
+      // 나머지 이펙트/아이템은 기존 코드 방식으로 생성합니다.
       make('orb', g => {
         g.fillStyle(COLORS.pink, 1);
         g.fillCircle(32,32,9);
@@ -676,6 +688,7 @@
     createPlayer() {
       this.player = this.physics.add.sprite(MAP_W/2, MAP_H/2, 'player');
       this.player.setCollideWorldBounds(false);
+      this.player.setDisplaySize(64,64);
       this.player.body.setCircle(20,12,12);
       this.player.moveSpeed = 250;
       this.player.damage = 18;
@@ -839,12 +852,13 @@
       enemy.type=type;
       enemy.setDepth(10);
 
+      enemy.setDisplaySize(64,64);
       if(type==='elite'){
         enemy.maxHp=90+this.state.wave*15;
         enemy.hp=enemy.maxHp;
         enemy.speed=75+this.state.wave*3;
         enemy.damage=14;
-        enemy.scale=1.05;
+        enemy.setDisplaySize(67.2,67.2);
       } else if(type==='bat'){
         enemy.maxHp=32+this.state.wave*5;
         enemy.hp=enemy.maxHp;
@@ -869,7 +883,7 @@
       boss.hp=1800;
       boss.speed=48;
       boss.damage=24;
-      boss.setScale(1.55);
+      boss.setDisplaySize(99.2,99.2);
       boss.setDepth(15);
       boss.setData('isBoss',true);
 
