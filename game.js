@@ -222,6 +222,10 @@
       this.createCombatHud();
       this.createMobileControls();
       this.bindEvents();
+      this.layoutHud();
+      this.onHudResize=()=>requestAnimationFrame(()=>this.layoutHud());
+      window.addEventListener('resize',this.onHudResize);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>window.removeEventListener('resize',this.onHudResize));
 
       this.spawnTimer = this.time.addEvent({
         delay: 900,
@@ -766,7 +770,25 @@
       this.bossBg=this.add.rectangle(GAME_W/2,122,520,13,0x311c2b,.92).setDepth(100).setVisible(false);
       this.bossBar=this.add.rectangle(GAME_W/2-260,122,520,13,0xff526e,.95).setOrigin(0,.5).setDepth(101).setVisible(false);
       this.bossText=this.add.text(GAME_W/2,101,'BOSS',{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'900',color:'#ffd6e4'}).setOrigin(.5).setDepth(101).setVisible(false);
-      [panel,title,sub,hpBg,hp,hpText,...statLabels,...statTexts,passiveTitle,passive,this.bossBg,this.bossBar,this.bossText].forEach(o => o.setScrollFactor(0));
+      const combatItems=[panel,title,sub,hpBg,hp,hpText,...statLabels,...statTexts,passiveTitle,passive,this.bossBg,this.bossBar,this.bossText];
+      combatItems.forEach(o => o.setScrollFactor(0));
+      this.hudTopItems=[...Object.values(this.ui).filter(o=>o!==this.ui.hint),...combatItems];
+      this.hudBaseY=new Map(this.hudTopItems.map(o=>[o,o.y]));
+    }
+
+    layoutHud() {
+      if(!this.hudBaseY || !this.game.canvas) return;
+      const container=document.getElementById('game-container');
+      if(!container) return;
+      const canvas=this.game.canvas.getBoundingClientRect();
+      const visible=container.getBoundingClientRect();
+      const scale=canvas.width/GAME_W;
+      if(!scale) return;
+      // ENVELOP fills the screen by cropping the canvas. Keep the HUD in its visible area.
+      const cropTop=Math.max(0,(visible.top-canvas.top)/scale);
+      const cropBottom=Math.max(0,(canvas.bottom-visible.bottom)/scale);
+      this.hudTopItems.forEach(o=>o.setY(this.hudBaseY.get(o)+cropTop));
+      this.ui.hint.setY(GAME_H-18-cropBottom);
     }
 
     createMobileControls() {
