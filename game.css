@@ -23,7 +23,8 @@ a{text-decoration:none;color:inherit}
   min-height:100vh;
   padding:0;
   margin:0;
-  display:block;
+  display:flex;
+  flex-direction:column;
   position:relative;
   overflow:hidden;
   background:#172318;
@@ -42,8 +43,8 @@ a{text-decoration:none;color:inherit}
   backdrop-filter:blur(10px) saturate(125%);
   -webkit-backdrop-filter:blur(10px) saturate(125%);
   pointer-events:none;
-  position:absolute;
-  inset:0 0 auto 0;
+  position:relative;
+  flex:0 0 46px;
   z-index:20;
 }
 .back-link{
@@ -72,22 +73,22 @@ a{text-decoration:none;color:inherit}
 }
 .top-button:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(70,30,70,.1)}
 .game-shell{
-  width:100vw;
-  height:100vh;
-  min-height:100vh;
+  width:100%;
+  height:auto;
+  min-height:0;
+  flex:1 1 auto;
   margin:0;
   padding:0;
   background:#172318;
   border-radius:0;
   overflow:hidden;
   box-shadow:none;
-  position:absolute;
-  inset:0;
+  position:relative;
 }
 #game-container{
-  width:100vw;
-  height:100vh;
-  min-height:100vh;
+  width:100%;
+  height:100%;
+  min-height:0;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -112,6 +113,7 @@ a{text-decoration:none;color:inherit}
 @media(max-width:850px){
   .game-header{
     height:46px;
+    flex-basis:46px;
     padding:0 10px;
     grid-template-columns:auto 1fr auto;
   }
@@ -122,7 +124,8 @@ a{text-decoration:none;color:inherit}
   .game-title small{display:none}
   .game-mark{width:34px;height:34px;border-radius:11px;font-size:18px}
   .top-button{font-size:10px;padding:8px 11px}
-  .game-shell,#game-container{width:100vw;height:100vh;min-height:100vh}
+  .game-shell{width:100%;height:auto;min-height:0}
+  #game-container{width:100%;height:100%;min-height:0}
 }
 
 @media(max-width:480px){
@@ -136,3 +139,6 @@ a{text-decoration:none;color:inherit}
 /* Reference-style survival HUD */
 .survival-note{font-size:10px;color:#a99daa;text-align:center;margin:7px 0 0}
 @media(max-width:780px){.survival-note{display:none}}
+
+/* Reserve the browser viewport below the header for the game. */
+.game-page{height:100dvh;min-height:0}
