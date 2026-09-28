@@ -23,7 +23,7 @@ $$('.timeline-item').forEach(btn => btn.addEventListener('click', () => {
   modalBody.innerHTML = `<span class="kicker">${d[0].split(' · ')[0]}</span><h2 style="margin:8px 0 14px">${d[0]}</h2><p style="color:#716572">${d[1]}</p>`;
   modal.showModal();
 }));
-$('.modal-close')?.addEventListener('click', () => modal.close());
+modal?.querySelector('.modal-close')?.addEventListener('click', () => modal.close());
 
 $('#shuffleGallery')?.addEventListener('click', () => {
   // 버튼 클릭 시점에 갤러리 카드를 다시 가져옵니다.
