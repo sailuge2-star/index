@@ -50,7 +50,6 @@
             <a href="#gallery">갤러리</a>
             <a href="#community">커뮤니티</a>
             <a href="#links">방명록</a>
-            <a href="game.html">🎮 게임</a>
         </nav>
         <div class="admin-header-menu" id="adminHeaderMenu" hidden>
             <button class="admin-header-btn" id="adminHeaderBtn" type="button" aria-expanded="false" aria-haspopup="menu">ADMIN 관리</button>
@@ -180,7 +179,7 @@
                     <span class="kicker">VIEWER STATISTICS</span>
                     <h2>SOOP 시청자 통계</h2>
                 </div>
-                <p>사이트에서 수집한 방송 시청자 데이터를 기준으로 표시합니다.</p>
+                <p>사이트에서 수집한 방송 시청자 데이터를 기준으로 표시합니다.(직접 SOOP API 응답 받아오는 구조로 정확하지 않을 수 있습니다.)</p>
             </div>
 
             <div class="soop-stats-grid">
@@ -280,7 +279,7 @@
             </div>
             <div class="gallery-grid" id="galleryGrid">
                 <figure class="gallery-card g1" data-static-gallery="true"><figcaption><b>3000일 축하</b><span>우리의 시간</span></figcaption></figure>
-                <figure class="gallery-card g2" data-static-gallery="true"><figcaption><b>뽀글이의 하루</b><span>소통 & 게임</span></figcaption></figure>
+                <figure class="gallery-card g2" data-static-gallery="true"><figcaption><b>뽀글스의 하루</b><span>소통 & 게임</span></figcaption></figure>
                 <figure class="gallery-card g3" data-static-gallery="true"><figcaption><b>다음 장면</b><span>앞으로도 함께</span></figcaption></figure>
                 <figure class="gallery-card g4" data-static-gallery="true"><figcaption><b>팬아트 보관함</b><span>승인된 팬아트가 여기에 표시됩니다</span></figcaption></figure>
             </div>
@@ -291,7 +290,7 @@
             <div class="wrap community-grid">
                 <div>
                     <span class="kicker light">COMMUNITY</span>
-                    <h2>뽀글이들의 작은 광장</h2>
+                    <h2>뽀글스들의 작은 광장</h2>
                     <p>축하 메시지는 실제 방명록에 저장되고, 팬아트는 운영자 승인 후 공개됩니다.</p>
                 </div>
                 <div class="community-actions">
@@ -303,13 +302,13 @@
 
         <section class="section wrap" id="guestbook">
             <div class="section-head">
-                <div><span class="kicker">GUESTBOOK</span><h2>뽀글이들의 3000일 축하 방명록</h2></div>
+                <div><span class="kicker">GUESTBOOK</span><h2>뽀글스들의 3000일 축하 방명록</h2></div>
                 <p id="guestbookStatus">최신 메시지를 불러오는 중…</p>
             </div>
             <div class="guestbook-layout">
                 <form class="guestbook-form glass" id="guestbookForm">
                     <input class="honeypot" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-                    <label>닉네임<input id="guestNickname" maxlength="30" required placeholder="뽀글이 닉네임"></label>
+                    <label>닉네임<input id="guestNickname" maxlength="30" required placeholder="뽀글스 닉네임"></label>
                     <label>축하 메시지<textarea id="guestMessage" maxlength="500" required placeholder="3000일 축하 한마디를 남겨주세요 ♡"></textarea></label>
                     <div class="form-foot"><span>최대 500자</span><button class="btn btn-primary" type="submit">방명록 등록</button></div>
                     <p class="form-note">비공식 팬사이트 · 개인정보나 연락처는 남기지 말아주세요.</p>
