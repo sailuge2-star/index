@@ -548,15 +548,21 @@
         [430,1030],[830,1040],[2050,1010],[2570,1030],
         [520,1550],[1510,1510],[2390,1540]
       ];
-      const addObstacle=(key,x,y,scale=1,bodyW=48,bodyH=48)=>{
+      const addObstacle=(key,x,y,scale=1)=>{
         const o=this.terrain.create(x,y,key).setDepth(2).setScale(scale);
         o.refreshBody();
-        o.body.setSize(bodyW,bodyH,true);
+        // Obstacles are drawn on 64px textures; static bodies use world pixels.
+        // Match the visible rock/house footprint after the sprite is scaled.
+        const visible=key==='rock' ? {width:44,height:37}
+          : key==='house' ? {width:56,height:51}
+          : {width:38,height:34};
+        o.body.setSize(key==='tree' ? visible.width : visible.width*scale,
+          key==='tree' ? visible.height : visible.height*scale,true);
         return o;
       };
-      treeSpots.forEach(([x,y],i)=>addObstacle('tree',mapX(x),mapY(y),.9+(i%3)*.08,38,34));
-      rockSpots.forEach(([x,y],i)=>addObstacle('rock',mapX(x),mapY(y),.75+(i%2)*.15,44,28));
-      houseSpots.forEach(([x,y])=>addObstacle('house',mapX(x),mapY(y),.95,50,42));
+      treeSpots.forEach(([x,y],i)=>addObstacle('tree',mapX(x),mapY(y),.9+(i%3)*.08));
+      rockSpots.forEach(([x,y],i)=>addObstacle('rock',mapX(x),mapY(y),.75+(i%2)*.15));
+      houseSpots.forEach(([x,y])=>addObstacle('house',mapX(x),mapY(y),.95));
 
       // 확장된 4200×2400 전장을 채우는 추가 오브젝트. 기존 배치와 겹치지 않도록
       // 일정한 간격의 패턴으로 배치해 넓어진 맵에서도 빈 공간이 과도하게 남지 않게 합니다.
@@ -574,9 +580,9 @@
         [260,760],[820,480],[1160,2080],[1880,520],[2320,2040],[3050,520],[3500,2060],[3920,820],
         [300,1760],[980,1720],[3300,1720],[3900,1840]
       ];
-      extraTreeSpots.forEach(([x,y],i)=>addObstacle('tree',x,y,.88+(i%3)*.07,38,34));
-      extraRockSpots.forEach(([x,y],i)=>addObstacle('rock',x,y,.72+(i%2)*.12,44,28));
-      extraHouseSpots.forEach(([x,y])=>addObstacle('house',x,y,.92,50,42));
+      extraTreeSpots.forEach(([x,y],i)=>addObstacle('tree',x,y,.88+(i%3)*.07));
+      extraRockSpots.forEach(([x,y],i)=>addObstacle('rock',x,y,.72+(i%2)*.12));
+      extraHouseSpots.forEach(([x,y])=>addObstacle('house',x,y,.92));
 
       // 길 안내 표지와 지역명
       const labelStyle={fontFamily:'Noto Sans KR',fontSize:'12px',fontStyle:'800',color:'#f3e6d5',stroke:'#3c2c24',strokeThickness:4};
@@ -791,11 +797,21 @@
       this.physics.add.collider(this.player, this.terrain);
     }
 
+    configurePlayerHitbox() {
+      // Arcade's circle and offsets are in source texture pixels, while the
+      // character is rendered at 64px. Convert the intended 26px world hitbox.
+      const radius=13;
+      const sourceRadius=radius/Math.abs(this.player.scaleX);
+      const offsetX=(this.player.width-sourceRadius*2)/2;
+      const offsetY=(this.player.height-sourceRadius*2)/2+5/Math.abs(this.player.scaleY);
+      this.player.body.setCircle(sourceRadius,offsetX,offsetY);
+    }
+
     createPlayer() {
       this.player = this.physics.add.sprite(MAP_W/2, MAP_H/2, 'playerRight');
       this.player.setCollideWorldBounds(false);
       this.player.setDisplaySize(64,64);
-      this.player.body.setCircle(20,12,12);
+      this.configurePlayerHitbox();
       this.player.moveSpeed = 250;
       this.player.body.setMaxVelocity(400, 400);
       this.player.damage = 18;
@@ -1193,8 +1209,13 @@
       }
 
       // Ignore tiny joystick drift so the character keeps its last facing direction.
-      if(x < -0.15 && this.player.texture.key !== 'playerLeft') this.player.setTexture('playerLeft');
-      else if(x > 0.15 && this.player.texture.key !== 'playerRight') this.player.setTexture('playerRight');
+      if(x < -0.15 && this.player.texture.key !== 'playerLeft') {
+        this.player.setTexture('playerLeft').setDisplaySize(64,64);
+        this.configurePlayerHitbox();
+      } else if(x > 0.15 && this.player.texture.key !== 'playerRight') {
+        this.player.setTexture('playerRight').setDisplaySize(64,64);
+        this.configurePlayerHitbox();
+      }
 
       const inWater=this.isInWater(this.player.x,this.player.y);
       const terrainSpeed=inWater ? this.player.moveSpeed*0.58 : this.player.moveSpeed;
