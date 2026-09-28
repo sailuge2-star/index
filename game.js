@@ -270,9 +270,18 @@
     preload() {
       // 캐릭터 이미지는 assets/roguelike/characters/ 폴더의 파일로 교체할 수 있습니다.
       // PNG/JPG 모두 사용 가능하며, 아래 파일명을 그대로 덮어쓰면 됩니다.
-      const assets = window.BBORINGIRL_CHARACTER_ASSETS || {};
-      Object.entries(assets).forEach(([key, path]) => {
-        if (path) this.load.image(key, path);
+      const configured = window.BBORINGIRL_CHARACTER_ASSETS || {};
+      const assets = {
+        enemy:'assets/roguelike/characters/enemy.png',
+        bat:'assets/roguelike/characters/bat.png',
+        elite:'assets/roguelike/characters/elite.png',
+        boss:'assets/roguelike/characters/boss.png',
+        ...configured,
+        playerLeft:configured.playerLeft || 'assets/roguelike/characters/player_left.png',
+        playerRight:configured.playerRight || 'assets/roguelike/characters/player_right.png'
+      };
+      Object.entries(assets).forEach(([key,path]) => {
+        if(path) this.load.image(key, path + (path.includes('?')?'&':'?') + 'rev=14');
       });
     }
 
@@ -283,7 +292,18 @@
         topButton.textContent = '☰ 메뉴';
       }
       document.body.classList.add('game-playing');
-      requestAnimationFrame(()=>this.scale.refresh());
+      const gameContainer=document.getElementById('game-container');
+      // Force the CSS header removal to settle before Phaser measures its parent.
+      gameContainer.getBoundingClientRect();
+      this.scale.refresh();
+      requestAnimationFrame(()=>requestAnimationFrame(()=>this.scale.refresh()));
+      this.time.delayedCall(150,()=>this.scene.isActive()&&this.scale.refresh());
+      this.containerObserver=new ResizeObserver(()=>requestAnimationFrame(()=>{
+        if(this.scene.isActive()) this.scale.refresh();
+      }));
+      this.containerObserver.observe(gameContainer);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.containerObserver.disconnect());
+      this.cameras.main.setBackgroundColor(0x2b5b36);
       document.getElementById('gameMenuButton').onclick=()=>this.scene.start('MenuScene');
       this.resetState();
       this.createTextures();
@@ -356,7 +376,7 @@
         g.destroy();
       };
 
-      make('player', g => {
+      const drawPlayer = g => {
         g.fillStyle(COLORS.pink, 1);
         g.fillCircle(32, 32, 22);
         g.fillStyle(0xffffff, 1);
@@ -367,7 +387,10 @@
         g.fillCircle(40, 26, 2);
         g.lineStyle(3, 0x8e1e60, 1);
         g.arc(32, 32, 10, .15, Math.PI-.15, false);
-      });
+      };
+      make('player', drawPlayer);
+      make('playerLeft', drawPlayer);
+      make('playerRight', drawPlayer);
 
       make('enemy', g => {
         g.fillStyle(0xb9d9c0, 1);
@@ -869,54 +892,63 @@
     }
 
     createMobileControls() {
-      this.joy = {
-        active:false,
-        id:null,
-        baseX:100,
-        baseY:GAME_H-105,
-        radius:62,
-        dx:0,
-        dy:0
-      };
-      this.joyGraphics = this.add.graphics().setDepth(110).setScrollFactor(0);
-      this.drawJoystick();
+      this.joy={active:false,id:null,baseX:0,baseY:0,radius:56,dx:0,dy:0};
+      this.joyGraphics=this.add.graphics().setDepth(110).setScrollFactor(0);
+      this.layoutJoystick();
+      this.onJoystickResize=()=>this.layoutJoystick();
+      this.scale.on('resize',this.onJoystickResize);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.scale.off('resize',this.onJoystickResize));
 
       this.input.on('pointerdown', p => {
-        if (p.y < GAME_H-190) return;
-        if (p.x > GAME_W-190) return;
-        this.joy.active = true;
-        this.joy.id = p.id;
+        if(!this.touchControlsEnabled) return;
+        const distance=Math.hypot(p.x-this.joy.baseX,p.y-this.joy.baseY);
+        if(distance>this.joy.radius*1.35) return;
+        this.joy.active=true;
+        this.joy.id=p.id;
         this.updateJoystick(p);
       });
       this.input.on('pointermove', p => {
-        if (this.joy.active && p.id === this.joy.id) this.updateJoystick(p);
+        if(this.joy.active && p.id===this.joy.id) this.updateJoystick(p);
       });
-      this.input.on('pointerup', p => {
-        if (this.joy.active && p.id === this.joy.id) {
-          this.joy.active=false;
-          this.joy.dx=0; this.joy.dy=0;
+      const release=p=>{
+        if(this.joy.active && p.id===this.joy.id){
+          this.joy.active=false;this.joy.id=null;
+          this.joy.dx=0;this.joy.dy=0;
           this.drawJoystick();
         }
-      });
+      };
+      this.input.on('pointerup',release);
+      this.input.on('pointerupoutside',release);
+    }
+
+    layoutJoystick() {
+      this.touchControlsEnabled=window.matchMedia('(pointer: coarse)').matches ||
+        (navigator.maxTouchPoints>0 && this.scale.width<=900);
+      const radius=Math.max(48,Math.min(64,this.scale.width*.09));
+      this.joy.radius=radius;
+      this.joy.baseX=radius+24;
+      this.joy.baseY=this.scale.height-radius-24;
+      this.joyGraphics.setVisible(this.touchControlsEnabled);
+      this.drawJoystick();
     }
 
     drawJoystick() {
       const g=this.joyGraphics;
       g.clear();
-      g.fillStyle(0x000000,.18);
-      g.fillCircle(this.joy.baseX,this.joy.baseY,this.joy.radius);
-      g.lineStyle(2,0xffffff,.25);
-      g.strokeCircle(this.joy.baseX,this.joy.baseY,this.joy.radius);
-      g.fillStyle(COLORS.pink,.72);
-      g.fillCircle(this.joy.baseX+this.joy.dx*35,this.joy.baseY+this.joy.dy*35,22);
+      if(!this.touchControlsEnabled) return;
+      const {baseX,baseY,radius,dx,dy}=this.joy;
+      g.fillStyle(0x101b20,.34).fillCircle(baseX,baseY,radius);
+      g.lineStyle(2,0xffffff,.28).strokeCircle(baseX,baseY,radius);
+      g.fillStyle(COLORS.pink,.82).fillCircle(baseX+dx*radius*.55,baseY+dy*radius*.55,Math.max(17,radius*.31));
     }
 
     updateJoystick(p) {
-      const dx=p.x-this.joy.baseX, dy=p.y-this.joy.baseY;
+      const dx=p.x-this.joy.baseX,dy=p.y-this.joy.baseY;
       const len=Math.hypot(dx,dy);
-      const scale=len>this.joy.radius ? this.joy.radius/len : 1;
-      this.joy.dx=dx/this.joy.radius*scale;
-      this.joy.dy=dy/this.joy.radius*scale;
+      const amount=Math.min(1,len/this.joy.radius);
+      const strength=amount<.12?0:(amount-.12)/.88;
+      this.joy.dx=len?dx/len*strength:0;
+      this.joy.dy=len?dy/len*strength:0;
       this.drawJoystick();
     }
 
