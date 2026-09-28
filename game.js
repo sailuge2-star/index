@@ -686,7 +686,7 @@
     }
 
     createPlayer() {
-      this.player = this.physics.add.sprite(MAP_W/2, MAP_H/2, 'player');
+      this.player = this.physics.add.sprite(MAP_W/2, MAP_H/2, 'playerRight');
       this.player.setCollideWorldBounds(false);
       this.player.setDisplaySize(64,64);
       this.player.body.setCircle(20,12,12);
@@ -1051,6 +1051,9 @@
       if(this.joy?.active){
         x=this.joy.dx; y=this.joy.dy;
       }
+
+      if(x < -0.01 && this.player.texture.key !== 'playerLeft') this.player.setTexture('playerLeft');
+      else if(x > 0.01 && this.player.texture.key !== 'playerRight') this.player.setTexture('playerRight');
 
       const inWater=this.isInWater(this.player.x,this.player.y);
       const terrainSpeed=inWater ? this.player.moveSpeed*0.58 : this.player.moveSpeed;

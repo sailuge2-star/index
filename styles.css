@@ -373,3 +373,9 @@ body:not(.site-entered) > *:not(.entry-gate):not(#adminLoginDialog){visibility:h
   .soop-stat-card-head>strong{font-size:21px}
   .soop-stat-chart{min-height:165px}
 }
+
+.brand-mark{overflow:hidden}.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
+
+.brand-mark{overflow:hidden}.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
+
+.brand .brand-mark{overflow:hidden;flex:0 0 38px}.brand .brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
