@@ -73,7 +73,9 @@
     : null;
 
   // 방문자가 사이트를 열어 둔 동안 방송 중 시청자 수를 1분 단위로 저장합니다.
-  // 여러 방문자가 동시에 수집해도 같은 방송/같은 분은 DB unique index로 중복을 막습니다.
+  // 기존 upsert 방식은 Supabase/PostgREST에서 unique index의 conflict 대상 인식이
+  // 배포 환경에 따라 실패할 수 있어, 여기서는 일반 INSERT를 사용합니다.
+  // 같은 분에 이미 저장된 경우에는 unique 제약 오류를 중복 샘플로 간주합니다.
   async function saveViewerSample(data) {
     const viewers = Number(data?.viewers);
     if (!sb || !data?.isLive || !Number.isFinite(viewers) || viewers < 0) return;
@@ -81,23 +83,27 @@
     const sampledAtDate = new Date();
     sampledAtDate.setSeconds(0, 0);
 
+    const payload = {
+      streamer_id: config.soopStreamerId || "bboringirl",
+      broad_no: String(data.broadNo || ""),
+      viewers: Math.round(viewers),
+      sampled_at: sampledAtDate.toISOString()
+    };
+
     try {
       const { error } = await sb
         .from("soop_viewer_samples")
-        .upsert({
-          streamer_id: config.soopStreamerId || "bboringirl",
-          broad_no: data.broadNo || "",
-          viewers: Math.round(viewers),
-          sampled_at: sampledAtDate.toISOString()
-        }, {
-          onConflict: "streamer_id,broad_no,sampled_at",
-          ignoreDuplicates: true
-        });
+        .insert(payload);
 
-      if (error) throw error;
+      if (error) {
+        // PostgreSQL unique violation(23505)은 같은 분에 이미 수집된 정상적인 중복입니다.
+        // 그 외 오류는 실제 DB/RLS/스키마 문제이므로 콘솔에 자세히 남깁니다.
+        if (error.code !== "23505") {
+          console.error("[SOOP VIEWER SAMPLE] DB 저장 실패", { error, payload });
+        }
+      }
     } catch (error) {
-      // 통계 수집 실패가 메인 방송 정보 표시를 막지 않도록 조용히 처리합니다.
-      console.warn("[SOOP VIEWER SAMPLE]", error);
+      console.error("[SOOP VIEWER SAMPLE] DB 저장 예외", error);
     }
   }
 
