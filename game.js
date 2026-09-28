@@ -95,6 +95,7 @@
         });
       }
 
+      const menuStartIndex=this.children.list.length;
       const badge = this.add.rectangle(GAME_W/2, 185, 94, 94, 0xff3d93, 1)
         .setStrokeStyle(3, 0xffc1dd, .65);
       this.add.text(GAME_W/2,185,'뽀',{
@@ -127,9 +128,29 @@
       home.on('pointerout',()=>home.setColor('#b9abb8'));
       home.on('pointerdown',()=>{ window.location.href='index.html'; });
 
-      this.add.text(GAME_W/2, 850, 'WASD / 방향키 이동 · 공격 자동 · 5분 생존 목표', {
+      const footer=this.add.text(GAME_W/2, 850, 'WASD / 방향키 이동 · 공격 자동 · 5분 생존 목표', {
         fontFamily:'Noto Sans KR',fontSize:'10px',color:'#8f858f'
       }).setOrigin(.5);
+      this.menuForeground=this.children.list.slice(menuStartIndex).filter(o=>o!==footer);
+      this.menuBaseY=new Map(this.menuForeground.map(o=>[o,o.y]));
+      this.menuFooter=footer;
+      this.layoutMenu();
+      this.onMenuResize=()=>requestAnimationFrame(()=>this.layoutMenu());
+      window.addEventListener('resize',this.onMenuResize);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>window.removeEventListener('resize',this.onMenuResize));
+    }
+
+    layoutMenu() {
+      const container=document.getElementById('game-container');
+      if(!container || !this.menuBaseY) return;
+      const canvas=this.game.canvas.getBoundingClientRect();
+      const visible=container.getBoundingClientRect();
+      const scale=canvas.width/GAME_W;
+      if(!scale) return;
+      const centerY=(visible.top+visible.height/2-canvas.top)/scale;
+      const shift=centerY-390;
+      this.menuForeground.forEach(o=>o.setY(this.menuBaseY.get(o)+shift));
+      this.menuFooter.setY((visible.bottom-canvas.top)/scale-28);
     }
 
     createMenuButton(x,y,w,h,label,primary,onClick) {
