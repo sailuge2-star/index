@@ -140,8 +140,11 @@
         this.scene.start('MainScene',{difficulty:this.selectedDifficulty});
       });
 
-      this.createMenuButton(GAME_W/2, 575, 420, 58, '조작 방법', false, () => {
+      this.createMenuButton(GAME_W/2-108, 575, 204, 58, '조작 방법', false, () => {
         this.showHowTo();
+      });
+      this.createMenuButton(GAME_W/2+108, 575, 204, 58, 'SOOP 연동', false, () => {
+        this.showSoopConnect();
       });
 
       const home = this.add.text(GAME_W/2, 660, '← 뽀린걸 팬사이트로 돌아가기', {
@@ -199,6 +202,11 @@
       });
       bg.on('pointerdown',onClick);
       return {bg,text};
+    }
+
+    showSoopConnect() {
+      const dialog=document.getElementById('soopConnectDialog');
+      if(dialog && !dialog.open) dialog.showModal();
     }
 
     showHowTo() {
