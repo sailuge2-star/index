@@ -15,7 +15,10 @@
   const mapRect = (x, y, w, h) => new Phaser.Geom.Rectangle(
     mapX(x), mapY(y), w * MAP_SX, h * MAP_SY
   );
-  const SURVIVAL_SECONDS = 300;
+  const SURVIVAL_SECONDS = 1800;
+  const STAGE_SECONDS = 300;
+  const TOTAL_STAGES = 6;
+  const DIFFICULTIES = {easy:1,normal:2,hard:3};
 
   const COLORS = {
     pink: 0xff3d93,
@@ -47,15 +50,19 @@
 
     create() {
       document.body.classList.remove('game-playing');
+      requestAnimationFrame(()=>this.scale.refresh());
+      this.selectedDifficulty='easy';
       const topButton = document.getElementById('restartTop');
       if (topButton) { topButton.style.display = 'none'; topButton.onclick = null; }
 
       this.cameras.main.setBackgroundColor(0x120d18);
 
       // Full-screen menu backdrop.
-      this.add.rectangle(GAME_W/2, GAME_H/2, GAME_W, GAME_H, 0x120d18);
-      this.add.rectangle(GAME_W/2, GAME_H*0.24, GAME_W, GAME_H*0.48, 0x29142a, .72);
-      this.add.rectangle(GAME_W/2, GAME_H*0.78, GAME_W, GAME_H*0.44, 0x172b1b, .9);
+      this.menuBackdrops=[
+        this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x120d18),
+        this.add.rectangle(this.scale.width/2,this.scale.height*.24,this.scale.width,this.scale.height*.48,0x29142a,.72),
+        this.add.rectangle(this.scale.width/2,this.scale.height*.78,this.scale.width,this.scale.height*.44,0x172b1b,.9)
+      ];
 
       const glow = this.add.graphics();
       for (let r=360;r>30;r-=28) {
@@ -113,44 +120,66 @@
         fontFamily:'Noto Sans KR', fontSize:'13px', color:'#d9cbd8'
       }).setOrigin(.5);
 
-      this.createMenuButton(GAME_W/2, 455, 420, 72, '게임 시작', true, () => {
-        this.scene.start('MainScene');
+      const difficultyButtons=[];
+      const choices=[['easy','쉬움 ×1'],['normal','보통 ×2'],['hard','하드 ×3']];
+      choices.forEach(([key,label],i)=>{
+        const x=GAME_W/2+(i-1)*140;
+        const bg=this.add.rectangle(x,415,126,40,0x241b2b,.98).setStrokeStyle(2,0x6d566c,.75)
+          .setInteractive({useHandCursor:true});
+        const text=this.add.text(x,415,label,{fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ffffff'}).setOrigin(.5);
+        difficultyButtons.push({key,bg,text});
+        bg.on('pointerdown',()=>{this.selectedDifficulty=key;refreshDifficulty();});
+      });
+      const refreshDifficulty=()=>difficultyButtons.forEach(({key,bg,text})=>{
+        const selected=key===this.selectedDifficulty;
+        bg.setFillStyle(selected?0xff3d93:0x241b2b,1).setStrokeStyle(2,selected?0xffc1dd:0x6d566c,.8);
+        text.setColor(selected?'#ffffff':'#cbbfcd');
+      });
+      refreshDifficulty();
+      this.createMenuButton(GAME_W/2, 485, 420, 72, '게임 시작', true, () => {
+        this.scene.start('MainScene',{difficulty:this.selectedDifficulty});
       });
 
-      this.createMenuButton(GAME_W/2, 545, 420, 58, '조작 방법', false, () => {
+      this.createMenuButton(GAME_W/2, 575, 420, 58, '조작 방법', false, () => {
         this.showHowTo();
       });
 
-      const home = this.add.text(GAME_W/2, 630, '← 뽀린걸 팬사이트로 돌아가기', {
+      const home = this.add.text(GAME_W/2, 660, '← 뽀린걸 팬사이트로 돌아가기', {
         fontFamily:'Noto Sans KR',fontSize:'12px',fontStyle:'700',color:'#b9abb8'
       }).setOrigin(.5).setInteractive({useHandCursor:true});
       home.on('pointerover',()=>home.setColor('#ff9dca'));
       home.on('pointerout',()=>home.setColor('#b9abb8'));
       home.on('pointerdown',()=>{ window.location.href='index.html'; });
 
-      const footer=this.add.text(GAME_W/2, 850, 'WASD / 방향키 이동 · 공격 자동 · 5분 생존 목표', {
+      const footer=this.add.text(GAME_W/2, 850, 'WASD / 방향키 이동 · 공격 자동 · 30분 생존 목표', {
         fontFamily:'Noto Sans KR',fontSize:'10px',color:'#8f858f'
       }).setOrigin(.5);
       this.menuForeground=this.children.list.slice(menuStartIndex).filter(o=>o!==footer);
       this.menuBaseY=new Map(this.menuForeground.map(o=>[o,o.y]));
+      this.menuBaseX=new Map(this.menuForeground.map(o=>[o,o.x]));
       this.menuFooter=footer;
       this.layoutMenu();
       this.onMenuResize=()=>requestAnimationFrame(()=>this.layoutMenu());
       window.addEventListener('resize',this.onMenuResize);
-      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>window.removeEventListener('resize',this.onMenuResize));
+      this.scale.on('resize',this.onMenuResize);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{
+        window.removeEventListener('resize',this.onMenuResize);
+        this.scale.off('resize',this.onMenuResize);
+      });
     }
 
     layoutMenu() {
       const container=document.getElementById('game-container');
       if(!container || !this.menuBaseY) return;
-      const canvas=this.game.canvas.getBoundingClientRect();
-      const visible=container.getBoundingClientRect();
-      const scale=canvas.width/GAME_W;
-      if(!scale) return;
-      const centerY=(visible.top+visible.height/2-canvas.top)/scale;
-      const shift=centerY-390;
-      this.menuForeground.forEach(o=>o.setY(this.menuBaseY.get(o)+shift));
-      this.menuFooter.setY((visible.bottom-canvas.top)/scale-28);
+      const centerX=this.scale.width/2;
+      const centerY=this.scale.height/2;
+      const shiftY=centerY-415;
+      const shiftX=centerX-GAME_W/2;
+      this.menuForeground.forEach(o=>o.setPosition(this.menuBaseX.get(o)+shiftX,this.menuBaseY.get(o)+shiftY));
+      this.menuFooter.setPosition(centerX,this.scale.height-28);
+      this.menuBackdrops[0].setPosition(centerX,centerY).setSize(this.scale.width,this.scale.height);
+      this.menuBackdrops[1].setPosition(centerX,this.scale.height*.24).setSize(this.scale.width,this.scale.height*.48);
+      this.menuBackdrops[2].setPosition(centerX,this.scale.height*.78).setSize(this.scale.width,this.scale.height*.44);
     }
 
     createMenuButton(x,y,w,h,label,primary,onClick) {
@@ -177,23 +206,23 @@
 
       // Keep every popup element inside one managed group so nothing remains
       // on the main menu after the popup is closed.
-      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x08060b,.78)
+      const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x08060b,.78)
         .setDepth(50).setInteractive();
       const boxW=700, boxH=500;
-      const box=this.add.rectangle(GAME_W/2,GAME_H/2,boxW,boxH,0x211825,.99)
+      const box=this.add.rectangle(this.scale.width/2,this.scale.height/2,boxW,boxH,0x211825,.99)
         .setStrokeStyle(2,0xff3d93,.65).setDepth(51);
 
-      const title=this.add.text(GAME_W/2,365,'조작 방법',{
+      const title=this.add.text(this.scale.width/2,this.scale.height/2-175,'조작 방법',{
         fontFamily:'Noto Sans KR',fontSize:'27px',fontStyle:'900',color:'#ffffff'
       }).setOrigin(.5).setDepth(52);
 
-      const body=this.add.text(GAME_W/2,515,
-        '이동\nW A S D  /  방향키\n\n공격\n가장 가까운 적에게 자동 공격\n\n성장\n경험치를 모으면 레벨업 카드 3개 중 하나 선택\n\n목표\n5분 생존 · 3분에 보스 출현',{
+      const body=this.add.text(this.scale.width/2,this.scale.height/2-25,
+        '이동\nW A S D  /  방향키\n\n공격\n가장 가까운 적에게 자동 공격\n\n성장\n경험치를 모으면 레벨업 카드 3개 중 하나 선택\n\n목표\n30분 생존 · 5분마다 스테이지 상승 · 3분에 보스 출현',{
           fontFamily:'Noto Sans KR',fontSize:'13px',color:'#ddd1dc',align:'center',
           lineSpacing:8, wordWrap:{width:boxW-100,useAdvancedWrap:true}
         }).setOrigin(.5).setDepth(52);
 
-      const close=this.add.text(GAME_W/2,690,'닫기',{
+      const close=this.add.text(this.scale.width/2,this.scale.height/2+150,'닫기',{
         fontFamily:'Noto Sans KR',fontSize:'13px',fontStyle:'800',color:'#ff9dca'
       }).setOrigin(.5).setInteractive({useHandCursor:true}).setDepth(52);
       close.on('pointerdown',()=>this.closeHowTo());
@@ -219,6 +248,25 @@
       this.state = null;
     }
 
+    init(data) {
+      this.difficulty=Object.prototype.hasOwnProperty.call(DIFFICULTIES,data?.difficulty)?data.difficulty:'easy';
+    }
+
+    enemyStatMultiplier() {
+      return DIFFICULTIES[this.difficulty] * Math.pow(1.1,this.state.stage-1);
+    }
+
+    advanceStage(stage) {
+      this.state.stage=stage;
+      this.enemies.children.iterate(enemy=>{
+        if(!enemy || !enemy.active) return;
+        enemy.maxHp=Math.round(enemy.maxHp*1.1);
+        enemy.hp=Math.min(enemy.maxHp,Math.round(enemy.hp*1.1));
+        enemy.damage=Math.round(enemy.damage*1.1*10)/10;
+      });
+      this.showBanner(`STAGE ${stage}`,`적의 공격력과 체력이 10% 증가했습니다`);
+    }
+
     preload() {
       // 캐릭터 이미지는 assets/roguelike/characters/ 폴더의 파일로 교체할 수 있습니다.
       // PNG/JPG 모두 사용 가능하며, 아래 파일명을 그대로 덮어쓰면 됩니다.
@@ -235,12 +283,14 @@
         topButton.textContent = '☰ 메뉴';
       }
       document.body.classList.add('game-playing');
+      requestAnimationFrame(()=>this.scale.refresh());
       document.getElementById('gameMenuButton').onclick=()=>this.scene.start('MenuScene');
       this.resetState();
       this.createTextures();
       this.createWorld();
       this.createPlayer();
       this.createGroups();
+      this.enemyHealthGraphics=this.add.graphics().setDepth(19);
       this.createInput();
       this.createUi();
       this.createCombatHud();
@@ -249,7 +299,11 @@
       this.layoutHud();
       this.onHudResize=()=>requestAnimationFrame(()=>this.layoutHud());
       window.addEventListener('resize',this.onHudResize);
-      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>window.removeEventListener('resize',this.onHudResize));
+      this.scale.on('resize',this.onHudResize);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{
+        window.removeEventListener('resize',this.onHudResize);
+        this.scale.off('resize',this.onHudResize);
+      });
 
       this.spawnTimer = this.time.addEvent({
         delay: 900,
@@ -282,6 +336,7 @@
         elapsed: 0,
         kills: 0,
         wave: 1,
+        stage: 1,
         bossSpawned: false,
         level: 1,
         xp: 0,
@@ -804,15 +859,13 @@
       if(!this.hudBaseY || !this.game.canvas) return;
       const container=document.getElementById('game-container');
       if(!container) return;
-      const canvas=this.game.canvas.getBoundingClientRect();
-      const visible=container.getBoundingClientRect();
-      const scale=canvas.width/GAME_W;
-      if(!scale) return;
-      // ENVELOP fills the screen by cropping the canvas. Keep the HUD in its visible area.
-      const cropTop=Math.max(0,(visible.top-canvas.top)/scale);
-      const cropBottom=Math.max(0,(canvas.bottom-visible.bottom)/scale);
+      const cropTop=0;
+      const cropBottom=0;
       this.hudTopItems.forEach(o=>o.setY(this.hudBaseY.get(o)+cropTop));
-      this.ui.hint.setY(GAME_H-18-cropBottom);
+      this.ui.hint.setY(this.scale.height-18-cropBottom);
+      this.bossBg.setX(this.scale.width/2);
+      this.bossBar.setX(this.scale.width/2-260);
+      this.bossText.setX(this.scale.width/2);
     }
 
     createMobileControls() {
@@ -917,6 +970,10 @@
         enemy.speed=70+this.state.wave*4;
         enemy.damage=10;
       }
+      const multiplier=this.enemyStatMultiplier();
+      enemy.maxHp=Math.round(enemy.maxHp*multiplier);
+      enemy.hp=enemy.maxHp;
+      enemy.damage=Math.round(enemy.damage*multiplier*10)/10;
       enemy.lastHit=0;
       enemy.setCollideWorldBounds(false);
     }
@@ -930,11 +987,15 @@
       boss.hp=1800;
       boss.speed=48;
       boss.damage=24;
+      const multiplier=this.enemyStatMultiplier();
+      boss.maxHp=Math.round(boss.maxHp*multiplier);
+      boss.hp=boss.maxHp;
+      boss.damage=Math.round(boss.damage*multiplier*10)/10;
       boss.setDisplaySize(99.2,99.2);
       boss.setDepth(15);
       boss.setData('isBoss',true);
 
-      this.showBanner('BOSS 출현!', '300초까지 살아남으세요');
+      this.showBanner('BOSS 출현!', '30분까지 살아남으세요');
     }
 
     autoAttack() {
@@ -995,6 +1056,7 @@
         this.dropXp(enemy.x,enemy.y,value, false);
       }
       enemy.destroy();
+      this.updateUi();
     }
 
     dropXp(x,y,value,big=false) {
@@ -1022,25 +1084,20 @@
 
     gainXp(amount) {
       this.state.xp+=amount;
-      while(this.state.xp>=this.state.nextXp){
-        this.state.xp-=this.state.nextXp;
-        this.state.level++;
-        this.state.nextXp=Math.floor(this.state.nextXp*1.28+8);
-        this.openLevelUp();
-      }
+      if(!this.state.pausedForLevel && this.state.xp>=this.state.nextXp) this.openLevelUp();
       this.updateUi();
     }
 
     openLevelUp() {
-      if(!this.state.running) return;
+      if(!this.state.running || this.state.pausedForLevel) return;
       this.state.pausedForLevel=true;
       this.physics.world.isPaused=true;
 
-      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x160e19,.76).setDepth(200).setScrollFactor(0);
-      const title=this.add.text(GAME_W/2,300,'LEVEL UP!',{
+      const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x160e19,.76).setDepth(200).setScrollFactor(0);
+      const title=this.add.text(this.scale.width/2,this.scale.height/2-240,'LEVEL UP!',{
         fontFamily:'Noto Sans KR',fontSize:'42px',fontStyle:'900',color:'#ffffff'
       }).setOrigin(.5).setDepth(201).setScrollFactor(0);
-      const sub=this.add.text(GAME_W/2,350,'강화할 능력을 하나 선택하세요',{
+      const sub=this.add.text(this.scale.width/2,this.scale.height/2-190,'강화할 능력을 하나 선택하세요',{
         fontFamily:'Noto Sans KR',fontSize:'15px',color:'#f1e7ef'
       }).setOrigin(.5).setDepth(201).setScrollFactor(0);
 
@@ -1048,20 +1105,24 @@
       const cards=[];
 
       choices.forEach((u,i)=>{
-        const x=GAME_W/2-250+i*250;
-        const bg=this.add.rectangle(x,550,220,230,0x2b2131,.98).setStrokeStyle(2,0x8c5c80,.7).setDepth(201).setScrollFactor(0).setInteractive({useHandCursor:true});
-        const icon=this.add.text(x,495,u.icon,{fontSize:'34px',color:'#ff9bc7'}).setOrigin(.5).setDepth(202).setScrollFactor(0);
-        const name=this.add.text(x,540,u.title,{fontFamily:'Noto Sans KR',fontSize:'17px',fontStyle:'800',color:'#ffffff',align:'center',wordWrap:{width:190}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
-        const desc=this.add.text(x,595,u.desc,{fontFamily:'Noto Sans KR',fontSize:'12px',color:'#d3c5d2',align:'center',wordWrap:{width:180}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
+        const x=this.scale.width/2-250+i*250;
+        const bg=this.add.rectangle(x,this.scale.height/2+10,220,230,0x2b2131,.98).setStrokeStyle(2,0x8c5c80,.7).setDepth(201).setScrollFactor(0).setInteractive({useHandCursor:true});
+        const icon=this.add.text(x,this.scale.height/2-45,u.icon,{fontSize:'34px',color:'#ff9bc7'}).setOrigin(.5).setDepth(202).setScrollFactor(0);
+        const name=this.add.text(x,this.scale.height/2,u.title,{fontFamily:'Noto Sans KR',fontSize:'17px',fontStyle:'800',color:'#ffffff',align:'center',wordWrap:{width:190}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
+        const desc=this.add.text(x,this.scale.height/2+55,u.desc,{fontFamily:'Noto Sans KR',fontSize:'12px',color:'#d3c5d2',align:'center',wordWrap:{width:180}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
         bg.on('pointerover',()=>bg.setStrokeStyle(3,COLORS.pink,1));
         bg.on('pointerout',()=>bg.setStrokeStyle(2,0x8c5c80,.7));
         bg.on('pointerdown',()=> {
           u.apply(this.player);
           cards.forEach(c=>c.destroy());
           overlay.destroy(); title.destroy(); sub.destroy();
+          this.state.xp-=this.state.nextXp;
+          this.state.level++;
+          this.state.nextXp=Math.floor(this.state.nextXp*1.28+8);
           this.state.pausedForLevel=false;
           this.physics.world.isPaused=false;
           this.updateUi();
+          if(this.state.xp>=this.state.nextXp) this.openLevelUp();
         });
         cards.push(bg,icon,name,desc);
       });
@@ -1122,6 +1183,15 @@
       // 플레이어 좌표는 그대로 유지하고, 주변 맵 타일만 재배치합니다.
       // 따라서 카메라는 좌우뿐 아니라 상하/대각선으로도 실제 월드를 계속 이동합니다.
       this.updateInfiniteTiles();
+      this.enemyHealthGraphics.clear();
+      this.enemies.children.iterate(e=>{
+        if(!e||!e.active||e.type==='boss') return;
+        const width=48, height=5;
+        const left=e.x-width/2, top=e.y-e.displayHeight/2-12;
+        this.enemyHealthGraphics.fillStyle(0x271b28,.88).fillRect(left,top,width,height);
+        this.enemyHealthGraphics.fillStyle(e.type==='elite'?0xff9d46:e.type==='bat'?0xb793ff:0xff5e82,1)
+          .fillRect(left,top,width*Math.max(0,Math.min(1,e.hp/e.maxHp)),height);
+      });
 
       this.enemies.children.iterate(e=>{
         if(!e||!e.active) return;
@@ -1153,6 +1223,8 @@
       if(!this.state.running || this.state.pausedForLevel) return;
       this.state.elapsed++;
       this.state.wave=Math.min(10,1+Math.floor(this.state.elapsed/30));
+      const nextStage=Math.min(TOTAL_STAGES,1+Math.floor(this.state.elapsed/STAGE_SECONDS));
+      if(nextStage>this.state.stage && this.state.elapsed<SURVIVAL_SECONDS) this.advanceStage(nextStage);
       if(this.state.elapsed===180) this.spawnBoss();
       this.updateUi();
     }
@@ -1164,30 +1236,35 @@
       const ss=String(seconds%60).padStart(2,'0');
       this.ui.level.setText(`LV ${this.state.level}`);
       this.ui.hpText.setText(`HP ${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
-      this.ui.xpText.setText(`EXP ${this.state.xp} / ${this.state.nextXp}`);
+      const shownXp=Math.min(this.state.xp,this.state.nextXp);
+      this.ui.xpText.setText(`EXP ${shownXp} / ${this.state.nextXp}`);
       this.ui.time.setText(`${mm}:${ss}`);
-      this.ui.wave.setText(`WAVE ${this.state.wave}${this.state.bossSpawned?' · BOSS':''}`);
+      this.ui.wave.setText(`STAGE ${this.state.stage}/${TOTAL_STAGES} · WAVE ${this.state.wave}`);
       this.ui.kills.setText(`KILLS ${this.state.kills}`);
       this.ui.hpBar.width=55*Math.max(0,this.player.hp/this.player.maxHp);
-      this.ui.xpBar.width=520*Math.max(0,Math.min(1,this.state.xp/this.state.nextXp));
+      this.ui.xpBar.width=520*Math.max(0,Math.min(1,shownXp/this.state.nextXp));
       const byId=id=>document.getElementById(id);
       const hpRatio=Math.max(0,Math.min(1,this.player.hp/this.player.maxHp));
-      const xpRatio=Math.max(0,Math.min(1,this.state.xp/this.state.nextXp));
+      const xpRatio=Math.max(0,Math.min(1,shownXp/this.state.nextXp));
       byId('gameHp').textContent=`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`;
       byId('gameHpFill').style.width=`${hpRatio*100}%`;
-      byId('gameXp').textContent=`EXP ${this.state.xp} / ${this.state.nextXp}`;
+      byId('gameXp').textContent=`EXP ${shownXp} / ${this.state.nextXp}`;
       byId('gameXpFill').style.width=`${xpRatio*100}%`;
-      byId('gameXpTrack').setAttribute('aria-valuenow',String(this.state.xp));
+      byId('gameXpTrack').setAttribute('aria-valuenow',String(shownXp));
       byId('gameXpTrack').setAttribute('aria-valuemax',String(this.state.nextXp));
       byId('gameLevel').textContent=`LV ${this.state.level}`;
       byId('gameTime').textContent=`${mm}:${ss}`;
-      byId('gameWave').textContent=`WAVE ${this.state.wave}${this.state.bossSpawned?' · BOSS':''}`;
+      byId('gameWave').textContent=`STAGE ${this.state.stage}/${TOTAL_STAGES} · WAVE ${this.state.wave}`;
+      byId('gameDifficulty').textContent={easy:'쉬움',normal:'보통',hard:'하드'}[this.difficulty];
       byId('gameKills').textContent=`KILLS ${this.state.kills}`;
       byId('gameDamage').textContent=String(Math.round(this.player.damage));
       byId('gameAttackSpeed').textContent=`${(1000/this.player.fireDelay).toFixed(2)}/s`;
       byId('gameMoveSpeed').textContent=String(Math.round(this.player.moveSpeed));
       byId('gamePickup').textContent=String(Math.round(this.player.pickupRadius));
-      byId('gameBossStatus').hidden=!this.state.bossSpawned;
+      const bossStatus=byId('gameBossStatus');
+      bossStatus.hidden=!this.state.bossSpawned;
+      bossStatus.textContent=this.state.bossSpawned
+        ? (this.enemies.getChildren().some(e=>e.active&&e.type==='boss')?'BOSS 등장':'BOSS 격파') : '';
       if(this.combatHud){
         this.combatHud.hp.width=180*Math.max(0,this.player.hp/this.player.maxHp);
         this.combatHud.hpText.setText(`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
@@ -1200,14 +1277,14 @@
         let boss=null; this.enemies.children.iterate(e=>{if(e&&e.active&&e.type==='boss') boss=e;});
         const visible=Boolean(boss);
         this.bossBg.setVisible(visible); this.bossBar.setVisible(visible); this.bossText.setVisible(visible);
-        if(boss){ this.bossBar.width=520*Math.max(0,boss.hp/boss.maxHp); this.bossText.setText(`BOSS · ${Math.ceil(boss.hp)} / ${boss.maxHp}`); }
+        if(boss){ this.bossBar.width=520*Math.max(0,boss.hp/boss.maxHp); this.bossText.setText(`BOSS · ${Math.max(0,Math.ceil(boss.hp))} / ${boss.maxHp}`); }
       }
     }
 
     showBanner(title,sub) {
-      const box=this.add.rectangle(GAME_W/2,155,420,95,0x241727,.92).setStrokeStyle(2,COLORS.pink,.8).setDepth(150).setScrollFactor(0);
-      const t=this.add.text(GAME_W/2,138,title,{fontFamily:'Noto Sans KR',fontSize:'27px',fontStyle:'900',color:'#ffffff'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
-      const s=this.add.text(GAME_W/2,174,sub,{fontFamily:'Noto Sans KR',fontSize:'11px',color:'#f3dce9'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
+      const box=this.add.rectangle(this.scale.width/2,155,420,95,0x241727,.92).setStrokeStyle(2,COLORS.pink,.8).setDepth(150).setScrollFactor(0);
+      const t=this.add.text(this.scale.width/2,138,title,{fontFamily:'Noto Sans KR',fontSize:'27px',fontStyle:'900',color:'#ffffff'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
+      const s=this.add.text(this.scale.width/2,174,sub,{fontFamily:'Noto Sans KR',fontSize:'11px',color:'#f3dce9'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
       this.tweens.add({targets:[box,t,s],alpha:0,duration:2600,delay:700,onComplete:()=>[box,t,s].forEach(o=>o.destroy())});
     }
 
@@ -1218,16 +1295,16 @@
       this.attackTimer?.remove();
       this.physics.world.isPaused=true;
 
-      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x100b13,.78).setDepth(300).setScrollFactor(0);
-      this.add.text(GAME_W/2,420,'GAME OVER',{
+      const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x100b13,.78).setDepth(300).setScrollFactor(0);
+      this.add.text(this.scale.width/2,this.scale.height/2-120,'GAME OVER',{
         fontFamily:'Noto Sans KR',fontSize:'52px',fontStyle:'900',color:'#ffffff'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(GAME_W/2,490,`생존 ${Math.floor(this.state.elapsed/60)}분 ${this.state.elapsed%60}초 · 처치 ${this.state.kills}마리`,{
+      this.add.text(this.scale.width/2,this.scale.height/2-50,`생존 ${Math.floor(this.state.elapsed/60)}분 ${this.state.elapsed%60}초 · 처치 ${this.state.kills}마리`,{
         fontFamily:'Noto Sans KR',fontSize:'15px',color:'#e8dce7'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(GAME_W/2,560,'화면을 클릭하면 다시 시작',{
+      this.add.text(this.scale.width/2,this.scale.height/2+20,'화면을 클릭하면 다시 시작',{
         fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart());
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty}));
     }
 
     victory() {
@@ -1237,19 +1314,19 @@
       this.attackTimer?.remove();
       this.physics.world.isPaused=true;
 
-      const overlay=this.add.rectangle(GAME_W/2,GAME_H/2,GAME_W,GAME_H,0x180f1b,.8).setDepth(300).setScrollFactor(0);
-      this.add.text(GAME_W/2,420,'3000 DAYS CLEAR!',{
+      const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x180f1b,.8).setDepth(300).setScrollFactor(0);
+      this.add.text(this.scale.width/2,this.scale.height/2-120,'3000 DAYS CLEAR!',{
         fontFamily:'Noto Sans KR',fontSize:'46px',fontStyle:'900',color:'#ffffff'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(GAME_W/2,490,'5분 생존 성공 · 축하합니다 ♡',{
+      this.add.text(this.scale.width/2,this.scale.height/2-50,'30분 생존 성공 · 6스테이지 클리어! ♡',{
         fontFamily:'Noto Sans KR',fontSize:'17px',color:'#ffd5e7'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(GAME_W/2,535,`LV ${this.state.level} · 처치 ${this.state.kills}마리`,{
+      this.add.text(this.scale.width/2,this.scale.height/2-5,`LV ${this.state.level} · 처치 ${this.state.kills}마리`,{
         fontFamily:'Noto Sans KR',fontSize:'13px',color:'#e6dce6'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(GAME_W/2,605,'화면을 클릭하면 다시 플레이',{
+      this.add.text(this.scale.width/2,this.scale.height/2+65,'화면을 클릭하면 다시 플레이',{
         fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart());
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty}));
     }
   }
 
@@ -1261,13 +1338,12 @@
     backgroundColor: '#1f4328',
     scale: {
       // 중요: width/height는 '브라우저 크기'가 아니라 게임의 기준 좌표계입니다.
-      // 부모 컨테이너 전체를 기준으로 ENVELOP 방식으로 확대하여
-      // 1920×1080 게임 화면을 기준으로 브라우저 전체에 맞춰 확대/축소합니다.
-      mode: Phaser.Scale.ENVELOP,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
+      // 캔버스를 부모 영역 크기로 조정해 화면 비율이 달라도 맵을 자르지 않습니다.
+      mode: Phaser.Scale.RESIZE,
+      autoCenter: Phaser.Scale.NO_CENTER,
       width: GAME_W,
       height: GAME_H,
-      expandParent: true
+      expandParent: false
     },
     render: {
       antialias: true,

@@ -98,10 +98,7 @@ a{text-decoration:none;color:inherit}
 }
 #game-container canvas{
   display:block;
-  width:auto !important;
-  height:auto !important;
-  max-width:none;
-  max-height:none;
+
   border-radius:0;
   touch-action:none;
   flex:0 0 auto;
@@ -157,3 +154,7 @@ a{text-decoration:none;color:inherit}
 .status-level-time{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.status-level-time strong:first-child{color:#9dddf5}.status-level-time strong:last-child{font-size:22px}.status-stage{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:#d3c5d2}.status-xp-text{margin-top:10px;font-size:10px;color:#b9def0}.status-divider{height:1px;background:rgba(193,211,214,.16);margin:13px 0}.status-subheading{font-size:11px;color:#ff9bc8}.status-stats{margin:8px 0 0;font-size:11px}.status-stats>div{display:flex;justify-content:space-between;padding:5px 0}.status-stats dt{color:#aebcc2}.status-stats dd{margin:0;font-weight:800}.status-passives{margin-top:7px;font-size:10px;line-height:1.8;color:#d8cad4}.status-boss{margin-top:12px;color:#ff738e;font-size:11px;font-weight:900}
 .game-overlay-menu{position:absolute;top:24px;right:18px;pointer-events:auto;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:9px 14px;background:rgba(15,28,34,.86);color:#fff;font-weight:800;cursor:pointer}
 @media(max-width:600px){.game-status-popup{top:17px;left:8px;width:148px;padding:9px;border-radius:12px}.status-heading{font-size:10px}.status-level-time strong:last-child{font-size:15px}.status-stats{font-size:9px}.status-passives{font-size:8px}.game-overlay-menu{top:17px;right:8px;padding:7px 9px;font-size:10px}}
+
+.status-difficulty{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#aebcc2}.status-difficulty strong{color:#ffb6d5}
+
+.status-stage{flex-wrap:wrap;gap:3px 8px}
