@@ -137,7 +137,12 @@
         text.setColor(selected?'#ffffff':'#cbbfcd');
       });
       refreshDifficulty();
-      this.createMenuButton(GAME_W/2, 485, 420, 72, '게임 시작', true, () => {
+      this.createMenuButton(GAME_W/2, 485, 420, 72, '게임 시작', true, async () => {
+        if(this.startPending)return;
+        this.startPending=true;
+        await window.BBO_GAME_ACCESS?.ready;
+        this.startPending=false;
+        if(!this.scene.isActive())return;
         this.scene.start('MainScene',{difficulty:this.selectedDifficulty});
       });
 
@@ -352,11 +357,12 @@
     }
 
     init(data) {
+      this.balance=window.BBO_GAME_ACCESS?.settings()||{player_hp:100,player_damage:18,player_speed:250,enemy_multiplier:1,spawn_ms:900};
       this.difficulty=Object.prototype.hasOwnProperty.call(DIFFICULTIES,data?.difficulty)?data.difficulty:'easy';
     }
 
     enemyStatMultiplier() {
-      return DIFFICULTIES[this.difficulty] * Math.pow(1.1,this.state.stage-1);
+      return DIFFICULTIES[this.difficulty] * Math.pow(1.1,this.state.stage-1) * this.balance.enemy_multiplier;
     }
 
     advanceStage(stage) {
@@ -439,7 +445,7 @@
       });
 
       this.spawnTimer = this.time.addEvent({
-        delay: 900,
+        delay: this.balance.spawn_ms,
         loop: true,
         callback: this.spawnEnemy,
         callbackScope: this
@@ -944,13 +950,13 @@
       this.player.setCollideWorldBounds(false);
       this.player.setDisplaySize(64,64);
       this.configurePlayerHitbox();
-      this.player.moveSpeed = 250;
-      this.player.body.setMaxVelocity(400, 400);
-      this.player.damage = 18;
+      this.player.moveSpeed = this.balance.player_speed;
+      this.player.body.setMaxVelocity(Math.max(400,this.balance.player_speed*2), Math.max(400,this.balance.player_speed*2));
+      this.player.damage = this.balance.player_damage;
       this.player.fireDelay = 650;
       this.player.lastHit = 0;
-      this.player.hp = 100;
-      this.player.maxHp = 100;
+      this.player.hp = this.balance.player_hp;
+      this.player.maxHp = this.balance.player_hp;
       this.player.projectiles = 1;
       this.player.pickupRadius = 75;
       this.player.invulnerableUntil = 0;
@@ -1245,7 +1251,7 @@
         const angle=base+offset;
         const bullet=this.projectiles.create(this.player.x,this.player.y,'bullet');
         bullet.setDepth(18);
-        bullet.damage=this.player.damage;
+        bullet.damage=window.BBO_GAME_ACCESS?.isAdmin()?999:this.player.damage;
         bullet.speed=470;
         bullet.life=1000;
         bullet.setVelocity(Math.cos(angle)*bullet.speed,Math.sin(angle)*bullet.speed);
@@ -1372,6 +1378,7 @@
     }
 
     playerHit(player,enemy) {
+      if(window.BBO_GAME_ACCESS?.isAdmin()) return;
       if(!enemy.active || !this.state.running) return;
       const now=this.time.now;
       if(now<player.invulnerableUntil) return;
@@ -1513,7 +1520,7 @@
       byId('gameWave').textContent=`STAGE ${this.state.stage}/${TOTAL_STAGES} · WAVE ${this.state.wave}`;
       byId('gameDifficulty').textContent={easy:'쉬움',normal:'보통',hard:'하드'}[this.difficulty];
       byId('gameKills').textContent=`KILLS ${this.state.kills}`;
-      byId('gameDamage').textContent=String(Math.round(this.player.damage));
+      byId('gameDamage').textContent=String(window.BBO_GAME_ACCESS?.isAdmin()?999:Math.round(this.player.damage));
       byId('gameAttackSpeed').textContent=`${(1000/this.player.fireDelay).toFixed(2)}/s`;
       byId('gameMoveSpeed').textContent=String(Math.round(this.player.moveSpeed));
       byId('gamePickup').textContent=String(Math.round(this.player.pickupRadius));
@@ -1527,7 +1534,7 @@
       if(this.combatHud){
         this.combatHud.hp.width=180*Math.max(0,this.player.hp/this.player.maxHp);
         this.combatHud.hpText.setText(`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
-        this.combatHud.statTexts[0].setText(String(Math.round(this.player.damage)));
+        this.combatHud.statTexts[0].setText(String(window.BBO_GAME_ACCESS?.isAdmin()?999:Math.round(this.player.damage)));
         this.combatHud.statTexts[1].setText(`${(1000/this.player.fireDelay).toFixed(2)}/s`);
         this.combatHud.statTexts[2].setText(String(Math.round(this.player.moveSpeed)));
         this.combatHud.statTexts[3].setText(String(Math.round(this.player.pickupRadius)));

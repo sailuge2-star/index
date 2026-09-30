@@ -231,3 +231,5 @@ a{text-decoration:none;color:inherit}
 .encounter-notices{display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .25s ease}
 .encounter-notices.is-visible{opacity:1}
 @media(prefers-reduced-motion:reduce){.encounter-notices{transition:none}}
+
+.game-role-label{font-size:10px;color:#c786ae;margin-top:4px}.game-admin-link{display:inline-block;font-size:12px;color:#e72f84;margin-top:3px}.game-admin-link[hidden]{display:none!important}

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ff3d93">
   <meta name="description" content="뽀린걸 3000일 기념 팬메이드 로그라이크 게임">
   <title>뽀린걸 로그라이크 · 3000일</title>
-  <link rel="stylesheet" href="game.css?v=hud-stack-20260930">
+  <link rel="stylesheet" href="game.css?v=game-admin-20260930">
 </head>
 <body>
   <div class="game-page">
@@ -16,7 +16,7 @@
         <span class="game-mark"><img src="assets/bbo_profile.png?v=8" alt="뽀린걸 프로필"></span>
         <div>
           <strong>뽀린걸 로그라이크</strong>
-          <small>3000 DAYS SURVIVAL</small>
+          <small>3000 DAYS SURVIVAL</small><span class="game-role-label" data-game-role>게스트</span><a class="game-admin-link" href="game-admin.html" data-game-admin hidden>게임 관리</a>
         </div>
       </div>
       <button id="restartTop" class="top-button" type="button">↻ 다시 시작</button>
@@ -37,7 +37,7 @@
           </div>
         </div>
         <aside class="game-status-popup" aria-label="상태 및 스탯">
-          <div class="status-heading">뽀린걸 생존 정보<small>SURVIVAL STATUS</small></div>
+          <div class="game-role-label" data-game-role>게스트</div><div class="status-heading">뽀린걸 생존 정보<small>SURVIVAL STATUS</small></div>
           <div class="status-health"><span>♥</span><div class="status-health-info"><div class="status-health-track"><span id="gameHpFill"></span></div><strong id="gameHp">100 / 100</strong></div></div>
           <div class="status-level-time"><strong id="gameLevel">LV 1</strong><strong id="gameTime">00:00</strong></div>
           <div class="status-stage"><span id="gameWave">STAGE 1/6 · WAVE 1</span><span id="gameKills">KILLS 0</span></div>
@@ -58,9 +58,12 @@
     </main>
   </div>
 
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="game-access.js?v=1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
-  <script src="game.js?v=boss-terrain-20260930"></script>
+  <script src="game.js?v=game-admin-20260930"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 채팅 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
