@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ff3d93">
   <meta name="description" content="뽀린걸 3000일 기념 팬메이드 로그라이크 게임">
   <title>뽀린걸 로그라이크 · 3000일</title>
-  <link rel="stylesheet" href="game.css?v=14">
+  <link rel="stylesheet" href="game.css?v=hud-stack-20260930">
 </head>
 <body>
   <div class="game-page">
@@ -25,6 +25,17 @@
     <main class="game-shell">
       <div class="game-overlay" id="gameOverlay" aria-label="게임 상태">
         <div class="game-xp-track" id="gameXpTrack" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuenow="0" aria-valuemax="25"><span id="gameXpFill"></span></div>
+        <div id="encounterHud" class="encounter-hud">
+          <section id="encounterBoss" class="encounter-boss" aria-label="보스 체력" hidden>
+            <div class="encounter-boss-heading"><strong id="encounterBossName">BOSS</strong><span id="encounterBossHp"></span></div>
+            <div id="encounterBossTrack" class="encounter-boss-track" role="progressbar" aria-label="보스 HP" aria-valuemin="0" aria-valuenow="0" aria-valuemax="1"><span id="encounterBossFill"></span></div>
+            <div class="encounter-boss-hint">보스전 · 생존 시간 정지</div>
+          </section>
+          <div id="encounterNotices" class="encounter-notices" role="status" aria-live="polite" aria-atomic="true" hidden>
+            <section id="encounterNotice" class="encounter-notice" data-kind="stage" hidden><strong id="encounterNoticeTitle"></strong><p id="encounterNoticeSub"></p></section>
+            <section id="encounterBossNotice" class="encounter-notice" data-kind="boss" hidden><strong id="encounterBossNoticeTitle"></strong><p id="encounterBossNoticeSub"></p></section>
+          </div>
+        </div>
         <aside class="game-status-popup" aria-label="상태 및 스탯">
           <div class="status-heading">뽀린걸 생존 정보<small>SURVIVAL STATUS</small></div>
           <div class="status-health"><span>♥</span><div class="status-health-info"><div class="status-health-track"><span id="gameHpFill"></span></div><strong id="gameHp">100 / 100</strong></div></div>
@@ -48,12 +59,30 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
-  <script src="character-assets.js?v=14"></script>
-  <script src="game.js?v=19"></script>
-  <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle">
-    <h2 id="soopConnectTitle">SOOP 계정 연결</h2>
-    <p>SOOP 계정 연결 기능을 준비하고 있습니다.<br>현재는 계정을 연결할 수 없습니다.</p>
-    <form method="dialog"><button type="submit">닫기</button></form>
+  <script src="character-assets.js?v=boss-png-large-20260930"></script>
+  <script src="game.js?v=boss-terrain-20260930"></script>
+  <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
+    <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 채팅 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
+    <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
+      <h3 id="soopStreamerTitle">스트리머</h3>
+      <div class="soop-streamer-card"><img src="assets/bbo_profile.png" alt="뽀린걸 프로필"><div><div class="soop-streamer-name">뽀린걸 <span>기본 스트리머</span></div><small>@bboringirl</small></div><button type="button" class="soop-connect-action" disabled>연결 대기</button></div>
+      <div class="soop-search-row"><input type="search" aria-label="다른 스트리머 닉네임 또는 ID" placeholder="다른 스트리머 닉네임 또는 ID" disabled><button type="button" disabled>검색</button></div>
+    </section>
+    <section aria-labelledby="soopEffectsTitle">
+      <div class="soop-effects-heading"><h3 id="soopEffectsTitle">후원 개수별 효과</h3><span>별풍선·영상풍선·애드벌룬 같은 개수로 적용 예정</span><button type="button" id="soopResetDefaults">기본값</button></div>
+      <div class="soop-effect-list">
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">이로운 효과 후원 개수</span><input type="number" min="1" max="999999" step="1" value="10" data-default="10" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>이로운 효과</strong><p>도움 효과 중 하나 (확률 가중치)</p></div></div>
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">해로운 효과 후원 개수</span><input type="number" min="1" max="999999" step="1" value="15" data-default="15" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>해로운 효과</strong><p>방해 효과 중 하나 (확률 가중치)</p></div></div>
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">무적 7초 후원 개수</span><input type="number" min="1" max="999999" step="1" value="20" data-default="20" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>무적 7초</strong><p>7초 동안 피해를 받지 않음</p></div></div>
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">랜덤 효과 (룰렛) 후원 개수</span><input type="number" min="1" max="999999" step="1" value="33" data-default="33" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>랜덤 효과 (룰렛)</strong><p>룰렛으로 이로운 효과 / 해로운 효과 / 무적 7초 중 하나</p></div></div>
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">랜덤 보스 소환 후원 개수</span><input type="number" min="1" max="999999" step="1" value="40" data-default="40" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>랜덤 보스 소환</strong><p>랜덤 보스 중 하나 소환</p></div></div>
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">랜덤 보스 삭제 후원 개수</span><input type="number" min="1" max="999999" step="1" value="50" data-default="50" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>랜덤 보스 삭제</strong><p>플레이어와 가장 가까운 보스 1마리 삭제</p></div></div>
+      </div>
+    </section>
+    <p class="soop-approval-note" id="soopApprovalNote">SDK 승인 대기 · 화면 미리보기입니다. 입력값은 게임에 적용되지 않습니다.</p>
+    <p class="soop-sr-only" id="soopPopupFeedback" role="status"></p>
+    <form method="dialog" class="soop-popup-footer"><button type="submit" autofocus>닫기</button></form>
   </dialog>
+  <script src="soop-popup.js?v=1"></script>
 </body>
 </html>

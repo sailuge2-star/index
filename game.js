@@ -18,6 +18,7 @@
   const SURVIVAL_SECONDS = 1800;
   const STAGE_SECONDS = 300;
   const TOTAL_STAGES = 6;
+  const BOSS_TYPES = [{"key": "boss1", "name": "흑화된 뱁새 대장"}, {"key": "boss2", "name": "흑화된 재빠른 뱁새 대장"}, {"key": "boss3", "name": "흑화된 변태 뱁새"}, {"key": "boss4", "name": "흑화된 총든 뱁새"}, {"key": "boss5", "name": "흑화된 낫든 뱁새"}, {"key": "bossFinal", "name": "흑화된 뱁새왕"}];
   const DIFFICULTIES = {easy:1,normal:2,hard:3};
 
   const COLORS = {
@@ -204,39 +205,131 @@
       return {bg,text};
     }
 
+    lockMenuInput() {
+      if(this.modalInputLocked) return;
+      this.modalInputLocked=true;
+      this.modalInteractiveObjects=this.children.list.filter(obj=>obj && obj.input && obj.input.enabled);
+      this.modalInteractiveObjects.forEach(obj=>obj.disableInteractive());
+    }
+
+    unlockMenuInput() {
+      if(!this.modalInputLocked) return;
+      (this.modalInteractiveObjects||[]).forEach(obj=>{
+        if(obj && obj.active && obj.scene===this) obj.setInteractive({useHandCursor:true});
+      });
+      this.modalInteractiveObjects=[];
+      this.modalInputLocked=false;
+    }
+
     showSoopConnect() {
       const dialog=document.getElementById('soopConnectDialog');
-      if(dialog && !dialog.open) dialog.showModal();
+      if(!dialog || dialog.open) return;
+      this.lockMenuInput();
+      const unlock=()=>{
+        this.unlockMenuInput();
+        dialog.removeEventListener('close',unlock);
+        dialog.removeEventListener('cancel',unlock);
+      };
+      dialog.addEventListener('close',unlock);
+      dialog.addEventListener('cancel',unlock);
+      dialog.showModal();
     }
 
     showHowTo() {
-      if(this.howTo) return;
+      if(this.howTo || this.modalInputLocked) return;
+      this.lockMenuInput();
 
-      // Keep every popup element inside one managed group so nothing remains
-      // on the main menu after the popup is closed.
-      const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x08060b,.78)
+      // SOOP 연동 팝업과 같은 다크 네이비 카드 스타일의 조작 방법 팝업.
+      // 모든 요소를 한 번에 추적/삭제하여 닫은 뒤 잔상이 남지 않도록 한다.
+      const cx=this.scale.width/2, cy=this.scale.height/2;
+      const boxW=Math.min(640,this.scale.width-36);
+      const boxH=Math.min(650,this.scale.height-36);
+      const left=cx-boxW/2+26;
+      const innerW=boxW-52;
+
+      const overlay=this.add.rectangle(cx,cy,this.scale.width,this.scale.height,0x050812,.78)
         .setDepth(50).setInteractive();
-      const boxW=700, boxH=500;
-      const box=this.add.rectangle(this.scale.width/2,this.scale.height/2,boxW,boxH,0x211825,.99)
-        .setStrokeStyle(2,0xff3d93,.65).setDepth(51);
+      const roundedRect=(x,y,w,h,r,fill,fillAlpha=1,stroke=null,strokeWidth=1,strokeAlpha=1,depth=52)=>{
+        const g=this.add.graphics().setDepth(depth);
+        g.fillStyle(fill,fillAlpha);
+        g.fillRoundedRect(x-w/2,y-h/2,w,h,r);
+        if(stroke!==null){
+          g.lineStyle(strokeWidth,stroke,strokeAlpha);
+          g.strokeRoundedRect(x-w/2,y-h/2,w,h,r);
+        }
+        return g;
+      };
+      const box=roundedRect(cx,cy,boxW,boxH,26,0xffd7e2,.995,0xdb4464,1,1,51);
 
-      const title=this.add.text(this.scale.width/2,this.scale.height/2-175,'조작 방법',{
-        fontFamily:'Noto Sans KR',fontSize:'27px',fontStyle:'900',color:'#ffffff'
+      const title=this.add.text(left,cy-boxH/2+28,'조작 방법',{
+        fontFamily:'Noto Sans KR',fontSize:'25px',fontStyle:'900',color:'#8f2945'
+      }).setOrigin(0,0).setDepth(52);
+
+      const badgeBg=roundedRect(cx+boxW/2-80,cy-boxH/2+41,102,28,14,0xf8b8c9,1,0xdb4464,1,1,52);
+      const badgeDot=this.add.circle(cx+boxW/2-116,cy-boxH/2+41,4,0xdb4464).setDepth(53);
+      const badgeText=this.add.text(cx+boxW/2-71,cy-boxH/2+41,'게임 가이드',{
+        fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'700',color:'#a72f50'
+      }).setOrigin(.5).setDepth(53);
+
+      const sectionY=cy-boxH/2+91;
+      const section=this.add.text(left,sectionY,'기본 조작',{
+        fontFamily:'Noto Sans KR',fontSize:'13px',fontStyle:'800',color:'#a72f50'
+      }).setOrigin(0,0).setDepth(52);
+
+      const rows=[
+        ['이동','W A S D  /  방향키','캐릭터를 원하는 방향으로 이동'],
+        ['공격','자동 공격','가장 가까운 적을 자동으로 공격'],
+        ['성장','레벨업 카드','경험치를 모아 카드 3개 중 하나 선택'],
+        ['목표','30분 생존','3분마다 스테이지 상승 · 3분에 보스 출현 (보스출현시 타이머 잠금)']
+      ];
+      const rowObjects=[];
+      const rowH=76, gap=8;
+      let y=sectionY+37;
+      rows.forEach(([label,key,desc])=>{
+        const bg=roundedRect(cx,y+rowH/2,innerW,rowH,14,0xf9bfd0,1,null,1,1,52);
+        const keyBg=roundedRect(left+70,y+rowH/2,116,46,12,0xffe6ed,1,0xdb4464,1,1,53);
+        const keyText=this.add.text(left+70,y+rowH/2,key,{
+          fontFamily:'Noto Sans KR',fontSize:key.length>9?'12px':'14px',fontStyle:'900',color:'#db4464',align:'center',
+          wordWrap:{width:100,useAdvancedWrap:true}
+        }).setOrigin(.5).setDepth(54);
+        const labelText=this.add.text(left+166,y+15,label,{
+          fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'900',color:'#8f2945'
+        }).setOrigin(0,0).setDepth(54);
+        const descText=this.add.text(left+166,y+39,desc,{
+          fontFamily:'Noto Sans KR',fontSize:'11px',color:'#a84b64',
+          wordWrap:{width:innerW-188,useAdvancedWrap:true}
+        }).setOrigin(0,0).setDepth(54);
+        rowObjects.push(bg,keyBg,keyText,labelText,descText);
+        y+=rowH+gap;
+      });
+
+      const note=this.add.text(cx,cy+boxH/2-91,'플레이 중 일시정지 및 레벨업 선택 화면에서는 적 생성이 멈춥니다.',{
+        fontFamily:'Noto Sans KR',fontSize:'10px',color:'#a84b64',align:'center',
+        wordWrap:{width:innerW,useAdvancedWrap:true}
       }).setOrigin(.5).setDepth(52);
 
-      const body=this.add.text(this.scale.width/2,this.scale.height/2-25,
-        '이동\nW A S D  /  방향키\n\n공격\n가장 가까운 적에게 자동 공격\n\n성장\n경험치를 모으면 레벨업 카드 3개 중 하나 선택\n\n목표\n30분 생존 · 5분마다 스테이지 상승 · 3분에 보스 출현',{
-          fontFamily:'Noto Sans KR',fontSize:'13px',color:'#ddd1dc',align:'center',
-          lineSpacing:8, wordWrap:{width:boxW-100,useAdvancedWrap:true}
-        }).setOrigin(.5).setDepth(52);
+      // SOOP 연동 팝업의 하단 닫기 버튼 CSS와 시각 스타일을 동일하게 맞춘다.
+      // 160px 폭 / 44px 높이 / #db4464 배경 / 흰색 Noto Sans KR 800 텍스트.
+      const closeW=160, closeH=44, closeR=22, closeY=cy+boxH/2-43;
+      const closeBg=roundedRect(cx,closeY,closeW,closeH,closeR,0xdb4464,1,0xdb4464,1,1,52);
+      const closeHit=this.add.rectangle(cx,closeY,closeW,closeH,0x000000,0)
+        .setInteractive({useHandCursor:true}).setDepth(54);
+      const closeText=this.add.text(cx,closeY,'닫기',{
+        fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ffffff'
+      }).setOrigin(.5).setDepth(53);
+      const redrawClose=(fill)=>{
+        closeBg.clear();
+        closeBg.fillStyle(fill,1);
+        closeBg.fillRoundedRect(cx-closeW/2,closeY-closeH/2,closeW,closeH,closeR);
+        closeBg.lineStyle(1,0xdb4464,1);
+        closeBg.strokeRoundedRect(cx-closeW/2,closeY-closeH/2,closeW,closeH,closeR);
+      };
+      closeHit.on('pointerover',()=>redrawClose(0xe85f7e));
+      closeHit.on('pointerout',()=>redrawClose(0xdb4464));
+      closeHit.on('pointerdown',()=>this.closeHowTo());
+      closeText.setInteractive({useHandCursor:true}).on('pointerdown',()=>this.closeHowTo());
 
-      const close=this.add.text(this.scale.width/2,this.scale.height/2+150,'닫기',{
-        fontFamily:'Noto Sans KR',fontSize:'13px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setInteractive({useHandCursor:true}).setDepth(52);
-      close.on('pointerdown',()=>this.closeHowTo());
-
-      // All elements are explicitly tracked and destroyed together.
-      this.howTo={overlay,box,title,body,close};
+      this.howTo={overlay,box,title,badgeBg,badgeDot,badgeText,section,note,closeBg,closeHit,closeText,rowObjects};
     }
 
     closeHowTo() {
@@ -244,9 +337,11 @@
       const popup=this.howTo;
       Object.keys(popup).forEach(key=>{
         const obj=popup[key];
-        if(obj && typeof obj.destroy==='function') obj.destroy();
+        if(Array.isArray(obj)) obj.forEach(item=>item && typeof item.destroy==='function' && item.destroy());
+        else if(obj && typeof obj.destroy==='function') obj.destroy();
       });
       this.howTo=null;
+      this.unlockMenuInput();
     }
   }
 
@@ -272,7 +367,8 @@
         enemy.hp=Math.min(enemy.maxHp,Math.round(enemy.hp*1.1));
         enemy.damage=Math.round(enemy.damage*1.1*10)/10;
       });
-      this.showBanner(`STAGE ${stage}`,`적의 공격력과 체력이 10% 증가했습니다`);
+      // Keep stage scaling on schedule; announce it after the boundary boss is defeated.
+      this.state.pendingStageNotice=stage;
     }
 
     preload() {
@@ -289,7 +385,10 @@
         playerRight:configured.playerRight || 'assets/roguelike/characters/player_right.png'
       };
       Object.entries(assets).forEach(([key,path]) => {
-        if(path) this.load.image(key, path + (path.includes('?')?'&':'?') + 'rev=14');
+        if(path) {
+          const source = /^(data:|blob:)/i.test(path) ? path : path + (path.includes('?')?'&':'?') + 'rev=23';
+          this.load.image(key, source);
+        }
       });
     }
 
@@ -375,6 +474,9 @@
         stage: 1,
         bossRound: 0,
         bossActive: false,
+        pendingStageNotice: null,
+        bossOrder: Phaser.Utils.Array.Shuffle(BOSS_TYPES.slice(0,5)).concat(BOSS_TYPES[5]),
+        currentBossName: '',
         upgrades: {},
         level: 1,
         xp: 0,
@@ -458,6 +560,12 @@
         g.fillCircle(32,32,9);
         g.fillStyle(0xffffff, .8);
         g.fillCircle(29,29,3);
+      });
+
+      make('enemyBullet', g => {
+        g.fillStyle(0x5d1834,1); g.fillCircle(32,32,14);
+        g.fillStyle(0xff794b,1); g.fillCircle(32,32,10);
+        g.fillStyle(0xffedb0,1); g.fillCircle(29,29,4);
       });
 
       make('bullet', g => {
@@ -794,7 +902,7 @@
       this.player.y += shiftY;
       this.player.body.reset(this.player.x, this.player.y);
 
-      const groups = [this.enemies, this.projectiles, this.xpOrbs];
+      const groups = [this.enemies, this.projectiles, this.enemyProjectiles, this.xpOrbs];
       groups.forEach(group => {
         group?.children?.iterate(obj => {
           if (!obj || !obj.active) return;
@@ -808,13 +916,17 @@
     createGroups() {
       this.enemies = this.physics.add.group();
       this.projectiles = this.physics.add.group();
+      this.enemyProjectiles = this.physics.add.group();
       this.xpOrbs = this.physics.add.group();
 
       this.physics.add.overlap(this.projectiles, this.enemies, this.hitEnemy, null, this);
       this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
+      this.physics.add.overlap(this.player, this.enemyProjectiles, this.enemyBulletHit, null, this);
       this.physics.add.overlap(this.player, this.xpOrbs, this.collectXp, null, this);
-      // 나무/바위/건물은 실제 장애물로 작동합니다. 적은 장애물을 통과해 플레이어를 추적합니다.
+      // 플레이어와 보스는 같은 나무/바위/건물 충돌 영역을 사용합니다.
       this.physics.add.collider(this.player, this.terrain);
+      this.physics.add.collider(this.enemies, this.terrain, null,
+        enemy => enemy.active && enemy.type==='boss', this);
     }
 
     configurePlayerHitbox() {
@@ -905,13 +1017,14 @@
       const passive = this.add.text(34,335,'선택한 능력 없음',{fontFamily:'Noto Sans KR',fontSize:'9px',color:'#ddd1dc',lineSpacing:6}).setDepth(101);
       this.combatHud={panel,hp,hpText,statTexts,passive};
 
-      this.bossBg=this.add.rectangle(GAME_W/2,122,520,13,0x311c2b,.92).setDepth(100).setVisible(false);
-      this.bossBar=this.add.rectangle(GAME_W/2-260,122,520,13,0xff526e,.95).setOrigin(0,.5).setDepth(101).setVisible(false);
-      this.bossText=this.add.text(GAME_W/2,101,'BOSS',{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'900',color:'#ffd6e4'}).setOrigin(.5).setDepth(101).setVisible(false);
+      this.bossBg=this.add.rectangle(GAME_W/2,58,520,13,0x311c2b,.92).setDepth(100).setVisible(false);
+      this.bossBar=this.add.rectangle(GAME_W/2-260,58,520,13,0xff526e,.95).setOrigin(0,.5).setDepth(101).setVisible(false);
+      this.bossText=this.add.text(GAME_W/2,37,'BOSS',{fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'900',color:'#ffd6e4'}).setOrigin(.5).setDepth(101).setVisible(false);
       const combatItems=[panel,title,sub,hpBg,hp,hpText,...statLabels,...statTexts,passiveTitle,passive,this.bossBg,this.bossBar,this.bossText];
       combatItems.forEach(o => { o.setScrollFactor(0); if(o!==this.bossBg && o!==this.bossBar && o!==this.bossText) o.setVisible(false); });
       this.hudTopItems=[...Object.values(this.ui).filter(o=>o!==this.ui.hint),...combatItems];
       this.hudBaseY=new Map(this.hudTopItems.map(o=>[o,o.y]));
+      this.createEncounterHud();
     }
 
     layoutHud() {
@@ -925,6 +1038,7 @@
       this.bossBg.setX(this.scale.width/2);
       this.bossBar.setX(this.scale.width/2-260);
       this.bossText.setX(this.scale.width/2);
+      this.layoutEncounterHud();
     }
 
     createMobileControls() {
@@ -1065,7 +1179,11 @@
       if(this.state.bossActive || round!==this.state.bossRound+1 || round>TOTAL_STAGES) return;
       this.state.bossRound=round;
       this.state.bossActive=true;
-      const boss=this.enemies.create(this.player.x, this.player.y-650, 'boss');
+      const bossType=this.state.bossOrder[round-1];
+      this.state.currentBossName=bossType.name;
+      const boss=this.enemies.create(this.player.x, this.player.y-650, bossType.key);
+      boss.bossId=bossType.key;
+      boss.bossName=bossType.name;
       boss.type='boss';
       boss.bossRound=round;
       // Each five-minute boss grows from the previous boss, alongside stage/difficulty scaling.
@@ -1074,11 +1192,40 @@
       boss.hp=boss.maxHp;
       boss.speed=48*Math.pow(1.25,round-1);
       boss.damage=Math.round(24*Math.pow(1.5,round-1)*multiplier*10)/10;
-      boss.setDisplaySize(99.2,99.2);
+      const bossSize=99.2*(boss.bossId==='bossFinal'?3.5:2.5);
+      boss.setDisplaySize(bossSize,bossSize);
       boss.setDepth(15);
       boss.setData('isBoss',true);
-      this.showBanner(`BOSS ${round}/${TOTAL_STAGES} 출현!`, '보스를 쓰러뜨릴 때까지 시간이 멈춥니다');
+      this.showBanner(`${round===TOTAL_STAGES?'FINAL BOSS':'BOSS'} · ${boss.bossName} 출현!`, '보스를 쓰러뜨릴 때까지 시간이 멈춥니다');
       this.updateUi();
+    }
+
+    updateEnemyRangedAttack(enemy,delta) {
+      if(!enemy.active || !this.state.running || this.state.pausedForUser || this.state.pausedForLevel) return;
+      const bossShooter=enemy.type==='boss' && enemy.bossId==='boss4';
+      if(enemy.type!=='elite' && !bossShooter) return;
+      const interval=bossShooter?2000:1800;
+      enemy.rangedCooldown=Math.max(0,(enemy.rangedCooldown??interval)-delta);
+      if(enemy.rangedCooldown>0 || Phaser.Math.Distance.Between(enemy.x,enemy.y,this.player.x,this.player.y)>720) return;
+      enemy.rangedCooldown=interval;
+      const aim=Phaser.Math.Angle.Between(enemy.x,enemy.y,this.player.x,this.player.y);
+      const count=bossShooter?9:1;
+      for(let i=0;i<count;i++){
+        const angle=aim+(i-(count-1)/2)*0.22;
+        const bullet=this.enemyProjectiles.create(enemy.x,enemy.y,'enemyBullet');
+        bullet.owner=enemy;
+        bullet.damage=enemy.damage;
+        bullet.life=3200;
+        bullet.setDepth(18).setScale(bossShooter?0.85:0.65);
+        bullet.body.setCircle(12,20,20);
+        bullet.setVelocity(Math.cos(angle)*260,Math.sin(angle)*260);
+      }
+    }
+
+    enemyBulletHit(player,bullet) {
+      if(!bullet.active || !this.state.running || this.state.pausedForLevel || this.state.pausedForUser) return;
+      this.playerHit(player,bullet);
+      bullet.destroy();
     }
 
     autoAttack() {
@@ -1127,9 +1274,11 @@
       this.tweens.add({targets:spark,scale:.75,alpha:0,duration:180,onComplete:()=>spark.destroy()});
 
       if(enemy.hp<=0) this.killEnemy(enemy);
+      else if(enemy.type==='boss') this.updateBossHud();
     }
 
     killEnemy(enemy) {
+      this.enemyProjectiles.getChildren().filter(b=>b.owner===enemy).forEach(b=>b.destroy());
       const value=enemy.type==='boss'?40:enemy.type==='elite'?8:enemy.type==='bat'?3:2;
       this.state.kills++;
       if(enemy.type==='boss'){
@@ -1141,6 +1290,10 @@
           return;
         }
         this.showBanner('보스 격파!', '시간이 다시 흐르고 적들이 등장합니다 ♡');
+        if(this.state.pendingStageNotice!==null){
+          this.showBanner(`STAGE ${this.state.pendingStageNotice}`, '적의 공격력과 체력이 10% 증가했습니다');
+          this.state.pendingStageNotice=null;
+        }
       } else {
         this.dropXp(enemy.x,enemy.y,value, false);
       }
@@ -1291,7 +1444,15 @@
       this.enemies.children.iterate(e=>{
         if(!e||!e.active) return;
         const angle=Phaser.Math.Angle.Between(e.x,e.y,this.player.x,this.player.y);
-        e.setVelocity(Math.cos(angle)*e.speed,Math.sin(angle)*e.speed);
+        const moveSpeed=e.speed*(e.type==='boss' && this.isInWater(e.x,e.y)?0.58:1);
+        e.setVelocity(Math.cos(angle)*moveSpeed,Math.sin(angle)*moveSpeed);
+        this.updateEnemyRangedAttack(e,delta);
+      });
+
+      this.enemyProjectiles.getChildren().slice().forEach(b=>{
+        if(!b.active) return;
+        b.life-=delta;
+        if(b.life<=0) b.destroy();
       });
 
       this.projectiles.children.iterate(b=>{
@@ -1362,7 +1523,7 @@
       const bossStatus=byId('gameBossStatus');
       bossStatus.hidden=!this.state.bossActive;
       bossStatus.textContent=this.state.bossActive
-        ? `BOSS ${this.state.bossRound}/${TOTAL_STAGES} · 시간 정지` : '';
+        ? `${this.state.currentBossName} · 시간 정지` : '';
       if(this.combatHud){
         this.combatHud.hp.width=180*Math.max(0,this.player.hp/this.player.maxHp);
         this.combatHud.hpText.setText(`${Math.max(0,Math.ceil(this.player.hp))} / ${this.player.maxHp}`);
@@ -1372,24 +1533,106 @@
         this.combatHud.statTexts[3].setText(String(Math.round(this.player.pickupRadius)));
         this.combatHud.passive.setText(passiveLines.length?passiveLines.join('\n'):'선택한 능력 없음');
       }
-      if(this.bossBar){
-        let boss=null; this.enemies.children.iterate(e=>{if(e&&e.active&&e.type==='boss') boss=e;});
-        const visible=Boolean(boss);
-        this.bossBg.setVisible(visible); this.bossBar.setVisible(visible); this.bossText.setVisible(visible);
-        if(boss){ this.bossBar.width=520*Math.max(0,boss.hp/boss.maxHp); this.bossText.setText(`BOSS ${boss.bossRound}/${TOTAL_STAGES} · ${Math.max(0,Math.ceil(boss.hp))} / ${boss.maxHp}`); }
+      this.updateBossHud();
+    }
+
+    createEncounterHud() {
+      const byId=id=>document.getElementById(id);
+      this.encounterHud={root:byId('encounterHud'),boss:byId('encounterBoss'),
+        name:byId('encounterBossName'),hp:byId('encounterBossHp'),
+        track:byId('encounterBossTrack'),fill:byId('encounterBossFill'),
+        notices:byId('encounterNotices'),
+        notice:byId('encounterNotice'),title:byId('encounterNoticeTitle'),sub:byId('encounterNoticeSub'),
+        bossNotice:byId('encounterBossNotice'),bossTitle:byId('encounterBossNoticeTitle'),bossSub:byId('encounterBossNoticeSub')};
+      this.bannerTimer=null;
+      this.clearEncounterHud();
+      this.encounterResize=new ResizeObserver(()=>this.layoutEncounterHud());
+      this.encounterResize.observe(this.encounterHud.root);
+      const actions=document.querySelector('.game-overlay-actions');
+      if(actions) this.encounterResize.observe(actions);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{
+        this.encounterResize.disconnect();this.clearEncounterHud();
+      });
+    }
+
+    layoutEncounterHud() {
+      const hud=this.encounterHud;
+      if(!hud) return;
+      const overlay=document.getElementById('gameOverlay');
+      const rect=overlay.getBoundingClientRect();
+      if(!rect.width) return;
+      const actions=document.querySelector('.game-overlay-actions')?.getBoundingClientRect();
+      const panel=document.querySelector('.game-status-popup')?.getBoundingClientRect();
+      const compact=rect.width<=640;
+      const edge=compact?8:18;
+      const left=compact?edge:Math.max(edge,(panel?.right||rect.left)-rect.left+16);
+      const available=Math.max(1,rect.width-left-edge);
+      const width=Math.min(580,available);
+      const top=Math.max(20,(actions?.bottom||rect.top+48)-rect.top+12);
+      hud.root.style.width=width+'px';
+      hud.root.style.left=(left+(available-width)/2)+'px';
+      hud.root.style.top=top+'px';
+      // On narrow screens the status panel begins below both HUD rows.
+      const bottom=top+hud.root.getBoundingClientRect().height+12;
+      overlay.style.setProperty('--encounter-bottom',Math.ceil(bottom)+'px');
+    }
+
+    clearEncounterHud() {
+      this.bannerTimer?.remove();this.bannerTimer=null;
+      if(!this.encounterHud) return;
+      this.encounterHud.boss.hidden=true;
+      this.encounterHud.notice.hidden=true;
+      this.encounterHud.bossNotice.hidden=true;
+      this.encounterHud.notices.classList.remove('is-visible');
+      this.encounterHud.notices.hidden=true;
+      this.layoutEncounterHud();
+    }
+
+    updateBossHud() {
+      if(!this.encounterHud) return;
+      // Retire the canvas HP bar so there is only one source of boss information.
+      this.bossBg.setVisible(false);this.bossBar.setVisible(false);this.bossText.setVisible(false);
+      const boss=this.state.running?this.enemies.getChildren().find(e=>e?.active&&e.type==='boss'):null;
+      const hud=this.encounterHud;
+      hud.boss.hidden=!boss;
+      if(boss){
+        const hp=Math.max(0,Math.ceil(boss.hp));
+        hud.name.textContent=`${boss.bossRound===TOTAL_STAGES?'FINAL BOSS':'BOSS '+boss.bossRound+'/'+TOTAL_STAGES} · ${boss.bossName}`;
+        hud.hp.textContent=`${hp.toLocaleString()} / ${boss.maxHp.toLocaleString()}`;
+        hud.fill.style.width=(Math.max(0,Math.min(1,boss.hp/boss.maxHp))*100)+'%';
+        hud.track.setAttribute('aria-valuenow',String(hp));
+        hud.track.setAttribute('aria-valuemax',String(boss.maxHp));
       }
+      this.layoutEncounterHud();
     }
 
     showBanner(title,sub) {
-      const box=this.add.rectangle(this.scale.width/2,155,420,95,0x241727,.92).setStrokeStyle(2,COLORS.pink,.8).setDepth(150).setScrollFactor(0);
-      const t=this.add.text(this.scale.width/2,138,title,{fontFamily:'Noto Sans KR',fontSize:'27px',fontStyle:'900',color:'#ffffff'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
-      const s=this.add.text(this.scale.width/2,174,sub,{fontFamily:'Noto Sans KR',fontSize:'11px',color:'#f3dce9'}).setOrigin(.5).setDepth(151).setScrollFactor(0);
-      this.tweens.add({targets:[box,t,s],alpha:0,duration:2600,delay:700,onComplete:()=>[box,t,s].forEach(o=>o.destroy())});
+      const hud=this.encounterHud;
+      if(!hud || !this.state.running) return;
+      const stage=title.startsWith('STAGE');
+      const card=stage?hud.notice:hud.bossNotice;
+      (stage?hud.title:hud.bossTitle).textContent=title;
+      (stage?hud.sub:hud.bossSub).textContent=sub;
+      card.hidden=false;
+      hud.notices.hidden=false;
+      hud.notices.classList.add('is-visible');
+      this.layoutEncounterHud();
+      // Same-tick stage/boss messages occupy separate rows and share one lifetime.
+      this.bannerTimer?.remove();
+      this.bannerTimer=this.time.delayedCall(3000,()=>{
+        hud.notices.classList.remove('is-visible');
+        this.bannerTimer=this.time.delayedCall(250,()=>{
+          this.bannerTimer=null;
+          hud.notice.hidden=true;hud.bossNotice.hidden=true;hud.notices.hidden=true;
+          this.layoutEncounterHud();
+        });
+      });
     }
 
     gameOver() {
       if(!this.state.running) return;
       this.state.running=false;
+      this.clearEncounterHud();
       this.syncPauseState();
       this.spawnTimer?.remove();
       this.attackTimer?.remove();
@@ -1410,6 +1653,7 @@
     victory() {
       if(!this.state.running) return;
       this.state.running=false;
+      this.clearEncounterHud();
       this.syncPauseState();
       this.spawnTimer?.remove();
       this.attackTimer?.remove();

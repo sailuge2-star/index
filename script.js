@@ -124,7 +124,11 @@ $('#artFile')?.addEventListener('change', () => {
   if (file.size > 6 * 1024 * 1024) { alert('이미지는 6MB 이하만 올릴 수 있습니다.'); $('#artFile').value=''; return; }
   const url = URL.createObjectURL(file);
   artPreview.hidden = false;
-  artPreview.innerHTML = `<img src="${url}" alt="팬아트 미리보기">`;
+  artPreview.replaceChildren();
+  const previewImg = document.createElement('img');
+  previewImg.src = url;
+  previewImg.alt = '팬아트 미리보기';
+  artPreview.appendChild(previewImg);
 });
 function demoArts() { try { return JSON.parse(localStorage.getItem(demoArtKey) || '[]'); } catch { return []; } }
 function saveDemoArt(row) { const rows=[row,...demoArts()].slice(0,20); localStorage.setItem(demoArtKey,JSON.stringify(rows)); return rows; }
