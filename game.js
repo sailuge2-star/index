@@ -121,7 +121,7 @@
       this.add.text(GAME_W/2, 334, '3000 DAYS SURVIVAL', {
         fontFamily:'Noto Sans KR', fontSize:'13px', fontStyle:'800', color:'#ac587b', letterSpacing:4
       }).setOrigin(.5);
-      this.add.text(GAME_W/2, 370, '끝없이 몰려오는 적을 물리치고 3000일을 기념하세요.', {
+      this.add.text(GAME_W/2, 370, '끝없이 몰려오는 흑화된 뽀글스를 물리치고 3000일을 기념하세요.', {
         fontFamily:'Noto Sans KR', fontSize:'13px', color:'#8e627b'
       }).setOrigin(.5);
 
@@ -294,7 +294,7 @@
         ['이동','W A S D  /  방향키','캐릭터를 원하는 방향으로 이동'],
         ['공격','자동 공격','가장 가까운 적을 자동으로 공격'],
         ['성장','레벨업 카드','경험치를 모아 카드 3개 중 하나 선택'],
-        ['목표','30분 생존','3분마다 스테이지 상승 · 3분에 보스 출현 (보스출현시 타이머 잠금)']
+        ['목표','30분 생존','5분마다 스테이지 상승 · 5분에 보스 출현 (보스출현시 타이머 잠금)']
       ];
       const rowObjects=[];
       const rowH=76, gap=8;
