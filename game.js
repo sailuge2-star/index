@@ -391,7 +391,7 @@
     preload() {
       // 캐릭터 이미지는 assets/roguelike/characters/ 폴더의 파일로 교체할 수 있습니다.
       // PNG/JPG 모두 사용 가능하며, 아래 파일명을 그대로 덮어쓰면 됩니다.
-      this.load.image('weapon-boomerang','assets/roguelike/weapons/boomerang.png?v=guardian-20261002');
+      this.load.image('weapon-boomerang',window.BBO_BOOMERANG_IMAGE||'assets/roguelike/weapons/boomerang.png?v=embedded-20261002');
       const configured = window.BBORINGIRL_CHARACTER_ASSETS || {};
       const assets = {
         enemy:'assets/roguelike/characters/enemy.png',
