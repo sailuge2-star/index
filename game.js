@@ -42,6 +42,8 @@
     { id:'rapid', title:'방송 텐션', desc:'공격속도 +18%', icon:'⚡', apply:p => p.fireDelay = Math.max(170, p.fireDelay * .82) },
     { id:'maxhp', title:'팬들의 사랑', desc:'최대 HP +25 / 회복', icon:'♥', apply:p => { p.maxHp += 25; p.hp = p.maxHp; } },
     { id:'magnet', title:'추억의 자석', desc:'경험치 획득 범위 +35%', icon:'✦', apply:p => p.pickupRadius *= 1.35 },
+    { id:'cannon', title:'포탄', desc:'획득 / 강화: 범위 피해·폭발 범위 증가, 발사 간격 감소', icon:'●', apply:p => p.cannonLevel=(p.cannonLevel||0)+1 },
+    { id:'boomerang', title:'부메랑', desc:'획득 / 강화: 공전 무기 개수(최대 6)·피해·회전 속도 증가', icon:'↻', apply:p => p.boomerangLevel=(p.boomerangLevel||0)+1 },
     { id:'multishot', title:'하트 발사', desc:'투사체 +1개', icon:'✧', apply:p => p.projectiles += 1 }
   ];
 
@@ -438,6 +440,8 @@
       this.createWorld();
       this.createPlayer();
       this.createGroups();
+      this.extraWeapons=new window.BBOExtraWeapons(this);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.extraWeapons.destroy());
       this.enemyHealthGraphics=this.add.graphics().setDepth(19);
       this.createInput();
       this.createUi();
@@ -979,6 +983,8 @@
       this.player.hp = this.balance.player_hp;
       this.player.maxHp = this.balance.player_hp;
       this.player.projectiles = 1;
+      this.player.cannonLevel = 0;
+      this.player.boomerangLevel = 0;
       this.player.pickupRadius = 75;
       this.player.invulnerableUntil = 0;
       this.player.setDepth(20);
@@ -1471,7 +1477,8 @@
         const x=this.scale.width/2-250+i*250;
         const bg=this.add.rectangle(x,this.scale.height/2+10,220,230,0x2b2131,.98).setStrokeStyle(2,0x8c5c80,.7).setDepth(201).setScrollFactor(0).setInteractive({useHandCursor:true});
         const icon=this.add.text(x,this.scale.height/2-45,u.icon,{fontSize:'34px',color:'#ff9bc7'}).setOrigin(.5).setDepth(202).setScrollFactor(0);
-        const name=this.add.text(x,this.scale.height/2,u.title,{fontFamily:'Noto Sans KR',fontSize:'17px',fontStyle:'800',color:'#ffffff',align:'center',wordWrap:{width:190}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
+        const weaponTitle=['cannon','boomerang'].includes(u.id)?`${u.title} ${(this.state.upgrades[u.id]||0)?'강화 LV '+((this.state.upgrades[u.id]||0)+1):'획득'}`:u.title;
+        const name=this.add.text(x,this.scale.height/2,weaponTitle,{fontFamily:'Noto Sans KR',fontSize:'17px',fontStyle:'800',color:'#ffffff',align:'center',wordWrap:{width:190}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
         const desc=this.add.text(x,this.scale.height/2+55,u.desc,{fontFamily:'Noto Sans KR',fontSize:'12px',color:'#d3c5d2',align:'center',wordWrap:{width:180}}).setOrigin(.5).setDepth(202).setScrollFactor(0);
         bg.on('pointerover',()=>bg.setStrokeStyle(3,COLORS.pink,1));
         bg.on('pointerout',()=>bg.setStrokeStyle(2,0x8c5c80,.7));
@@ -1517,6 +1524,8 @@
     update(time,delta) {
       if(!this.state?.running || this.state.pausedForLevel || this.state.pausedForUser) return;
 
+      this.extraWeapons.update(delta);
+      if(!this.state.running)return;
       this.player.donationInvulnerableMs=Math.max(0,(this.player.donationInvulnerableMs||0)-delta);
       let x=0,y=0;
       if(this.keys.A.isDown||this.keys.LEFT.isDown) x-=1;
