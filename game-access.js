@@ -32,7 +32,7 @@
     }
   }));
   const ready=Promise.all([refresh(),load()]);
-  window.BBO_GAME_ACCESS=Object.freeze({isAdmin:()=>admin,settings:()=>({...settings}),ready,
+  window.BBO_GAME_ACCESS=Object.freeze({client,isAdmin:()=>admin,settings:()=>({...settings}),ready,
     async save(values){const clean=validate(values);await refresh();if(!admin||!client)throw Error('관리자 로그인 후 이용해주세요.');const {error}=await bounded(client.from('game_balance').upsert({id:1,...clean}));if(error)throw error;settings=clean;loadError='';}
   });
   client?.auth.onAuthStateChange(()=>{admin=false;render();setTimeout(refresh,0);});

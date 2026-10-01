@@ -118,7 +118,7 @@
       this.add.text(GAME_W/2, 334, '3000 DAYS SURVIVAL', {
         fontFamily:'Noto Sans KR', fontSize:'13px', fontStyle:'800', color:'#ac587b', letterSpacing:4
       }).setOrigin(.5);
-      this.add.text(GAME_W/2, 370, '끝없이 몰려오는 흑화한 뱁새들을 물리치고 3000일을 기념하세요.', {
+      this.add.text(GAME_W/2, 370, '끝없이 몰려오는 적을 물리치고 3000일을 기념하세요.', {
         fontFamily:'Noto Sans KR', fontSize:'13px', color:'#8e627b'
       }).setOrigin(.5);
 
@@ -142,6 +142,7 @@
         if(this.startPending)return;
         this.startPending=true;
         await window.BBO_GAME_ACCESS?.ready;
+        await window.BBO_RANKING?.prepare();
         this.startPending=false;
         if(!this.scene.isActive())return;
         this.scene.start('MainScene',{difficulty:this.selectedDifficulty});
@@ -477,6 +478,8 @@
     }
 
     resetState() {
+      this.rankingRun=window.BBO_RANKING?.begin(this.difficulty);
+      document.getElementById('rankingRetry').hidden=true;
       this.state = {
         running: true,
         elapsed: 0,
@@ -1738,6 +1741,7 @@
 
     gameOver() {
       if(!this.state.running) return;
+      void window.BBO_RANKING?.finish(this.rankingRun,this.state,false);
       this.state.running=false;
       this.clearEncounterHud();
       this.syncPauseState();
@@ -1759,6 +1763,7 @@
 
     victory() {
       if(!this.state.running) return;
+      void window.BBO_RANKING?.finish(this.rankingRun,this.state,true);
       this.state.running=false;
       this.clearEncounterHud();
       this.syncPauseState();

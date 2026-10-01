@@ -23,6 +23,7 @@
     #soopConnectDialog #soopConnectAction:focus-visible{outline:3px solid #55203e;outline-offset:4px}
     #soopConnectDialog #soopConnectAction:disabled{opacity:.7;cursor:wait}
   </style>
+  <link rel="stylesheet" href="game-ranking.css?v=1">
 </head>
 <body>
   <div class="game-page">
@@ -39,6 +40,10 @@
       <button id="restartTop" class="top-button" type="button">↻ 다시 시작</button>
     </header>
 
+    <section class="player-entry" aria-label="플레이어 설정">
+      <label for="playerNickname">닉네임</label><input id="playerNickname" maxlength="20" placeholder="비워두면 게스트 + 번호" autocomplete="nickname">
+      <button id="openRanking" type="button">🏆 랭킹</button><small id="playerNameHint">빈칸이면 게스트 번호 자동 지정 · 최대 20자</small>
+    </section>
     <main class="game-shell">
       <div class="game-overlay" id="gameOverlay" aria-label="게임 상태">
         <div class="game-xp-track" id="gameXpTrack" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuenow="0" aria-valuemax="25"><span id="gameXpFill"></span></div>
@@ -75,12 +80,20 @@
     </main>
   </div>
 
+  <dialog id="rankingDialog" class="ranking-dialog" aria-labelledby="rankingTitle">
+    <header><h2 id="rankingTitle">🏆 생존 랭킹</h2><form method="dialog"><button>닫기</button></form></header>
+    <p>클리어 여부 → 생존 시간 → 처치 수 순서 · 동률은 먼저 등록한 기록 우선</p>
+    <label for="rankingDifficulty">난이도</label> <select id="rankingDifficulty"><option value="easy">쉬움</option><option value="normal">보통</option><option value="hard">하드</option></select> <button id="rankingRefresh" type="button">새로고침</button>
+    <p id="rankingStatus" role="status"></p><div class="ranking-scroll"><table><thead><tr><th>순위</th><th>닉네임</th><th>결과</th><th>생존</th><th>처치</th></tr></thead><tbody id="rankingRows"></tbody></table></div>
+  </dialog>
+  <div class="ranking-save" role="status"><span id="rankingSaveStatus"></span><button id="rankingRetry" type="button" hidden>저장 재시도</button></div>
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game-access.js?v=admin-link-fix-20260930"></script>
+  <script src="game-access.js?v=ranking-20261001"></script>
+  <script src="game-ranking.js?v=1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
-  <script src="game.js?v=pink-menu-20261001"></script>
+  <script src="game.js?v=ranking-20261001"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
