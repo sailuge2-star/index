@@ -22,7 +22,9 @@
    const s=this.scene;if(!s.state.running||s.state.pausedForLevel||s.state.pausedForUser)return;
    const dt=Math.min(delta,100);this.clock+=dt;this.graphics.clear();const g=this.graphics,p=s.player;
    const cannon=p.cannonLevel||0,boomerang=p.boomerangLevel||0;
-   if(cannon){this.cooldown-=dt;if(this.cooldown<=0&&this.launch(cannon))this.cooldown=Math.max(700,2800-(cannon-1)*180);}
+   // 기본 탄환과 같은 공격속도 배율. 무기 고유 강화와 곱해서 적용한다.
+   const attackSpeed=650/Math.max(170,Number(p.fireDelay)||650);
+   if(cannon){this.cooldown-=dt*attackSpeed;if(this.cooldown<=0&&this.launch(cannon))this.cooldown=Math.max(700,2800-(cannon-1)*180);}
    this.shells=this.shells.filter(shell=>{
     shell.age+=dt;const t=Math.min(1,shell.age/shell.duration);
     if(t>=1){this.explode(shell);return false;}
@@ -36,7 +38,7 @@
    });
    this.blasts=this.blasts.filter(b=>{b.age+=dt;const t=b.age/400;if(t>=1)return false;g.fillStyle(0xff923f,(1-t)*.4).fillCircle(b.x,b.y,b.radius*(.5+t*.5));g.lineStyle(5,0xffdf8b,1-t).strokeCircle(b.x,b.y,b.radius*(.5+t*.5));return true;});
    if(boomerang){
-    const count=Math.min(6,boomerang),radius=115;this.angle+=dt/1000*(2+Math.min(boomerang-1,15)*.18);
+    const count=Math.min(6,boomerang),radius=115;this.angle+=dt/1000*(2+Math.min(boomerang-1,15)*.18)*attackSpeed;
     const points=[];
     for(let i=0;i<count;i++){
      const a=this.angle+i*Math.PI*2/count,x=p.x+Math.cos(a)*radius,y=p.y+Math.sin(a)*radius,spin=this.angle*3;

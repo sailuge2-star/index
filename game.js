@@ -415,6 +415,9 @@
         pausedForUser: false
       };
       this.physics.world.isPaused=false;
+      this.time.paused=false;
+      this.combatPaused=false;
+      this.tweens.resumeAll();
     }
 
     createTextures() {
@@ -1065,8 +1068,15 @@
     }
 
     syncPauseState() {
-      const paused=this.state.pausedForLevel || this.state.pausedForUser;
+      const paused=!this.state.running || this.state.pausedForLevel || this.state.pausedForUser;
+      if(this.combatPaused&&!paused&&this.player){
+        // 재개 직후 겹쳐 있던 적/탄환이 즉시 피해를 주지 않도록 보호한다.
+        this.player.invulnerableUntil=Math.max(this.player.invulnerableUntil||0,this.time.now+650);
+      }
+      this.combatPaused=paused;
       this.physics.world.isPaused=paused;
+      this.time.paused=paused;
+      if(paused)this.tweens.pauseAll();else this.tweens.resumeAll();
       for(const timer of [this.spawnTimer,this.attackTimer,this.tickTimer]){
         if(timer) timer.paused=paused;
       }
@@ -1311,6 +1321,7 @@
     }
 
     hitEnemy(bullet, enemy) {
+      if(!this.state.running||this.state.pausedForLevel||this.state.pausedForUser)return;
       if(!bullet.active || !enemy.active) return;
       bullet.destroy();
       enemy.hp-=bullet.damage;
@@ -1370,6 +1381,7 @@
     }
 
     collectXp(player,orb) {
+      if(!this.state.running||this.state.pausedForLevel||this.state.pausedForUser)return;
       if(!orb.active) return;
       const dist=Phaser.Math.Distance.Between(player.x,player.y,orb.x,orb.y);
       if(dist>player.pickupRadius) return;
@@ -1428,6 +1440,7 @@
     }
 
     playerHit(player,enemy) {
+      if(!this.state.running||this.state.pausedForLevel||this.state.pausedForUser)return;
       if(window.BBO_GAME_ACCESS?.isAdmin()||player.donationInvulnerableMs>0) return;
       if(!enemy.active || !this.state.running) return;
       const now=this.time.now;
