@@ -146,7 +146,7 @@
         await window.BBO_RANKING?.prepare();
         this.startPending=false;
         if(!this.scene.isActive())return;
-        this.scene.start('MainScene',{difficulty:this.selectedDifficulty});
+        this.scene.start('MainScene',{difficulty:this.selectedDifficulty,autoAim:document.querySelector('input[name="attackMode"]:checked')?.value!=='mouse'});
       });
 
       this.createMenuButton(GAME_W/2-108, 575, 204, 58, '조작 방법', false, () => {
@@ -364,6 +364,8 @@
     }
 
     init(data) {
+      this.autoAim=data?.autoAim!==false;
+      document.getElementById('gameAttackMode').textContent=this.autoAim?'자동 조준':'마우스 조준';
       this.balance=window.BBO_GAME_ACCESS?.settings()||{player_hp:100,player_damage:18,player_speed:250,enemy_multiplier:1,spawn_ms:900};
       this.difficulty=Object.prototype.hasOwnProperty.call(DIFFICULTIES,data?.difficulty)?data.difficulty:'easy';
     }
@@ -627,6 +629,22 @@
       });
     }
 
+    createWaterZones() {
+      // 물가 테두리까지 타일 내부에 두고, 인접한 물 사이에는 잔디 간격을 유지한다.
+      const margin=120;
+      return [
+        [280,220,500,220],
+        [2130,1120,560,270],
+        [1220,120,360,170],
+        [150,1430,390,210],
+        [2450,1490,430,190],
+        [1230,1500,430,180]
+      ].map(([x,y,w,h])=>mapRect(
+        Math.max(margin,Math.min(x,BASE_MAP_W-margin-w)),
+        Math.max(margin,Math.min(y,BASE_MAP_H-margin-h)),w,h
+      ));
+    }
+
     createWorld() {
       this.cameras.main.setBackgroundColor(0x1f4328);
 
@@ -648,14 +666,7 @@
       path.fillRect(0, MAP_H/2-50, MAP_W, 100);
 
       // 물가/호수: 플레이어는 통과할 수 있지만 느려지는 지역
-      this.waterZones = [
-        mapRect(235, 180, 560, 250),
-        mapRect(2110, 1120, 610, 310),
-        mapRect(1180, 35, 410, 190),
-        mapRect(90, 1380, 470, 250),
-        mapRect(2550, 1350, 520, 260),
-        mapRect(1180, 1510, 520, 210)
-      ];
+      this.waterZones = this.createWaterZones();
       const water = this.add.graphics().setDepth(-17);
       this.waterZones.forEach((r, idx) => {
         water.fillStyle(0x2f7890, .96); water.fillRoundedRect(r.x,r.y,r.width,r.height,38);
@@ -781,14 +792,7 @@
       bg.fillRect(0, MAP_H/2-50, MAP_W, 100);
 
       // 물은 맵의 가장자리에서 충분히 떨어뜨려 배치해 타일 경계에서 잘리지 않게 합니다.
-      const safeWater = [
-        mapRect(280, 220, 500, 220),
-        mapRect(2130, 1160, 560, 270),
-        mapRect(1220, 120, 360, 170),
-        mapRect(150, 1430, 390, 210),
-        mapRect(2640, 1390, 430, 220),
-        mapRect(1230, 1580, 430, 180)
-      ];
+      const safeWater = this.createWaterZones();
       this.waterZones = safeWater;
       safeWater.forEach(r => {
         bg.fillStyle(0x2f7890, .96);
@@ -1336,8 +1340,17 @@
       if(!this.state.running || this.state.pausedForLevel || this.state.pausedForUser) return;
       const now=this.time.now;
       if(now-this.player.lastAttack < this.player.fireDelay) return;
-      const target=this.getNearestEnemy();
-      if(!target) return;
+      let target;
+      if(this.autoAim!==false){
+        target=this.getNearestEnemy();
+        if(!target)return;
+      }else{
+        // 현재 카메라로 매 발사마다 변환해 이동/맵 래핑 이후에도 커서 방향을 유지한다.
+        const pointer=this.input.activePointer;
+        target=this.cameras.main.getWorldPoint(pointer.x,pointer.y);
+        if(!Number.isFinite(target.x)||!Number.isFinite(target.y))return;
+        if(Math.hypot(target.x-this.player.x,target.y-this.player.y)<1)return;
+      }
 
       this.player.lastAttack=now;
       const base=Phaser.Math.Angle.Between(this.player.x,this.player.y,target.x,target.y);
@@ -1767,7 +1780,7 @@
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2+20,'화면을 클릭하면 다시 시작',{
         fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty}));
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim}));
     }
 
     victory() {
@@ -1792,7 +1805,7 @@
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2+65,'화면을 클릭하면 다시 플레이',{
         fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty}));
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim}));
     }
   }
 

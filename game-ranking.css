@@ -5,3 +5,9 @@
 .ranking-dialog{width:min(640px,calc(100vw - 28px));max-height:85dvh;box-sizing:border-box;border:2px solid #df8fb1;border-radius:20px;padding:22px;color:#71314e;background:#fff5f9}
 .ranking-dialog::backdrop{background:#261423aa}.ranking-dialog header{display:flex;justify-content:space-between;align-items:center;gap:10px}.ranking-dialog h2{margin:0}.ranking-dialog p{font-size:13px;line-height:1.6}.ranking-scroll{overflow:auto}.ranking-dialog table{width:100%;border-collapse:collapse;font-size:13px}.ranking-dialog th,.ranking-dialog td{padding:12px 7px;border-bottom:1px solid #edc4d6;text-align:center}.ranking-dialog td:nth-child(2){overflow-wrap:anywhere;max-width:190px}.ranking-save{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:40;max-width:90vw;text-align:center;color:#fff;background:#51283ee8;border-radius:12px;padding:10px 14px;font-size:13px}.ranking-save:has(#rankingSaveStatus:empty){display:none}.ranking-save button{margin-left:8px}
 @media(max-width:600px){.player-entry{gap:6px;padding:7px 10px}.player-entry small{width:100%;text-align:center;font-size:11px}.player-entry input{width:145px}.ranking-dialog{padding:14px}}
+
+.player-entry .attack-mode-options{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px 14px;margin:0;padding:5px 12px 7px;border:1px solid #edc4d6;border-radius:10px}
+.attack-mode-options legend{padding:0 5px;font-weight:700;font-size:12px}
+.attack-mode-options label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+.player-entry .attack-mode-options input[type=radio]{width:auto;margin:0;padding:0;accent-color:#c63870}
+.player-entry .attack-mode-options small{font-size:11px}

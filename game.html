@@ -23,7 +23,7 @@
     #soopConnectDialog #soopConnectAction:focus-visible{outline:3px solid #55203e;outline-offset:4px}
     #soopConnectDialog #soopConnectAction:disabled{opacity:.7;cursor:wait}
   </style>
-  <link rel="stylesheet" href="game-ranking.css?v=1">
+  <link rel="stylesheet" href="game-ranking.css?v=mouse-aim-20261001">
 </head>
 <body>
   <div class="game-page">
@@ -43,6 +43,12 @@
     <section class="player-entry" aria-label="플레이어 설정">
       <label for="playerNickname">닉네임</label><input id="playerNickname" maxlength="20" placeholder="비워두면 게스트 + 번호" autocomplete="nickname">
       <button id="openRanking" type="button">🏆 랭킹</button><small id="playerNameHint">빈칸이면 게스트 번호 자동 지정 · 최대 20자</small>
+      <fieldset class="attack-mode-options">
+        <legend>자동공격</legend>
+        <label><input type="radio" name="attackMode" value="auto" checked> 활성화</label>
+        <label><input type="radio" name="attackMode" value="mouse"> 비활성화</label>
+        <small>비활성화: 마우스 방향으로 연속 발사</small>
+      </fieldset>
     </section>
     <main class="game-shell">
       <div class="game-overlay" id="gameOverlay" aria-label="게임 상태">
@@ -63,6 +69,7 @@
           <div class="status-health"><span>♥</span><div class="status-health-info"><div class="status-health-track"><span id="gameHpFill"></span></div><strong id="gameHp">100 / 100</strong></div></div>
           <div class="status-level-time"><strong id="gameLevel">LV 1</strong><strong id="gameTime">00:00</strong></div>
           <div class="status-stage"><span id="gameWave">STAGE 1/6 · WAVE 1</span><span id="gameKills">KILLS 0</span></div>
+          <div class="status-difficulty">공격 방식 <strong id="gameAttackMode">자동 조준</strong></div>
           <div class="status-difficulty">난이도 <strong id="gameDifficulty">쉬움</strong></div>
           <div class="status-xp-text" id="gameXp">EXP 0 / 18</div>
           <div class="status-divider"></div>
@@ -93,7 +100,7 @@
   <script src="game-ranking.js?v=menu-lock-20261001"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
-  <script src="game.js?v=difficulty-spawn-20261001"></script>
+  <script src="game.js?v=mouse-aim-20261001"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
