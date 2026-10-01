@@ -251,3 +251,10 @@ a{text-decoration:none;color:inherit}
 body:not(.game-playing) .game-page{background:#ffedf4}
 body:not(.game-playing) .game-header{background:rgba(255,246,250,.96);border-bottom:1px solid #edc4d6;color:#71314e}
 body:not(.game-playing) .back-link{color:#98627c}
+
+/* Keep the title, subtitle and role label inside the welcome header. */
+body:not(.game-playing) .game-header{height:68px;min-height:68px;flex:0 0 68px;padding-top:8px;padding-bottom:8px}
+.game-header .game-title{min-height:0;align-items:center}
+.game-header .game-title>div{line-height:1.25}
+.game-header .game-role-label{display:block;line-height:1.2;margin-top:4px}
+@media(max-width:850px){body:not(.game-playing) .game-header{height:60px;min-height:60px;flex-basis:60px;padding-top:8px;padding-bottom:8px}}
