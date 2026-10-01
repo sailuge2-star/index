@@ -151,7 +151,7 @@
         this.scene.start('MainScene',{difficulty:this.selectedDifficulty,autoAim:document.querySelector('input[name="attackMode"]:checked')?.value!=='mouse'});
       });
 
-      this.createMenuButton(GAME_W/2-108, 575, 204, 58, '조작 방법', false, () => {
+      this.createMenuButton(GAME_W/2-108, 575, 204, 58, '설명서', false, () => {
         this.showHowTo();
       });
       this.createMenuButton(GAME_W/2+108, 575, 204, 58, 'SOOP 연동', false, () => {
@@ -250,112 +250,17 @@
     }
 
     showHowTo() {
-      if(this.howTo || this.modalInputLocked) return;
-      this.lockMenuInput();
-
-      // SOOP 연동 팝업과 같은 다크 네이비 카드 스타일의 조작 방법 팝업.
-      // 모든 요소를 한 번에 추적/삭제하여 닫은 뒤 잔상이 남지 않도록 한다.
-      const cx=this.scale.width/2, cy=this.scale.height/2;
-      const boxW=Math.min(640,this.scale.width-36);
-      const boxH=Math.min(650,this.scale.height-36);
-      const left=cx-boxW/2+26;
-      const innerW=boxW-52;
-
-      const overlay=this.add.rectangle(cx,cy,this.scale.width,this.scale.height,0x050812,.78)
-        .setDepth(50).setInteractive();
-      const roundedRect=(x,y,w,h,r,fill,fillAlpha=1,stroke=null,strokeWidth=1,strokeAlpha=1,depth=52)=>{
-        const g=this.add.graphics().setDepth(depth);
-        g.fillStyle(fill,fillAlpha);
-        g.fillRoundedRect(x-w/2,y-h/2,w,h,r);
-        if(stroke!==null){
-          g.lineStyle(strokeWidth,stroke,strokeAlpha);
-          g.strokeRoundedRect(x-w/2,y-h/2,w,h,r);
-        }
-        return g;
-      };
-      const box=roundedRect(cx,cy,boxW,boxH,26,0xffd7e2,.995,0xdb4464,1,1,51);
-
-      const title=this.add.text(left,cy-boxH/2+28,'조작 방법',{
-        fontFamily:'Noto Sans KR',fontSize:'25px',fontStyle:'900',color:'#8f2945'
-      }).setOrigin(0,0).setDepth(52);
-
-      const badgeBg=roundedRect(cx+boxW/2-80,cy-boxH/2+41,102,28,14,0xf8b8c9,1,0xdb4464,1,1,52);
-      const badgeDot=this.add.circle(cx+boxW/2-116,cy-boxH/2+41,4,0xdb4464).setDepth(53);
-      const badgeText=this.add.text(cx+boxW/2-71,cy-boxH/2+41,'게임 가이드',{
-        fontFamily:'Noto Sans KR',fontSize:'10px',fontStyle:'700',color:'#a72f50'
-      }).setOrigin(.5).setDepth(53);
-
-      const sectionY=cy-boxH/2+91;
-      const section=this.add.text(left,sectionY,'기본 조작',{
-        fontFamily:'Noto Sans KR',fontSize:'13px',fontStyle:'800',color:'#a72f50'
-      }).setOrigin(0,0).setDepth(52);
-
-      const rows=[
-        ['이동','W A S D  /  방향키','캐릭터를 원하는 방향으로 이동'],
-        ['공격','자동 공격','가장 가까운 적을 자동으로 공격'],
-        ['성장','레벨업 카드','경험치를 모아 카드 3개 중 하나 선택'],
-        ['목표','30분 생존','5분마다 스테이지 상승 · 5분에 보스 출현 (보스출현시 타이머 잠금)']
-      ];
-      const rowObjects=[];
-      const rowH=76, gap=8;
-      let y=sectionY+37;
-      rows.forEach(([label,key,desc])=>{
-        const bg=roundedRect(cx,y+rowH/2,innerW,rowH,14,0xf9bfd0,1,null,1,1,52);
-        const keyBg=roundedRect(left+70,y+rowH/2,116,46,12,0xffe6ed,1,0xdb4464,1,1,53);
-        const keyText=this.add.text(left+70,y+rowH/2,key,{
-          fontFamily:'Noto Sans KR',fontSize:key.length>9?'12px':'14px',fontStyle:'900',color:'#db4464',align:'center',
-          wordWrap:{width:100,useAdvancedWrap:true}
-        }).setOrigin(.5).setDepth(54);
-        const labelText=this.add.text(left+166,y+15,label,{
-          fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'900',color:'#8f2945'
-        }).setOrigin(0,0).setDepth(54);
-        const descText=this.add.text(left+166,y+39,desc,{
-          fontFamily:'Noto Sans KR',fontSize:'11px',color:'#a84b64',
-          wordWrap:{width:innerW-188,useAdvancedWrap:true}
-        }).setOrigin(0,0).setDepth(54);
-        rowObjects.push(bg,keyBg,keyText,labelText,descText);
-        y+=rowH+gap;
-      });
-
-      const note=this.add.text(cx,cy+boxH/2-91,'플레이 중 일시정지 및 레벨업 선택 화면에서는 적 생성이 멈춥니다.',{
-        fontFamily:'Noto Sans KR',fontSize:'10px',color:'#a84b64',align:'center',
-        wordWrap:{width:innerW,useAdvancedWrap:true}
-      }).setOrigin(.5).setDepth(52);
-
-      // SOOP 연동 팝업의 하단 닫기 버튼 CSS와 시각 스타일을 동일하게 맞춘다.
-      // 160px 폭 / 44px 높이 / #db4464 배경 / 흰색 Noto Sans KR 800 텍스트.
-      const closeW=160, closeH=44, closeR=22, closeY=cy+boxH/2-43;
-      const closeBg=roundedRect(cx,closeY,closeW,closeH,closeR,0xdb4464,1,0xdb4464,1,1,52);
-      const closeHit=this.add.rectangle(cx,closeY,closeW,closeH,0x000000,0)
-        .setInteractive({useHandCursor:true}).setDepth(54);
-      const closeText=this.add.text(cx,closeY,'닫기',{
-        fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ffffff'
-      }).setOrigin(.5).setDepth(53);
-      const redrawClose=(fill)=>{
-        closeBg.clear();
-        closeBg.fillStyle(fill,1);
-        closeBg.fillRoundedRect(cx-closeW/2,closeY-closeH/2,closeW,closeH,closeR);
-        closeBg.lineStyle(1,0xdb4464,1);
-        closeBg.strokeRoundedRect(cx-closeW/2,closeY-closeH/2,closeW,closeH,closeR);
-      };
-      closeHit.on('pointerover',()=>redrawClose(0xe85f7e));
-      closeHit.on('pointerout',()=>redrawClose(0xdb4464));
-      closeHit.on('pointerdown',()=>this.closeHowTo());
-      closeText.setInteractive({useHandCursor:true}).on('pointerdown',()=>this.closeHowTo());
-
-      this.howTo={overlay,box,title,badgeBg,badgeDot,badgeText,section,note,closeBg,closeHit,closeText,rowObjects};
+      const dialog=document.getElementById('gameManual');
+      if(!dialog||dialog.open||this.modalInputLocked)return;
+      this.lockMenuInput();this.howTo=dialog;
+      const unlock=()=>{this.howTo=null;this.unlockMenuInput();};
+      dialog.addEventListener('close',unlock,{once:true});
+      try{dialog.showModal();dialog.querySelector('.manual-content').scrollTop=0;}
+      catch(error){dialog.removeEventListener('close',unlock);unlock();throw error;}
     }
 
     closeHowTo() {
-      if(!this.howTo) return;
-      const popup=this.howTo;
-      Object.keys(popup).forEach(key=>{
-        const obj=popup[key];
-        if(Array.isArray(obj)) obj.forEach(item=>item && typeof item.destroy==='function' && item.destroy());
-        else if(obj && typeof obj.destroy==='function') obj.destroy();
-      });
-      this.howTo=null;
-      this.unlockMenuInput();
+      if(this.howTo?.open)this.howTo.close();
     }
   }
 

@@ -24,6 +24,22 @@
     #soopConnectDialog #soopConnectAction:disabled{opacity:.7;cursor:wait}
   </style>
   <link rel="stylesheet" href="game-ranking.css?v=mouse-aim-20261001">
+
+  <style>
+    #gameManual{width:min(800px,calc(100vw - 24px));height:min(820px,calc(100dvh - 24px));max-height:calc(100dvh - 24px);padding:0;overflow:hidden;color-scheme:light}
+    #gameManual[open]{display:flex;flex-direction:column}
+    #gameManual .manual-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:24px 26px 16px;flex-shrink:0}
+    #gameManual h2{margin:0;font-size:25px;font-weight:900;color:#8f2945}
+    #gameManual .manual-badge{border:1px solid #db4464;border-radius:20px;background:#f8b8c9;padding:7px 13px;color:#a72f50;font-size:11px;font-weight:800;white-space:nowrap}
+    #gameManual .manual-content{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 26px 12px;scrollbar-color:#db7897 #ffd7e2}
+    #gameManual section{margin:8px 0 22px}#gameManual h3{margin:0 0 12px;font-size:14px}
+    #gameManual .manual-row{display:flex;align-items:center;gap:20px;padding:14px 13px;margin:8px 0;border-radius:15px;background:#f8bfd0}
+    #gameManual .manual-tag{flex:0 0 130px;text-align:center;padding:13px 7px;background:#ffe7ee;border:1px solid #db4464;border-radius:12px;color:#db4464;font-size:13px;font-weight:800}
+    #gameManual strong{display:block;font-size:14px;margin-bottom:5px}#gameManual p{margin:0;font-size:12px;line-height:1.75;color:#a85c76;overflow-wrap:anywhere}
+    #gameManual .manual-note{padding:12px 2px;font-size:12px;line-height:1.8;color:#a85c76}
+    #gameManual .soop-popup-footer{margin:0;padding:14px 20px 20px;border-top:1px solid #edb0c2;flex-shrink:0}
+    @media(max-width:520px){#gameManual .manual-header{padding:18px 16px 12px}#gameManual .manual-content{padding:0 14px 10px}#gameManual .manual-row{gap:10px;padding:12px 10px}#gameManual .manual-tag{flex-basis:94px;font-size:11px;padding:12px 4px}#gameManual h2{font-size:23px}}
+  </style>
 </head>
 <body>
   <div class="game-page">
@@ -94,6 +110,7 @@
     <p id="rankingStatus" role="status"></p><div class="ranking-scroll"><table><thead><tr><th>순위</th><th>닉네임</th><th>결과</th><th>생존</th><th>처치</th></tr></thead><tbody id="rankingRows"></tbody></table></div>
   </dialog>
   <div class="ranking-save" role="status"><span id="rankingSaveStatus"></span><button id="rankingRetry" type="button" hidden>저장 재시도</button></div>
+<dialog id="gameManual" class="soop-connect-dialog" aria-labelledby="manualTitle"><header class="manual-header"><h2 id="manualTitle">설명서</h2><span class="manual-badge">● 게임 가이드</span></header><div class="manual-content" tabindex="0" aria-label="게임 설명서 내용"><section><h3>게임 목표</h3><div class="manual-row"><span class="manual-tag">30분 생존</span><div><strong>6스테이지 생존전</strong><p>5분마다 보스가 등장합니다. 보스전 중 생존 타이머가 멈추며, 최종 보스를 쓰러뜨리면 클리어됩니다.</p></div></div><div class="manual-row"><span class="manual-tag">난이도</span><div><strong>쉬움 · 보통 · 하드</strong><p>쉬움을 기준으로 보통은 몬스터 스폰 수 2배, 하드는 3배입니다. 적의 체력과 공격력도 난이도와 스테이지에 따라 증가합니다.</p></div></div></section><section><h3>기본 조작</h3><div class="manual-row"><span class="manual-tag">WASD / 방향키</span><div><strong>이동</strong><p>키보드로 이동합니다. 모바일에서는 화면의 가상 조이스틱을 사용하세요. 물에 들어가면 이동속도가 느려집니다.</p></div></div><div class="manual-row"><span class="manual-tag">자동공격 ON</span><div><strong>가까운 적 자동 조준</strong><p>기본 설정입니다. 가까운 적을 향해 자동으로 탄환을 발사합니다.</p></div></div><div class="manual-row"><span class="manual-tag">자동공격 OFF</span><div><strong>마우스 방향 조준</strong><p>메인 화면에서 비활성화를 선택하면 클릭 없이 커서 방향으로 연속 발사합니다. 박격포도 커서 방향을 따릅니다.</p></div></div><div class="manual-row"><span class="manual-tag">일시정지 / 메뉴</span><div><strong>잠시 쉬거나 메뉴로 이동</strong><p>일시정지 버튼으로 멈추고 계속 버튼으로 재개합니다. 메뉴로 돌아가면 진행 중인 판이 끝나며 중도 기록은 랭킹에 저장되지 않습니다.</p></div></div></section><section><h3>레벨업과 무기</h3><div class="manual-row"><span class="manual-tag">레벨업 카드</span><div><strong>3개 중 하나 선택</strong><p>적이 떨어뜨린 경험치 구슬을 모으면 레벨업합니다. 카드 선택 중에는 게임이 멈춥니다. 공격력·체력·이동속도 등의 능력을 강화할 수 있습니다.</p></div></div><div class="manual-row"><span class="manual-tag">AUG A3</span><div><strong>기본 탄환 무기</strong><p>처음부터 사용합니다. 강화 카드를 선택하면 발사 탄환이 1개 늘어납니다.</p></div></div><div class="manual-row"><span class="manual-tag">박격포</span><div><strong>포물선 범위 공격</strong><p>처음 선택하면 획득합니다. 표시된 착탄 지점에서 폭발해 주변 적에게 피해를 줍니다. 강화하면 피해·폭발 범위가 증가하고 발사 간격이 줄어듭니다.</p></div></div><div class="manual-row"><span class="manual-tag">뽀글스의 수호</span><div><strong>캐릭터 주변을 지키는 뽀글스</strong><p>주변을 공전하며 닿는 적에게 피해를 줍니다. 강화하면 최대 6마리까지 늘고 피해·회전 속도가 증가합니다. 세 무기는 함께 사용할 수 있습니다.</p></div></div></section><section><h3>보스 랜덤 아이템</h3><div class="manual-row"><span class="manual-tag">상자 드롭 30%</span><div><strong>상자에 가까이 가면 자동 획득</strong><p>보스 처치 시 30% 확률로 상자가 떨어집니다. 아래 5가지 효과 중 하나가 각각 20% 확률로 적용되고 획득 알림이 표시됩니다. 최종 보스와 전멸 아이템으로 처치한 보스는 상자를 떨어뜨리지 않습니다.</p></div></div><div class="manual-row"><span class="manual-tag">전멸의 별</span><div><strong>맵의 적 전멸</strong><p>현재 맵의 적을 처치하고 적의 투사체를 제거합니다.</p></div></div><div class="manual-row"><span class="manual-tag">경험치 자석</span><div><strong>경험치 구슬 전체 흡수</strong><p>현재 맵에 있는 경험치 구슬을 모두 흡수합니다.</p></div></div><div class="manual-row"><span class="manual-tag">반쪽 회복 물약</span><div><strong>최대 체력의 50% 회복</strong><p>최대 체력을 넘지 않는 범위에서 회복합니다.</p></div></div><div class="manual-row"><span class="manual-tag">완전 회복 물약</span><div><strong>체력 완전 회복</strong><p>현재 체력을 최대 체력까지 회복합니다.</p></div></div><div class="manual-row"><span class="manual-tag">성장의 축복</span><div><strong>5레벨 상승</strong><p>현재 경험치는 유지하고, 강화 카드 선택을 5회 제공합니다.</p></div></div></section><section><h3>닉네임과 랭킹</h3><div class="manual-row"><span class="manual-tag">닉네임</span><div><strong>빈칸이면 게스트 + 번호</strong><p>게임 시작 전 닉네임을 입력하세요. 온라인 연결 시 빈칸에는 게스트 번호가 배정됩니다.</p></div></div><div class="manual-row"><span class="manual-tag">랭킹</span><div><strong>난이도별 개인 최고 기록</strong><p>클리어 여부 → 생존 시간 → 처치 수 순으로 상위 50명을 표시합니다. 동률은 먼저 등록한 기록이 우선입니다. 게임 오버·클리어 시 저장되며 관리자 플레이는 제외됩니다.</p></div></div></section><section><h3>SOOP 후원 연동</h3><div class="manual-row"><span class="manual-tag">SOOP 연동</span><div><strong>후원 효과와 함께 플레이</strong><p>메인 화면의 SOOP 연동에서 인증번호를 입력해 연결합니다. 별풍선·영상풍선·애드벌룬 개수가 설정값과 정확히 일치하면 회복·피해·무적·랜덤 효과·보스 소환·삭제 효과가 적용됩니다. 설정과 연결 상태는 SOOP 팝업에서 확인하세요.</p></div></div></section><p class="manual-note">닫기 버튼 또는 ESC로 설명서를 닫을 수 있습니다. 설명서가 열려 있는 동안 메인 메뉴 버튼은 잠깁니다.</p></div><form method="dialog" class="soop-popup-footer"><button type="submit" autofocus>닫기</button></form></dialog>
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="game-access.js?v=ranking-20261001"></script>
@@ -102,7 +119,7 @@
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
   <script src="game-weapons.js?v=embedded-20261002"></script>
   <script src="game-boss-items.js?v=1"></script>
-  <script src="game.js?v=boss-items-20261002"></script>
+  <script src="game.js?v=manual-20261002"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
