@@ -1159,6 +1159,11 @@
     }
 
     spawnEnemy() {
+      const count=DIFFICULTIES[this.difficulty]||1;
+      for(let i=0;i<count;i++) this.spawnSingleEnemy();
+    }
+
+    spawnSingleEnemy() {
       if(!this.state.running || this.state.pausedForUser || this.state.pausedForLevel ||
          this.state.bossActive || this.state.elapsed>=SURVIVAL_SECONDS) return;
       const p=this.getSpawnPosition();
