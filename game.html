@@ -6,7 +6,23 @@
   <meta name="theme-color" content="#ff3d93">
   <meta name="description" content="뽀린걸 3000일 기념 팬메이드 로그라이크 게임">
   <title>뽀린걸 로그라이크 · 3000일</title>
-  <link rel="stylesheet" href="game.css?v=soop-button-20261001">
+  <link rel="stylesheet" href="game.css?v=pink-menu-20261001">
+
+  <style id="soop-connect-button-style">
+    #soopConnectDialog #soopConnectAction {
+      appearance:none;display:flex;align-items:center;justify-content:center;
+      width:100%;min-height:54px;margin:12px 0 8px;padding:14px 20px;
+      background:linear-gradient(180deg,#df3569,#b91f4c);color:#fff;
+      border:2px solid #94173d;border-radius:12px;
+      box-shadow:0 5px 0 #8a1638,0 8px 15px rgba(112,22,54,.18);
+      line-height:1.3;font-family:inherit;font-size:17px;font-weight:800;
+      cursor:pointer;touch-action:manipulation;
+    }
+    #soopConnectDialog #soopConnectAction:hover:not(:disabled){filter:brightness(1.08)}
+    #soopConnectDialog #soopConnectAction:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 #8a1638}
+    #soopConnectDialog #soopConnectAction:focus-visible{outline:3px solid #55203e;outline-offset:4px}
+    #soopConnectDialog #soopConnectAction:disabled{opacity:.7;cursor:wait}
+  </style>
 </head>
 <body>
   <div class="game-page">
@@ -64,13 +80,14 @@
   <script src="game-access.js?v=admin-link-fix-20260930"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
-  <script src="game.js?v=soop-button-20261001"></script>
+  <script src="game.js?v=pink-menu-20261001"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
       <h3 id="soopStreamerTitle">스트리머</h3>
-      <div class="soop-streamer-card"><img src="assets/bbo_profile.png" alt="뽀린걸 프로필"><div><div class="soop-streamer-name">뽀린걸 <span>기본 스트리머</span></div><small>@bboringirl</small></div><button type="button" class="soop-connect-action" id="soopConnectAction">연결하기</button></div>
+      <div class="soop-streamer-card"><img src="assets/bbo_profile.png" alt="뽀린걸 프로필"><div><div class="soop-streamer-name">뽀린걸 <span>기본 스트리머</span></div><small>@bboringirl</small></div></div>
       <div class="soop-search-row"><input id="soopCertification" type="password" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="SOOP 앱의 6자리 인증번호" placeholder="SOOP 앱 → 내 정보 → 인증번호 6자리"></div>
+      <button type="button" class="soop-connect-action" id="soopConnectAction">연결하기</button>
     </section>
     <section aria-labelledby="soopEffectsTitle">
       <div class="soop-effects-heading"><h3 id="soopEffectsTitle">후원 개수별 효과</h3><span>별풍선·영상풍선·애드벌룬: 입력한 개수와 일치할 때 적용</span><button type="button" id="soopResetDefaults">기본값</button></div>
@@ -88,6 +105,6 @@
     <form method="dialog" class="soop-popup-footer"><button type="submit" autofocus>닫기</button></form>
   </dialog>
   <div id="soopDonationToast" role="status" hidden></div>
-  <script src="soop-popup.js?v=soop-button-20261001"></script>
+  <script src="soop-popup.js?v=soop-large-button-20261001-1932"></script>
 </body>
 </html>

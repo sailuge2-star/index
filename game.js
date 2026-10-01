@@ -49,6 +49,10 @@
       super('MenuScene');
     }
 
+    preload() {
+      this.load.image('menu-player-portrait','assets/roguelike/characters/player.png?v=pink-menu-1');
+    }
+
     create() {
       document.body.classList.remove('game-playing');
       requestAnimationFrame(()=>this.scale.refresh());
@@ -56,29 +60,27 @@
       const topButton = document.getElementById('restartTop');
       if (topButton) { topButton.style.display = 'none'; topButton.onclick = null; }
 
-      this.cameras.main.setBackgroundColor(0x120d18);
-
-      // Full-screen menu backdrop.
-      this.menuBackdrops=[
-        this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x120d18),
-        this.add.rectangle(this.scale.width/2,this.scale.height*.24,this.scale.width,this.scale.height*.48,0x29142a,.72),
-        this.add.rectangle(this.scale.width/2,this.scale.height*.78,this.scale.width,this.scale.height*.44,0x172b1b,.9)
-      ];
-
-      const glow = this.add.graphics();
-      for (let r=360;r>30;r-=28) {
-        glow.fillStyle(0xff3d93, 0.008 + (360-r)/50000);
-        glow.fillCircle(GAME_W/2, 220, r);
+      this.cameras.main.setBackgroundColor(0xffedf4);
+      if(!this.textures.exists('pink-menu-background')) {
+        const texture=this.textures.createCanvas('pink-menu-background',1920,1080);
+        const ctx=texture.context;
+        const gradient=ctx.createLinearGradient(0,0,1920,1080);
+        gradient.addColorStop(0,'#fff8ed');gradient.addColorStop(.48,'#ffe4ef');gradient.addColorStop(1,'#eee6ff');
+        ctx.fillStyle=gradient;ctx.fillRect(0,0,1920,1080);
+        for(const [x,y,radius] of [[120,130,270],[1790,900,370],[1750,100,230],[160,1080,320]]){
+          const glow=ctx.createRadialGradient(x,y,0,x,y,radius);
+          glow.addColorStop(0,'rgba(255,255,255,.85)');glow.addColorStop(1,'rgba(255,255,255,0)');
+          ctx.fillStyle=glow;ctx.fillRect(0,0,1920,1080);
+        }
+        for(let i=0;i<65;i++){
+          const x=(i*347+61)%1920,y=(i*193+47)%1080;
+          ctx.fillStyle=i%2?'rgba(255,255,255,.75)':'rgba(230,150,180,.23)';
+          ctx.beginPath();ctx.ellipse(x,y,3+i%5,7+i%5,i*.8,0,Math.PI*2);ctx.fill();
+        }
+        texture.refresh();
       }
-
-      const stars = this.add.graphics();
-      for (let i=0;i<130;i++) {
-        const x=Phaser.Math.Between(0,GAME_W);
-        const y=Phaser.Math.Between(0,GAME_H);
-        const size=Phaser.Math.Between(1,3);
-        stars.fillStyle(i%4===0?0xffb6d5:0xffffff, Phaser.Math.FloatBetween(.12,.5));
-        stars.fillCircle(x,y,size);
-      }
+      this.menuBackdrop=this.add.image(this.scale.width/2,this.scale.height/2,'pink-menu-background')
+        .setDisplaySize(this.scale.width,this.scale.height);
 
       // Soft drifting particles make the menu feel alive without external assets.
       this.menuParticles=[];
@@ -87,7 +89,7 @@
           Phaser.Math.Between(20,GAME_W-20),
           Phaser.Math.Between(80,GAME_H-30),
           Phaser.Math.Between(2,6),
-          i%2?0xff79b5:0x7954e9,
+          i%2?0xffffff:0xe9a9c4,
           .22
         );
         this.menuParticles.push(p);
@@ -104,37 +106,36 @@
       }
 
       const menuStartIndex=this.children.list.length;
-      const badge = this.add.rectangle(GAME_W/2, 185, 94, 94, 0xff3d93, 1)
-        .setStrokeStyle(3, 0xffc1dd, .65);
-      this.add.text(GAME_W/2,185,'뽀',{
-        fontFamily:'Noto Sans KR',fontSize:'54px',fontStyle:'900',color:'#ffffff'
-      }).setOrigin(.5);
-      this.tweens.add({targets:badge,scale:1.04,duration:1200,yoyo:true,repeat:-1,ease:'Sine.inOut'});
+      this.add.image(GAME_W/2,420,this.menuSurface(550,620,false)).setAlpha(.55);
+      this.add.circle(GAME_W/2,183,91,0xffffff,.9).setStrokeStyle(3,0xeeb2ca,.8);
+      const portrait=this.add.image(GAME_W/2,183,'menu-player-portrait');
+      const portraitScale=156/Math.max(portrait.width,portrait.height);
+      portrait.setScale(portraitScale);
 
       this.add.text(GAME_W/2, 285, '뽀린걸 생존전', {
-        fontFamily:'Noto Sans KR', fontSize:'46px', fontStyle:'900', color:'#ffffff'
+        fontFamily:'Noto Sans KR', fontSize:'46px', fontStyle:'900', color:'#6f3653'
       }).setOrigin(.5);
       this.add.text(GAME_W/2, 334, '3000 DAYS SURVIVAL', {
-        fontFamily:'Noto Sans KR', fontSize:'13px', fontStyle:'800', color:'#ff9dca', letterSpacing:4
+        fontFamily:'Noto Sans KR', fontSize:'13px', fontStyle:'800', color:'#ac587b', letterSpacing:4
       }).setOrigin(.5);
       this.add.text(GAME_W/2, 370, '끝없이 몰려오는 적을 물리치고 3000일을 기념하세요.', {
-        fontFamily:'Noto Sans KR', fontSize:'13px', color:'#d9cbd8'
+        fontFamily:'Noto Sans KR', fontSize:'13px', color:'#8e627b'
       }).setOrigin(.5);
 
       const difficultyButtons=[];
       const choices=[['easy','쉬움 ×1'],['normal','보통 ×2'],['hard','하드 ×3']];
       choices.forEach(([key,label],i)=>{
         const x=GAME_W/2+(i-1)*140;
-        const bg=this.add.rectangle(x,415,126,40,0x241b2b,.98).setStrokeStyle(2,0x6d566c,.75)
+        const bg=this.add.image(x,415,this.menuSurface(126,40,false))
           .setInteractive({useHandCursor:true});
-        const text=this.add.text(x,415,label,{fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ffffff'}).setOrigin(.5);
+        const text=this.add.text(x,415,label,{fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#6f3653'}).setOrigin(.5);
         difficultyButtons.push({key,bg,text});
         bg.on('pointerdown',()=>{this.selectedDifficulty=key;refreshDifficulty();});
       });
       const refreshDifficulty=()=>difficultyButtons.forEach(({key,bg,text})=>{
         const selected=key===this.selectedDifficulty;
-        bg.setFillStyle(selected?0xff3d93:0x241b2b,1).setStrokeStyle(2,selected?0xffc1dd:0x6d566c,.8);
-        text.setColor(selected?'#ffffff':'#cbbfcd');
+        bg.setTexture(this.menuSurface(126,40,selected));
+        text.setColor(selected?'#71314e':'#906478');
       });
       refreshDifficulty();
       this.createMenuButton(GAME_W/2, 485, 420, 72, '게임 시작', true, async () => {
@@ -154,14 +155,14 @@
       });
 
       const home = this.add.text(GAME_W/2, 660, '← 뽀린걸 팬사이트로 돌아가기', {
-        fontFamily:'Noto Sans KR',fontSize:'12px',fontStyle:'700',color:'#b9abb8'
+        fontFamily:'Noto Sans KR',fontSize:'12px',fontStyle:'700',color:'#8e627b'
       }).setOrigin(.5).setInteractive({useHandCursor:true});
       home.on('pointerover',()=>home.setColor('#ff9dca'));
-      home.on('pointerout',()=>home.setColor('#b9abb8'));
+      home.on('pointerout',()=>home.setColor('#8e627b'));
       home.on('pointerdown',()=>{ window.location.href='index.html'; });
 
       const footer=this.add.text(GAME_W/2, 850, 'WASD / 방향키 이동 · 공격 자동 · 30분 생존 목표', {
-        fontFamily:'Noto Sans KR',fontSize:'10px',color:'#8f858f'
+        fontFamily:'Noto Sans KR',fontSize:'10px',color:'#8e627b'
       }).setOrigin(.5);
       this.menuForeground=this.children.list.slice(menuStartIndex).filter(o=>o!==footer);
       this.menuBaseY=new Map(this.menuForeground.map(o=>[o,o.y]));
@@ -186,26 +187,30 @@
       const shiftX=centerX-GAME_W/2;
       this.menuForeground.forEach(o=>o.setPosition(this.menuBaseX.get(o)+shiftX,this.menuBaseY.get(o)+shiftY));
       this.menuFooter.setPosition(centerX,this.scale.height-28);
-      this.menuBackdrops[0].setPosition(centerX,centerY).setSize(this.scale.width,this.scale.height);
-      this.menuBackdrops[1].setPosition(centerX,this.scale.height*.24).setSize(this.scale.width,this.scale.height*.48);
-      this.menuBackdrops[2].setPosition(centerX,this.scale.height*.78).setSize(this.scale.width,this.scale.height*.44);
+      this.menuBackdrop.setPosition(centerX,centerY).setDisplaySize(this.scale.width,this.scale.height);
+    }
+
+    menuSurface(w,h,primary) {
+      const key=`pink-menu-${w}-${h}-${primary}`;
+      if(!this.textures.exists(key)) {
+        const g=this.make.graphics({x:0,y:0,add:false});
+        const radius=Math.min(22,h/2);
+        g.fillStyle(0xc886a5,.25);g.fillRoundedRect(0,5,w,h,radius);
+        g.fillStyle(primary?0xf7bdd2:0xfff5f9,1);g.fillRoundedRect(0,0,w,h,radius);
+        g.lineStyle(2,primary?0xdf8fb1:0xe9bcd0,1);g.strokeRoundedRect(1,1,w-2,h-2,radius);
+        g.lineStyle(2,0xffffff,.65);g.lineBetween(radius,4,w-radius,4);
+        g.generateTexture(key,w,h+6);g.destroy();
+      }
+      return key;
     }
 
     createMenuButton(x,y,w,h,label,primary,onClick) {
-      const bg=this.add.rectangle(x,y,w,h,primary?0xff3d93:0x241b2b,.98)
-        .setStrokeStyle(2,primary?0xffa9cf:0x6d566c,.75)
-        .setInteractive({useHandCursor:true});
-      const text=this.add.text(x,y,label,{
-        fontFamily:'Noto Sans KR',fontSize:primary?'18px':'13px',fontStyle:'800',color:'#ffffff'
+      const bg=this.add.image(x,y,this.menuSurface(w,h,primary)).setInteractive({useHandCursor:true});
+      const text=this.add.text(x,y-2,label,{
+        fontFamily:'Noto Sans KR',fontSize:primary?'20px':'14px',fontStyle:'800',color:'#71314e'
       }).setOrigin(.5).setDepth(2);
-      bg.on('pointerover',()=>{
-        bg.setStrokeStyle(3,primary?0xffd2e4:0xff3d93,1);
-        this.tweens.add({targets:[bg,text],scale:1.02,duration:100});
-      });
-      bg.on('pointerout',()=>{
-        bg.setStrokeStyle(2,primary?0xffa9cf:0x6d566c,.75);
-        this.tweens.add({targets:[bg,text],scale:1,duration:100});
-      });
+      bg.on('pointerover',()=>{bg.setTint(0xffe7f1);this.tweens.add({targets:[bg,text],scale:1.025,duration:120});});
+      bg.on('pointerout',()=>{bg.clearTint();this.tweens.add({targets:[bg,text],scale:1,duration:120});});
       bg.on('pointerdown',onClick);
       return {bg,text};
     }

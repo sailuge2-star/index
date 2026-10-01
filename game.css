@@ -246,3 +246,8 @@ a{text-decoration:none;color:inherit}
 .game-admin-link[hidden]{display:none!important}
 
 #soopDonationToast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:80vw;background:#372340ed;border:1px solid #ffa8d1;border-radius:14px;padding:12px 20px;color:#fff;z-index:180;pointer-events:none;font-size:13px}#soopDonationToast[hidden]{display:none}
+
+/* Pastel welcome screen; gameplay keeps its existing full-screen layout. */
+body:not(.game-playing) .game-page{background:#ffedf4}
+body:not(.game-playing) .game-header{background:rgba(255,246,250,.96);border-bottom:1px solid #edc4d6;color:#71314e}
+body:not(.game-playing) .back-link{color:#98627c}
