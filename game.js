@@ -616,21 +616,41 @@
       });
 
       make('tree', g => {
-        g.fillStyle(0x6b432d, 1); g.fillRect(27, 36, 10, 22);
-        g.fillStyle(0x214b2b, 1); g.fillCircle(32, 25, 18);
-        g.fillStyle(0x2f6b3a, 1); g.fillCircle(20, 31, 13); g.fillCircle(44, 31, 13);
-        g.fillStyle(0x4e8b4c, 1); g.fillCircle(30, 18, 8);
+        g.fillStyle(0x254c46,.22);g.fillEllipse(33,56,48,12);
+        g.fillStyle(0x755747,1);g.fillRoundedRect(27,29,11,29,3);
+        g.fillStyle(0xb18a63,1);g.fillRect(29,33,3,23);
+        g.lineStyle(3,0x755747,1);g.lineBetween(31,44,18,32);g.lineBetween(33,40,46,29);
+        [[20,31,16],[44,30,17],[31,19,20]].forEach(([x,y,r])=>{
+          g.fillStyle(0x487c68,1);g.fillCircle(x,y+3,r);
+          g.fillStyle(0x71a47b,1);g.fillCircle(x,y-1,r-2);
+          g.fillStyle(0x9bc68e,.9);g.fillEllipse(x-4,y-7,r,10);
+        });
+        [[19,24],[36,13],[44,28]].forEach(([x,y])=>{g.fillStyle(0xf4c9da,1);g.fillCircle(x,y,3);g.fillStyle(0xfff2c9,1);g.fillCircle(x,y,1);});
       });
       make('rock', g => {
-        g.fillStyle(0x667277, 1); g.fillRoundedRect(10, 22, 44, 27, 8);
-        g.fillStyle(0x879398, 1); g.fillTriangle(17, 25, 30, 12, 42, 25);
-        g.fillStyle(0xb2b9bb, .55); g.fillCircle(25, 27, 5);
+        g.fillStyle(0x254c46,.2);g.fillEllipse(33,51,48,11);
+        g.fillStyle(0x717f91,1);g.fillRoundedRect(10,23,44,27,9);
+        g.fillStyle(0xb3bdc8,1);g.fillTriangle(11,31,27,14,45,23);g.fillTriangle(11,31,45,23,35,42);
+        g.fillStyle(0x909fac,1);g.fillTriangle(45,23,54,39,35,42);
+        g.lineStyle(2,0xdbe2e0,.8);g.lineBetween(15,30,28,18);g.lineBetween(28,18,41,25);
+        g.fillStyle(0x7da27d,1);g.fillEllipse(18,45,17,8);g.fillEllipse(41,47,18,7);
+        g.fillStyle(0xc2d397,1);g.fillCircle(14,44,2);g.fillCircle(39,46,2);
       });
       make('house', g => {
-        g.fillStyle(0xb8755d, 1); g.fillRect(8, 24, 48, 32);
-        g.fillStyle(0x7d3d43, 1); g.fillTriangle(4, 25, 32, 5, 60, 25);
-        g.fillStyle(0x5a3a31, 1); g.fillRect(27, 38, 11, 18);
-        g.fillStyle(0xaed0d9, 1); g.fillRect(15, 33, 9, 9); g.fillRect(40, 33, 9, 9);
+        g.fillStyle(0x254c46,.2);g.fillEllipse(33,58,58,10);
+        g.fillStyle(0xb99683,1);g.fillRoundedRect(8,23,48,34,3);
+        g.fillStyle(0xffe9c8,1);g.fillRect(10,26,42,27);
+        g.fillStyle(0x99786b,1);g.fillRect(10,52,43,5);
+        g.fillStyle(0x9d526d,1);g.fillTriangle(2,28,32,3,62,28);
+        g.fillStyle(0xd38da0,1);g.fillTriangle(7,25,32,6,57,25);
+        g.lineStyle(2,0xf0bbbd,1);g.lineBetween(14,20,49,20);g.lineBetween(20,15,43,15);
+        g.fillStyle(0x9d526d,1);g.fillRect(43,7,7,12);
+        g.fillStyle(0xf4d5c0,1);g.fillRect(42,5,9,4);
+        g.fillStyle(0x7b625e,1);g.fillRoundedRect(27,35,12,22,5);
+        g.fillStyle(0xb88a79,1);g.fillRoundedRect(29,37,8,18,3);
+        g.fillStyle(0xffdc88,1);g.fillCircle(35,47,1.2);
+        [14,42].forEach(x=>{g.fillStyle(0x688ca0,1);g.fillRoundedRect(x,33,9,10,2);g.fillStyle(0xbde1dc,1);g.fillRect(x+1,34,7,7);g.lineStyle(1,0xfff3de,1);g.lineBetween(x+4,34,x+4,42);g.lineBetween(x,38,x+9,38);g.fillStyle(0x906e69,1);g.fillRect(x-1,44,11,3);g.fillStyle(0x76a777,1);g.fillEllipse(x+4,44,10,4);g.fillStyle(0xe79cb8,1);g.fillCircle(x+2,43,2);g.fillCircle(x+7,43,2);});
+        g.fillStyle(0xe6cdb8,1);g.fillRoundedRect(24,56,18,5,2);
       });
     }
 
@@ -786,47 +806,43 @@
       // 잘리거나 좌표가 어긋나는 문제가 생길 수 있습니다. 그래서 배경은 별도의
       // Graphics 텍스처로 생성하고, 오브젝트는 실제 Sprite를 타일마다 복제합니다.
       const bg = this.add.graphics();
-      bg.fillStyle(0x2b5b36, 1);
-      bg.fillRect(0, 0, MAP_W, MAP_H);
-      bg.fillStyle(0x8c765c, 1);
-      bg.fillRect(MAP_W/2-92, 0, 184, MAP_H);
-      bg.fillRect(0, MAP_H/2-82, MAP_W, 164);
-      bg.fillCircle(MAP_W/2, MAP_H/2, 230);
-      bg.fillStyle(0x9c8669, .7);
-      bg.fillRect(MAP_W/2-58, 0, 116, MAP_H);
-      bg.fillRect(0, MAP_H/2-50, MAP_W, 100);
-
-      // 물은 맵의 가장자리에서 충분히 떨어뜨려 배치해 타일 경계에서 잘리지 않게 합니다.
-      const safeWater = this.createWaterZones();
-      this.waterZones = safeWater;
-      safeWater.forEach(r => {
-        bg.fillStyle(0x2f7890, .96);
-        bg.fillRoundedRect(r.x,r.y,r.width,r.height,38);
-        bg.lineStyle(5,0x74b9c4,.55);
-        bg.strokeRoundedRect(r.x,r.y,r.width,r.height,38);
-        for(let y=r.y+30;y<r.y+r.height-10;y+=34){
-          for(let x=r.x+25;x<r.x+r.width-20;x+=95){
-            bg.lineStyle(2,0xb2e1df,.28);
-            bg.arc(x,y,16,Math.PI,Math.PI*2,false);
-          }
-        }
-      });
-
-      bg.fillStyle(0x9a8060, 1); bg.fillCircle(MAP_W/2, MAP_H/2, 210);
-      bg.lineStyle(8,0xc1a27b,.55); bg.strokeCircle(MAP_W/2,MAP_H/2,210);
-      bg.fillStyle(0x6c7b70,.9); bg.fillCircle(MAP_W/2,MAP_H/2,72);
-      bg.fillStyle(0x9fb0a6,.7); bg.fillCircle(MAP_W/2,MAP_H/2,48);
-
-      // 타일 가장자리까지 같은 방식으로 반복되므로 잔디 패턴도 타일마다 정확히 이어집니다.
-      for (let i=0;i<900;i++) {
-        const x=Phaser.Math.Between(20,MAP_W-20), y=Phaser.Math.Between(20,MAP_H-20);
-        if (safeWater.some(r=>r.contains(x,y))) continue;
-        bg.lineStyle(2, i%3===0?0x86b678:0x6f9e66, .25);
-        bg.lineBetween(x,y,x+Phaser.Math.Between(-4,4),y-Phaser.Math.Between(4,10));
+      bg.fillStyle(0x709779,1);bg.fillRect(0,0,MAP_W,MAP_H);
+      // Muted meadow details are baked once; the tile edges keep one solid base color.
+      const safeWater=this.createWaterZones();this.waterZones=safeWater;
+      for(let i=0;i<1600;i++){
+        const x=Phaser.Math.Between(35,MAP_W-35),y=Phaser.Math.Between(35,MAP_H-35);
+        if(safeWater.some(r=>x>r.x-24&&x<r.right+24&&y>r.y-24&&y<r.bottom+24))continue;
+        bg.fillStyle(i%2?0x9fb48a:0x547e67,.14);bg.fillEllipse(x,y,30+i%40,12+i%17);
+        bg.lineStyle(1,0xc1d2a1,.35);bg.lineBetween(x-3,y+3,x,y-3);bg.lineBetween(x,y+3,x+4,y-2);
+        if(i%9===0){bg.fillStyle(i%3?0xffead0:0xf3c7d6,.85);bg.fillCircle(x,y-4,2.5);bg.fillStyle(0xe7ce83,1);bg.fillCircle(x,y-4,1);}
       }
-      bg.lineStyle(1,0x6d9b68,.10);
-      for(let x=0;x<=MAP_W;x+=100) bg.lineBetween(x,0,x,MAP_H);
-      for(let y=0;y<=MAP_H;y+=100) bg.lineBetween(0,y,MAP_W,y);
+      // Soft sand paths, with a continuous border across the repeated tile.
+      bg.fillStyle(0x9caa80,1);bg.fillRect(MAP_W/2-101,0,202,MAP_H);bg.fillRect(0,MAP_H/2-91,MAP_W,182);
+      bg.fillStyle(0xd0bd9c,1);bg.fillRect(MAP_W/2-92,0,184,MAP_H);bg.fillRect(0,MAP_H/2-82,MAP_W,164);bg.fillCircle(MAP_W/2,MAP_H/2,230);
+      bg.fillStyle(0xe4d3b4,.65);bg.fillRect(MAP_W/2-62,0,124,MAP_H);bg.fillRect(0,MAP_H/2-52,MAP_W,104);
+      for(let y=35;y<MAP_H-30;y+=65){bg.fillStyle(0xbda98e,.5);bg.fillRoundedRect(MAP_W/2-42+(y%3)*17,y,36,17,7);}
+      for(let x=35;x<MAP_W-30;x+=75){bg.fillStyle(0xbda98e,.4);bg.fillRoundedRect(x,MAP_H/2-20+(x%3)*13,34,16,6);}
+      safeWater.forEach(r=>{
+        // Sandy shoreline and shallow turquoise water remain safely inside the tile.
+        bg.fillStyle(0x536f61,.25);bg.fillRoundedRect(r.x-17,r.y-11,r.width+34,r.height+34,55);
+        bg.fillStyle(0xd5caa4,1);bg.fillRoundedRect(r.x-12,r.y-12,r.width+24,r.height+24,50);
+        bg.fillStyle(0x8ec6be,1);bg.fillRoundedRect(r.x,r.y,r.width,r.height,38);
+        bg.fillStyle(0x63aeb6,1);bg.fillRoundedRect(r.x+9,r.y+9,r.width-18,r.height-18,33);
+        bg.fillStyle(0x518fa9,.65);bg.fillRoundedRect(r.x+24,r.y+23,r.width-48,r.height-46,30);
+        bg.lineStyle(3,0xd1eee1,.75);bg.strokeRoundedRect(r.x+4,r.y+4,r.width-8,r.height-8,36);
+        for(let y=r.y+38;y<r.bottom-30;y+=39)for(let x=r.x+35;x<r.right-32;x+=85){bg.lineStyle(2,0xc5ebdf,.4);bg.beginPath();bg.arc(x,y,12,0,Math.PI,false);bg.strokePath();}
+        for(let k=0;k<3;k++){const x=r.x+50+k*70,y=r.bottom-38;bg.fillStyle(0x619f86,1);bg.fillEllipse(x,y,25,13);bg.lineStyle(1,0xb1c98d,.7);bg.lineBetween(x,y,x+10,y-3);if(k===1){bg.fillStyle(0xf4cedc,1);bg.fillCircle(x,y-3,4);}}
+        for(let k=0;k<5;k++){const x=r.right-35-k*18,y=r.bottom+8;bg.lineStyle(2,0x698b68,1);bg.lineBetween(x,y,x-3,y-13);bg.lineBetween(x,y,x+5,y-9);}
+      });
+      // A pale stone medallion replaces the flat center disk.
+      const cx=MAP_W/2,cy=MAP_H/2;
+      bg.fillStyle(0xb5a791,1);bg.fillCircle(cx,cy,214);
+      bg.fillStyle(0xe6d7c0,1);bg.fillCircle(cx,cy,203);
+      bg.lineStyle(2,0xc0ad96,.7);bg.strokeCircle(cx,cy,177);bg.strokeCircle(cx,cy,105);
+      for(let i=0;i<16;i++){const a=i*Math.PI/8;bg.lineBetween(cx+Math.cos(a)*105,cy+Math.sin(a)*105,cx+Math.cos(a)*202,cy+Math.sin(a)*202);}
+      bg.fillStyle(0x94b8ac,1);bg.fillCircle(cx,cy,78);bg.lineStyle(5,0xffebc6,.9);bg.strokeCircle(cx,cy,73);
+      bg.fillStyle(0xf2d5df,1);for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2;bg.fillEllipse(cx+Math.cos(a)*23,cy+Math.sin(a)*23,29,29);}
+      bg.fillStyle(0xffe7a4,1);bg.fillCircle(cx,cy,15);
       bg.generateTexture('bboringirl-infinite-map', MAP_W, MAP_H);
       bg.destroy();
 
