@@ -1,7 +1,7 @@
 (() => {
  'use strict';
  class ExtraWeapons {
-  constructor(scene){this.scene=scene;this.graphics=scene.add.graphics().setDepth(19);this.shells=[];this.blasts=[];this.clock=0;this.angle=0;this.cooldown=0;this.hits=new WeakMap();}
+  constructor(scene){this.scene=scene;this.graphics=scene.add.graphics().setDepth(19);this.shells=[];this.blasts=[];this.clock=0;this.angle=0;this.cooldown=0;this.hits=new WeakMap();this.boomerangSprites=[];}
   damage(enemy,amount){const s=this.scene;if(!s.state.running||!enemy.active)return;enemy.hp-=amount;if(enemy.hp<=0)s.killEnemy(enemy);else if(enemy.type==='boss')s.updateBossHud();}
   target(){const s=this.scene;if(s.autoAim!==false)return s.getNearestEnemy();const p=s.input.activePointer;return s.cameras.main.getWorldPoint(p.x,p.y);}
   launch(level){
@@ -38,10 +38,21 @@
     const points=[];
     for(let i=0;i<count;i++){
      const a=this.angle+i*Math.PI*2/count,x=p.x+Math.cos(a)*radius,y=p.y+Math.sin(a)*radius,spin=this.angle*3;
+     if(s.textures?.exists('weapon-boomerang')){
+      let sprite=this.boomerangSprites[i];
+      if(!sprite){
+       sprite=s.add.image(x,y,'weapon-boomerang').setDepth(19);
+       sprite.setScale(56/Math.max(sprite.width,sprite.height));
+       this.boomerangSprites[i]=sprite;
+      }
+      sprite.setPosition(x,y).setRotation(spin);
+     }else{
      const point=(dx,dy)=>({x:x+dx*Math.cos(spin)-dy*Math.sin(spin),y:y+dx*Math.sin(spin)+dy*Math.cos(spin)});
      const left=point(-18,-10),mid=point(0,8),right=point(18,-10);
      g.lineStyle(10,0x794d2c,1).beginPath().moveTo(left.x,left.y).lineTo(mid.x,mid.y).lineTo(right.x,right.y).strokePath();
-     g.lineStyle(5,0xffdc72,1).beginPath().moveTo(left.x,left.y).lineTo(mid.x,mid.y).lineTo(right.x,right.y).strokePath();points.push({x,y});
+     g.lineStyle(5,0xffdc72,1).beginPath().moveTo(left.x,left.y).lineTo(mid.x,mid.y).lineTo(right.x,right.y).strokePath();
+     }
+     points.push({x,y});
     }
     for(const e of s.enemies.getChildren().slice()){
      if(!s.state.running)break;if(!e.active||(this.hits.get(e)||0)>this.clock)continue;
@@ -50,7 +61,7 @@
     }
    }
   }
-  destroy(){this.graphics.destroy();this.shells=[];this.blasts=[];}
+  destroy(){this.boomerangSprites.forEach(sprite=>sprite.destroy());this.boomerangSprites=[];this.graphics.destroy();this.shells=[];this.blasts=[];}
  }
  window.BBOExtraWeapons=ExtraWeapons;
 })();

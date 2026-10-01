@@ -42,9 +42,9 @@
     { id:'rapid', title:'방송 텐션', desc:'공격속도 +18%', icon:'⚡', apply:p => p.fireDelay = Math.max(170, p.fireDelay * .82) },
     { id:'maxhp', title:'팬들의 사랑', desc:'최대 HP +25 / 회복', icon:'♥', apply:p => { p.maxHp += 25; p.hp = p.maxHp; } },
     { id:'magnet', title:'추억의 자석', desc:'경험치 획득 범위 +35%', icon:'✦', apply:p => p.pickupRadius *= 1.35 },
-    { id:'cannon', title:'포탄', desc:'획득 / 강화: 범위 피해·폭발 범위 증가, 발사 간격 감소', icon:'●', apply:p => p.cannonLevel=(p.cannonLevel||0)+1 },
-    { id:'boomerang', title:'부메랑', desc:'획득 / 강화: 공전 무기 개수(최대 6)·피해·회전 속도 증가', icon:'↻', apply:p => p.boomerangLevel=(p.boomerangLevel||0)+1 },
-    { id:'multishot', title:'하트 발사', desc:'투사체 +1개', icon:'✧', apply:p => p.projectiles += 1 }
+    { id:'cannon', title:'박격포', desc:'획득 / 강화: 범위 피해·폭발 범위 증가, 발사 간격 감소', icon:'●', apply:p => p.cannonLevel=(p.cannonLevel||0)+1 },
+    { id:'boomerang', title:'뽀글스의 수호', desc:'획득 / 강화: 뽀글스 최대 6마리 · 피해·회전 속도 증가', icon:'↻', apply:p => p.boomerangLevel=(p.boomerangLevel||0)+1 },
+    { id:'multishot', title:'AUG A3', desc:'탄환 +1개', icon:'✧', apply:p => p.projectiles += 1 }
   ];
 
   class MenuScene extends Phaser.Scene {
@@ -391,6 +391,7 @@
     preload() {
       // 캐릭터 이미지는 assets/roguelike/characters/ 폴더의 파일로 교체할 수 있습니다.
       // PNG/JPG 모두 사용 가능하며, 아래 파일명을 그대로 덮어쓰면 됩니다.
+      this.load.image('weapon-boomerang','assets/roguelike/weapons/boomerang.png?v=guardian-20261002');
       const configured = window.BBORINGIRL_CHARACTER_ASSETS || {};
       const assets = {
         enemy:'assets/roguelike/characters/enemy.png',
