@@ -379,3 +379,19 @@ body:not(.site-entered) > *:not(.entry-gate):not(#adminLoginDialog){visibility:h
 .brand-mark{overflow:hidden}.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
 
 .brand .brand-mark{overflow:hidden;flex:0 0 38px}.brand .brand-mark img{display:block;width:100%;height:100%;object-fit:cover}
+
+/* Month navigation stays at the calendar's true horizontal center. */
+.soop-calendar-section .section-head{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px}
+.soop-calendar-section .soop-calendar-actions{display:contents}
+.soop-calendar-month-selector{display:flex;align-items:center;justify-content:center;gap:8px;grid-column:2;grid-row:1}
+.soop-calendar-month-selector strong{min-width:145px;text-align:center;font-size:16px;letter-spacing:-.03em}
+.soop-calendar-shortcuts{display:flex;align-items:center;justify-content:flex-end;gap:8px;grid-column:3;grid-row:1}
+.soop-calendar-month-selector .calendar-nav{flex-shrink:0}
+@media(max-width:760px){
+ .soop-calendar-section .section-head{grid-template-columns:minmax(0,1fr) auto;gap:14px 8px}
+ .soop-calendar-section .section-head>div:first-child{grid-column:1;grid-row:1}
+ .soop-calendar-shortcuts{grid-column:2;grid-row:1;flex-wrap:wrap}
+ .soop-calendar-month-selector{grid-column:1/-1;grid-row:2;justify-self:center}
+ .soop-calendar-shortcuts .btn{padding:9px 10px;font-size:11px}
+ .soop-calendar-section .section-head h2{font-size:clamp(18px,4.5vw,28px)}
+}
