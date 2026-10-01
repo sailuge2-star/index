@@ -6,17 +6,18 @@
   <meta name="theme-color" content="#ff3d93">
   <meta name="description" content="뽀린걸 3000일 기념 팬메이드 로그라이크 게임">
   <title>뽀린걸 로그라이크 · 3000일</title>
-  <link rel="stylesheet" href="game.css?v=game-admin-20260930">
+  <link rel="stylesheet" href="game.css?v=soop-live-20261001">
 </head>
 <body>
   <div class="game-page">
+    <a class="game-admin-link" href="game-admin.html" target="_blank" rel="noopener" aria-label="게임 관리 (새 탭)" data-game-admin hidden>⚙ 게임 관리 ↗</a>
     <header class="game-header">
       <a class="back-link" href="index.html">← 팬사이트로 돌아가기</a>
       <div class="game-title">
         <span class="game-mark"><img src="assets/bbo_profile.png?v=8" alt="뽀린걸 프로필"></span>
         <div>
           <strong>뽀린걸 로그라이크</strong>
-          <small>3000 DAYS SURVIVAL</small><span class="game-role-label" data-game-role>게스트</span><a class="game-admin-link" href="game-admin.html" data-game-admin hidden>게임 관리</a>
+          <small>3000 DAYS SURVIVAL</small><span class="game-role-label" data-game-role>게스트</span>
         </div>
       </div>
       <button id="restartTop" class="top-button" type="button">↻ 다시 시작</button>
@@ -48,7 +49,7 @@
           <dl class="status-stats"><div><dt>공격력</dt><dd id="gameDamage">18</dd></div><div><dt>공격속도</dt><dd id="gameAttackSpeed">1.54/s</dd></div><div><dt>이동속도</dt><dd id="gameMoveSpeed">250</dd></div><div><dt>흡수범위</dt><dd id="gamePickup">75</dd></div></dl>
           <div class="status-divider"></div>
           <div class="status-heading status-subheading">패시브 효과</div>
-          <div class="status-passives" id="gamePassives">선택한 능력 없음</div>
+          <div id="gameSlowStatus" class="status-passives" role="status" hidden></div><div class="status-passives" id="gamePassives">선택한 능력 없음</div>
           <div class="status-boss" id="gameBossStatus" hidden>BOSS 등장</div>
         </aside>
         <div class="game-overlay-actions"><button class="game-overlay-pause" id="gamePauseButton" type="button" aria-pressed="false">⏸ 일시정지</button><button class="game-overlay-menu" id="gameMenuButton" type="button">☰ 메뉴</button></div>
@@ -60,32 +61,33 @@
 
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="game-access.js?v=1"></script>
+  <script src="game-access.js?v=admin-link-fix-20260930"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
-  <script src="game.js?v=game-admin-20260930"></script>
+  <script src="game.js?v=soop-live-20261001"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
-    <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 채팅 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
+    <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
       <h3 id="soopStreamerTitle">스트리머</h3>
-      <div class="soop-streamer-card"><img src="assets/bbo_profile.png" alt="뽀린걸 프로필"><div><div class="soop-streamer-name">뽀린걸 <span>기본 스트리머</span></div><small>@bboringirl</small></div><button type="button" class="soop-connect-action" disabled>연결 대기</button></div>
-      <div class="soop-search-row"><input type="search" aria-label="다른 스트리머 닉네임 또는 ID" placeholder="다른 스트리머 닉네임 또는 ID" disabled><button type="button" disabled>검색</button></div>
+      <div class="soop-streamer-card"><img src="assets/bbo_profile.png" alt="뽀린걸 프로필"><div><div class="soop-streamer-name">뽀린걸 <span>기본 스트리머</span></div><small>@bboringirl</small></div><button type="button" class="soop-connect-action" id="soopConnectAction">연결하기</button></div>
+      <div class="soop-search-row"><input id="soopCertification" type="password" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="SOOP 앱의 6자리 인증번호" placeholder="SOOP 앱 → 내 정보 → 인증번호 6자리"></div>
     </section>
     <section aria-labelledby="soopEffectsTitle">
-      <div class="soop-effects-heading"><h3 id="soopEffectsTitle">후원 개수별 효과</h3><span>별풍선·영상풍선·애드벌룬 같은 개수로 적용 예정</span><button type="button" id="soopResetDefaults">기본값</button></div>
+      <div class="soop-effects-heading"><h3 id="soopEffectsTitle">후원 개수별 효과</h3><span>별풍선·영상풍선·애드벌룬: 입력한 개수와 일치할 때 적용</span><button type="button" id="soopResetDefaults">기본값</button></div>
       <div class="soop-effect-list">
-        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">이로운 효과 후원 개수</span><input type="number" min="1" max="999999" step="1" value="10" data-default="10" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>이로운 효과</strong><p>도움 효과 중 하나 (확률 가중치)</p></div></div>
-        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">해로운 효과 후원 개수</span><input type="number" min="1" max="999999" step="1" value="15" data-default="15" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>해로운 효과</strong><p>방해 효과 중 하나 (확률 가중치)</p></div></div>
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">이로운 효과 후원 개수</span><input type="number" min="1" max="999999" step="1" value="10" data-default="10" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>이로운 효과</strong><p>최대 체력의 30% 회복</p></div></div>
+        <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">해로운 효과 후원 개수</span><input type="number" min="1" max="999999" step="1" value="15" data-default="15" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>해로운 효과</strong><p>최대 체력의 20% 감소 (최소 1 유지)</p></div></div>
         <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">무적 7초 후원 개수</span><input type="number" min="1" max="999999" step="1" value="20" data-default="20" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>무적 7초</strong><p>7초 동안 피해를 받지 않음</p></div></div>
         <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">랜덤 효과 (룰렛) 후원 개수</span><input type="number" min="1" max="999999" step="1" value="33" data-default="33" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>랜덤 효과 (룰렛)</strong><p>룰렛으로 이로운 효과 / 해로운 효과 / 무적 7초 중 하나</p></div></div>
         <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">랜덤 보스 소환 후원 개수</span><input type="number" min="1" max="999999" step="1" value="40" data-default="40" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>랜덤 보스 소환</strong><p>랜덤 보스 중 하나 소환</p></div></div>
         <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">랜덤 보스 삭제 후원 개수</span><input type="number" min="1" max="999999" step="1" value="50" data-default="50" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>랜덤 보스 삭제</strong><p>플레이어와 가장 가까운 보스 1마리 삭제</p></div></div>
       </div>
     </section>
-    <p class="soop-approval-note" id="soopApprovalNote">SDK 승인 대기 · 화면 미리보기입니다. 입력값은 게임에 적용되지 않습니다.</p>
+    <p class="soop-approval-note" id="soopApprovalNote">뽀린걸 계정으로 방송 중에 연결해주세요. 후원 효과는 이 게임에 적용됩니다. 일시정지 중에는 효과 처리를 대기합니다.</p>
     <p class="soop-sr-only" id="soopPopupFeedback" role="status"></p>
     <form method="dialog" class="soop-popup-footer"><button type="submit" autofocus>닫기</button></form>
   </dialog>
-  <script src="soop-popup.js?v=1"></script>
+  <div id="soopDonationToast" role="status" hidden></div>
+  <script src="soop-popup.js?v=soop-live-20261001"></script>
 </body>
 </html>

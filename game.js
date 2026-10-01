@@ -568,6 +568,15 @@
         g.fillCircle(29,29,3);
       });
 
+      make('bossScythe', g => {
+        g.lineStyle(7,0x654038,1);g.lineBetween(18,55,43,15);
+        g.fillStyle(0xd7eafa,1);g.beginPath();g.moveTo(13,15);g.lineTo(38,5);g.lineTo(58,17);g.lineTo(61,38);g.lineTo(43,22);g.lineTo(13,15);g.closePath();g.fillPath();
+        g.lineStyle(2,0x54708c,1);g.strokePath();
+      });
+      make('tongueTip', g => {
+        g.fillStyle(0x822d59,1);g.fillEllipse(32,32,38,25);
+        g.fillStyle(0xff88b3,1);g.fillEllipse(32,30,32,19);
+      });
       make('enemyBullet', g => {
         g.fillStyle(0x5d1834,1); g.fillCircle(32,32,14);
         g.fillStyle(0xff794b,1); g.fillCircle(32,32,10);
@@ -929,10 +938,8 @@
       this.physics.add.overlap(this.player, this.enemies, this.playerHit, null, this);
       this.physics.add.overlap(this.player, this.enemyProjectiles, this.enemyBulletHit, null, this);
       this.physics.add.overlap(this.player, this.xpOrbs, this.collectXp, null, this);
-      // 플레이어와 보스는 같은 나무/바위/건물 충돌 영역을 사용합니다.
+      // 플레이어는 장애물에 막히고, 보스와 일반 적은 통과합니다. 보스의 물 감속은 유지합니다.
       this.physics.add.collider(this.player, this.terrain);
-      this.physics.add.collider(this.enemies, this.terrain, null,
-        enemy => enemy.active && enemy.type==='boss', this);
     }
 
     configurePlayerHitbox() {
@@ -1195,20 +1202,23 @@
       // Each five-minute boss grows from the previous boss, alongside stage/difficulty scaling.
       const multiplier=this.enemyStatMultiplier();
       boss.maxHp=Math.round(1800*Math.pow(1.5,round-1)*multiplier);
+      if(boss.bossId==='boss1') boss.maxHp*=3;
       boss.hp=boss.maxHp;
-      boss.speed=48*Math.pow(1.25,round-1);
+      boss.speed=48*Math.pow(1.25,round-1)*(boss.bossId==='boss2'?2:boss.bossId==='bossFinal'?1.5:1);
       boss.damage=Math.round(24*Math.pow(1.5,round-1)*multiplier*10)/10;
       const bossSize=99.2*(boss.bossId==='bossFinal'?3.5:2.5);
       boss.setDisplaySize(bossSize,bossSize);
       boss.setDepth(15);
       boss.setData('isBoss',true);
+      if(boss.bossId==='boss5'||boss.bossId==='bossFinal') this.createOrbitingScythes(boss);
       this.showBanner(`${round===TOTAL_STAGES?'FINAL BOSS':'BOSS'} · ${boss.bossName} 출현!`, '보스를 쓰러뜨릴 때까지 시간이 멈춥니다');
       this.updateUi();
     }
 
     updateEnemyRangedAttack(enemy,delta) {
       if(!enemy.active || !this.state.running || this.state.pausedForUser || this.state.pausedForLevel) return;
-      const bossShooter=enemy.type==='boss' && enemy.bossId==='boss4';
+      const bossShooter=enemy.type==='boss' && ['boss4','bossFinal'].includes(enemy.bossId);
+      if(enemy.type==='boss'&&enemy.bossId==='boss3'){this.updateTongueAttack(enemy,delta);return;}
       if(enemy.type!=='elite' && !bossShooter) return;
       const interval=bossShooter?2000:1800;
       enemy.rangedCooldown=Math.max(0,(enemy.rangedCooldown??interval)-delta);
@@ -1228,10 +1238,83 @@
       }
     }
 
+    createOrbitingScythes(boss) {
+      for(let i=0;i<3;i++){
+        const blade=this.enemyProjectiles.create(boss.x,boss.y,'bossScythe');
+        blade.owner=boss;blade.kind='scythe';blade.damage=boss.damage;
+        blade.orbitAngle=i*Math.PI*2/3;
+        blade.orbitRadius=boss.displayWidth/2+45;
+        blade.setDepth(19).setDisplaySize(70,70);
+        blade.body.setCircle(23,9,9);
+        this.positionScythe(blade,0);
+      }
+    }
+
+    positionScythe(blade,delta) {
+      blade.orbitAngle+=delta*0.0014;
+      const x=blade.owner.x+Math.cos(blade.orbitAngle)*blade.orbitRadius;
+      const y=blade.owner.y+Math.sin(blade.orbitAngle)*blade.orbitRadius;
+      blade.body.reset(x,y);
+      blade.setRotation(blade.orbitAngle+Math.PI/2);
+      blade.damage=blade.owner.damage;
+    }
+
+    updateTongueAttack(enemy,delta) {
+      enemy.tongueCooldown=Math.max(0,(enemy.tongueCooldown??3000)-delta);
+      if(enemy.tongueCooldown>0||Phaser.Math.Distance.Between(enemy.x,enemy.y,this.player.x,this.player.y)>600)return;
+      enemy.tongueCooldown=3000;
+      const angle=Phaser.Math.Angle.Between(enemy.x,enemy.y,this.player.x,this.player.y);
+      const tip=this.enemyProjectiles.create(enemy.x,enemy.y,'tongueTip');
+      tip.kind='tongue';tip.owner=enemy;tip.damage=0;tip.life=1400;
+      tip.setDepth(19).setScale(0.8).setRotation(angle);
+      tip.body.setCircle(13,19,19);
+      tip.setVelocity(Math.cos(angle)*420,Math.sin(angle)*420);
+      tip.tongueLine=this.add.graphics().setDepth(18);
+      tip.once('destroy',()=>tip.tongueLine.destroy());
+    }
+
     enemyBulletHit(player,bullet) {
       if(!bullet.active || !this.state.running || this.state.pausedForLevel || this.state.pausedForUser) return;
-      this.playerHit(player,bullet);
-      bullet.destroy();
+      if(bullet.kind==='tongue'){
+        if(!window.BBO_GAME_ACCESS?.isAdmin()) player.tongueSlowMs=10000;
+      } else this.playerHit(player,bullet);
+      if(bullet.kind!=='scythe') bullet.destroy();
+    }
+
+    applySoopDonation(effect,nickname,count) {
+      if(!this.state.running||this.state.pausedForLevel||this.state.pausedForUser)return false;
+      let result='';
+      if(effect==='random')effect=['help','harm','shield'][Math.floor(Math.random()*3)];
+      if(effect==='help'){
+        this.player.hp=Math.min(this.player.maxHp,this.player.hp+Math.ceil(this.player.maxHp*0.3));
+        result='체력 30% 회복';
+      }else if(effect==='harm'){
+        if(!window.BBO_GAME_ACCESS?.isAdmin()&&!(this.player.donationInvulnerableMs>0)){
+          this.player.hp=Math.max(1,this.player.hp-Math.ceil(this.player.maxHp*0.2));
+        }
+        result='체력 20% 감소 (최소 1 유지)';
+      }else if(effect==='shield'){
+        this.player.donationInvulnerableMs=7000;result='7초 무적';
+      }else if(effect==='spawn'){
+        if(this.state.bossActive||this.state.elapsed>=SURVIVAL_SECONDS)result='이미 보스전 중이므로 추가 소환 생략';
+        else{
+          const round=this.state.bossRound+1,original=this.state.bossOrder[round-1];
+          this.state.bossOrder[round-1]=BOSS_TYPES[Math.floor(Math.random()*5)];
+          this.spawnBoss(round);
+          const boss=this.enemies.getChildren().find(e=>e.active&&e.type==='boss');
+          if(boss)boss.isDonationBoss=true;
+          this.state.bossOrder[round-1]=original;this.state.bossRound=round-1;
+          result='추가 보스 소환';
+        }
+      }else if(effect==='remove'){
+        const bosses=this.enemies.getChildren().filter(e=>e.active&&e.type==='boss');
+        bosses.sort((a,b)=>Math.hypot(a.x-this.player.x,a.y-this.player.y)-Math.hypot(b.x-this.player.x,b.y-this.player.y));
+        if(bosses[0]){this.killEnemy(bosses[0]);result='가장 가까운 보스 격파';}else result='삭제할 보스 없음';
+      }
+      this.updateUi();
+      const toast=document.getElementById('soopDonationToast');
+      if(toast){toast.textContent=`${nickname} · ${count}개 후원 · ${result}`;toast.hidden=false;clearTimeout(this.donationToastTimer);this.donationToastTimer=setTimeout(()=>{toast.hidden=true},4000);}
+      return true;
     }
 
     autoAttack() {
@@ -1289,6 +1372,10 @@
       this.state.kills++;
       if(enemy.type==='boss'){
         this.dropXp(enemy.x,enemy.y,value, true);
+        if(enemy.isDonationBoss){
+          this.state.bossActive=this.enemies.getChildren().some(e=>e!==enemy&&e.active&&e.type==='boss');
+          enemy.destroy();this.updateUi();return;
+        }
         this.state.bossActive=false;
         if(this.state.elapsed>=SURVIVAL_SECONDS && this.state.bossRound===TOTAL_STAGES){
           enemy.destroy();
@@ -1378,7 +1465,7 @@
     }
 
     playerHit(player,enemy) {
-      if(window.BBO_GAME_ACCESS?.isAdmin()) return;
+      if(window.BBO_GAME_ACCESS?.isAdmin()||player.donationInvulnerableMs>0) return;
       if(!enemy.active || !this.state.running) return;
       const now=this.time.now;
       if(now<player.invulnerableUntil) return;
@@ -1400,6 +1487,7 @@
     update(time,delta) {
       if(!this.state?.running || this.state.pausedForLevel || this.state.pausedForUser) return;
 
+      this.player.donationInvulnerableMs=Math.max(0,(this.player.donationInvulnerableMs||0)-delta);
       let x=0,y=0;
       if(this.keys.A.isDown||this.keys.LEFT.isDown) x-=1;
       if(this.keys.D.isDown||this.keys.RIGHT.isDown) x+=1;
@@ -1419,8 +1507,12 @@
         this.configurePlayerHitbox();
       }
 
+      this.player.tongueSlowMs=Math.max(0,(this.player.tongueSlowMs||0)-delta);
+      if(window.BBO_GAME_ACCESS?.isAdmin())this.player.tongueSlowMs=0;
+      const slowLabel=document.getElementById('gameSlowStatus');
+      if(slowLabel){slowLabel.hidden=!this.player.tongueSlowMs;slowLabel.textContent=`혀 감속 · 이동속도 50% · ${Math.ceil(this.player.tongueSlowMs/1000)}초`;}
       const inWater=this.isInWater(this.player.x,this.player.y);
-      const terrainSpeed=inWater ? this.player.moveSpeed*0.58 : this.player.moveSpeed;
+      const terrainSpeed=this.player.moveSpeed*(inWater?0.58:1)*(this.player.tongueSlowMs>0?0.5:1);
       const inputLength=Math.hypot(x,y);
       // Keyboard diagonals keep the same total speed; joystick retains analog speed.
       const inputScale=inputLength > 1 ? 1/inputLength : 1;
@@ -1458,6 +1550,9 @@
 
       this.enemyProjectiles.getChildren().slice().forEach(b=>{
         if(!b.active) return;
+        if(!b.owner?.active){b.destroy();return;}
+        if(b.kind==='scythe'){this.positionScythe(b,delta);return;}
+        if(b.kind==='tongue'){b.tongueLine.clear().lineStyle(8,0xf269a0,1).lineBetween(b.owner.x,b.owner.y,b.x,b.y);}
         b.life-=delta;
         if(b.life<=0) b.destroy();
       });

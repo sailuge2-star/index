@@ -233,3 +233,11 @@ a{text-decoration:none;color:inherit}
 @media(prefers-reduced-motion:reduce){.encounter-notices{transition:none}}
 
 .game-role-label{font-size:10px;color:#c786ae;margin-top:4px}.game-admin-link{display:inline-block;font-size:12px;color:#e72f84;margin-top:3px}.game-admin-link[hidden]{display:none!important}
+
+/* Independent admin entry: accessible on the menu and during gameplay. */
+.game-admin-link{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:120;pointer-events:auto;display:inline-flex;align-items:center;padding:10px 16px;margin:0;border:1px solid #ffb3d3;border-radius:12px;background:#53233e;color:#fff;font-size:13px;font-weight:800;box-shadow:0 4px 16px #0005}
+.game-admin-link:hover{background:#783053}
+.game-admin-link:focus-visible{outline:3px solid #ffdaed;outline-offset:3px}
+.game-admin-link[hidden]{display:none!important}
+
+#soopDonationToast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:80vw;background:#372340ed;border:1px solid #ffa8d1;border-radius:14px;padding:12px 20px;color:#fff;z-index:180;pointer-events:none;font-size:13px}#soopDonationToast[hidden]{display:none}

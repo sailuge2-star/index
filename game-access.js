@@ -23,6 +23,14 @@
     if(!client){loadError='Supabase 연결 설정이 없습니다.';return;}
     try{const {data,error}=await bounded(client.from('game_balance').select('*').eq('id',1).maybeSingle());if(error)throw error;if(data)settings=validate(data);loadError='';}catch(e){loadError='공용 설정을 불러오지 못했습니다. 기본값으로 진행합니다. '+e.message;}
   }
+  document.querySelectorAll('a.game-admin-link').forEach(link=>link.addEventListener('click',event=>{
+    if(!admin){event.preventDefault();return;}
+    const scene=window.bboringirlGame?.scene.getScene('MainScene');
+    if(scene?.scene.isActive()&&scene.state?.running){
+      scene.state.pausedForUser=true;
+      scene.syncPauseState();
+    }
+  }));
   const ready=Promise.all([refresh(),load()]);
   window.BBO_GAME_ACCESS=Object.freeze({isAdmin:()=>admin,settings:()=>({...settings}),ready,
     async save(values){const clean=validate(values);await refresh();if(!admin||!client)throw Error('관리자 로그인 후 이용해주세요.');const {error}=await bounded(client.from('game_balance').upsert({id:1,...clean}));if(error)throw error;settings=clean;loadError='';}
