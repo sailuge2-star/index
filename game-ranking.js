@@ -43,9 +43,23 @@
    data.forEach((r,i)=>{const tr=document.createElement('tr');[i+1,r.nickname,r.cleared?'클리어':'도전',Math.floor(r.survival/60)+':'+String(r.survival%60).padStart(2,'0'),r.kills.toLocaleString()].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td);});rows.append(tr);});
   }catch{if(version===loadVersion)status.textContent='랭킹을 불러오지 못했습니다. DB 설정 또는 네트워크를 확인하고 새로고침해주세요.';}
  }
- document.getElementById('openRanking').onclick=()=>{dialog.showModal();load();};
+ let rankingMenuScene=null;
+ function unlockRankingMenu(){
+  const scene=rankingMenuScene;rankingMenuScene=null;
+  if(scene?.scene.isActive())scene.unlockMenuInput();
+ }
+ document.getElementById('openRanking').onclick=()=>{
+  if(dialog.open)return;
+  const scene=window.bboringirlGame?.scene.getScene('MenuScene');
+  if(scene?.scene.isActive()){
+   if(scene.modalInputLocked)return;
+   scene.lockMenuInput();rankingMenuScene=scene;
+  }
+  try{dialog.showModal();}catch(error){unlockRankingMenu();throw error;}
+  load();
+ };
  document.getElementById('rankingRefresh').onclick=load;filter.onchange=load;
- dialog.addEventListener('close',()=>{loadVersion++;});
+ dialog.addEventListener('close',()=>{loadVersion++;unlockRankingMenu();});
  window.addEventListener('game-role-change',()=>{if(window.BBO_GAME_ACCESS?.isAdmin()){if(activeRun)activeRun.eligible=false;message('관리자 플레이는 랭킹에서 제외됩니다.');}});
  window.BBO_RANKING=Object.freeze({prepare,begin,finish});
 })();

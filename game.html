@@ -46,7 +46,7 @@
     </section>
     <main class="game-shell">
       <div class="game-overlay" id="gameOverlay" aria-label="게임 상태">
-        <div class="game-xp-track" id="gameXpTrack" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuenow="0" aria-valuemax="25"><span id="gameXpFill"></span></div>
+        <div class="game-xp-track" id="gameXpTrack" role="progressbar" aria-label="경험치" aria-valuemin="0" aria-valuenow="0" aria-valuemax="18"><span id="gameXpFill"></span></div>
         <div id="encounterHud" class="encounter-hud">
           <section id="encounterBoss" class="encounter-boss" aria-label="보스 체력" hidden>
             <div class="encounter-boss-heading"><strong id="encounterBossName">BOSS</strong><span id="encounterBossHp"></span></div>
@@ -64,7 +64,7 @@
           <div class="status-level-time"><strong id="gameLevel">LV 1</strong><strong id="gameTime">00:00</strong></div>
           <div class="status-stage"><span id="gameWave">STAGE 1/6 · WAVE 1</span><span id="gameKills">KILLS 0</span></div>
           <div class="status-difficulty">난이도 <strong id="gameDifficulty">쉬움</strong></div>
-          <div class="status-xp-text" id="gameXp">EXP 0 / 25</div>
+          <div class="status-xp-text" id="gameXp">EXP 0 / 18</div>
           <div class="status-divider"></div>
           <div class="status-heading status-subheading">능력치</div>
           <dl class="status-stats"><div><dt>공격력</dt><dd id="gameDamage">18</dd></div><div><dt>공격속도</dt><dd id="gameAttackSpeed">1.54/s</dd></div><div><dt>이동속도</dt><dd id="gameMoveSpeed">250</dd></div><div><dt>흡수범위</dt><dd id="gamePickup">75</dd></div></dl>
@@ -90,10 +90,10 @@
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="game-access.js?v=ranking-20261001"></script>
-  <script src="game-ranking.js?v=1"></script>
+  <script src="game-ranking.js?v=menu-lock-20261001"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
-  <script src="game.js?v=ranking-20261001"></script>
+  <script src="game.js?v=xp70-20261001"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">

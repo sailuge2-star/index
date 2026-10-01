@@ -15,6 +15,7 @@
   const mapRect = (x, y, w, h) => new Phaser.Geom.Rectangle(
     mapX(x), mapY(y), w * MAP_SX, h * MAP_SY
   );
+  const LEVEL_XP_RATIO = 0.7; // 기존 레벨별 필요 경험치의 70% (정수 반올림)
   const SURVIVAL_SECONDS = 1800;
   const STAGE_SECONDS = 300;
   const TOTAL_STAGES = 6;
@@ -494,7 +495,8 @@
         upgrades: {},
         level: 1,
         xp: 0,
-        nextXp: 25,
+        baseNextXp: 25,
+        nextXp: Math.round(25 * LEVEL_XP_RATIO),
         pausedForLevel: false,
         pausedForUser: false
       };
@@ -997,7 +999,7 @@
         title: this.add.text(35,30,'뽀린걸 로그라이크',{...style,fontSize:'18px'}).setDepth(101),
         level: this.add.text(35,58,'LV 1',{...style,fontSize:'13px'}).setDepth(101),
         hpText: this.add.text(105,58,'HP 100 / 100',{...small}).setDepth(101),
-        xpText: this.add.text(105,80,'EXP 0 / 25',{...small}).setDepth(101),
+        xpText: this.add.text(105,80,`EXP 0 / ${Math.round(25 * LEVEL_XP_RATIO)}`,{...small}).setDepth(101),
         time: this.add.text(GAME_W-38,32,'00:00',{...style,fontSize:'18px'}).setOrigin(1,0).setDepth(101),
         wave: this.add.text(GAME_W-38,58,'WAVE 1',{...small}).setOrigin(1,0).setDepth(101),
         kills: this.add.text(GAME_W-38,80,'KILLS 0',{...small}).setOrigin(1,0).setDepth(101),
@@ -1462,7 +1464,9 @@
           overlay.destroy(); title.destroy(); sub.destroy();
           this.state.xp-=this.state.nextXp;
           this.state.level++;
-          this.state.nextXp=Math.floor(this.state.nextXp*1.28+8);
+          // 원래 성장 곡선을 별도로 유지해 30% 감소가 매 레벨 중첩되지 않도록 한다.
+          this.state.baseNextXp=Math.floor(this.state.baseNextXp*1.28+8);
+          this.state.nextXp=Math.max(1,Math.round(this.state.baseNextXp*LEVEL_XP_RATIO));
           this.state.pausedForLevel=false;
           this.syncPauseState();
           this.updateUi();
