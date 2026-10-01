@@ -118,7 +118,7 @@
       this.add.text(GAME_W/2, 334, '3000 DAYS SURVIVAL', {
         fontFamily:'Noto Sans KR', fontSize:'13px', fontStyle:'800', color:'#ac587b', letterSpacing:4
       }).setOrigin(.5);
-      this.add.text(GAME_W/2, 370, '끝없이 몰려오는 적을 물리치고 3000일을 기념하세요.', {
+      this.add.text(GAME_W/2, 370, '끝없이 몰려오는 흑화한 뱁새들을 물리치고 3000일을 기념하세요.', {
         fontFamily:'Noto Sans KR', fontSize:'13px', color:'#8e627b'
       }).setOrigin(.5);
 
