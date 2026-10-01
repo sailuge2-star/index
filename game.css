@@ -183,7 +183,12 @@ a{text-decoration:none;color:inherit}
 .soop-streamer-name{display:flex;align-items:center;gap:7px;font-weight:800;font-size:15px}
 .soop-streamer-name span{font-size:10px;color:#fff;background:#db4464;border-radius:7px;padding:2px 7px}
 .soop-streamer-card small{display:block;font-size:12px;color:#a84b64;margin-top:3px}
-.soop-connect-action{margin-left:auto;background:transparent;color:#a84b64;border:0;font-size:11px;white-space:nowrap}
+.soop-connect-action{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;min-width:96px;min-height:44px;padding:10px 16px;background:#c82c58;color:#fff;border:1px solid #b8214a;border-radius:12px;font-size:14px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 3px 8px rgba(155,30,65,.2);touch-action:manipulation}
+.soop-connect-action:hover:not(:disabled){background:#ad2049}
+.soop-connect-action:focus-visible{outline:3px solid #76203c;outline-offset:3px}
+.soop-connect-action:disabled{opacity:.65;cursor:wait}
+.soop-approval-note[data-state="error"]{color:#941a32;font-weight:700}
+.soop-approval-note[data-state="pending"]{color:#71334b;font-weight:700}
 .soop-search-row{display:flex;align-items:center;gap:8px;margin:8px 0 16px}
 .soop-search-row input{min-width:0;flex:1;border:1px solid #db4464;border-radius:13px;background:#ffe6ed;color:#8f2945;padding:11px 14px;font:inherit;font-size:14px}
 .soop-search-row button{border:0;border-radius:22px;background:#db4464;color:#fff;font:inherit;font-size:13px;font-weight:800;padding:12px 19px;box-shadow:0 5px 0 #b62f50}

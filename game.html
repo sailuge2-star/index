@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ff3d93">
   <meta name="description" content="뽀린걸 3000일 기념 팬메이드 로그라이크 게임">
   <title>뽀린걸 로그라이크 · 3000일</title>
-  <link rel="stylesheet" href="game.css?v=soop-live-20261001">
+  <link rel="stylesheet" href="game.css?v=soop-button-20261001">
 </head>
 <body>
   <div class="game-page">
@@ -64,7 +64,7 @@
   <script src="game-access.js?v=admin-link-fix-20260930"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
-  <script src="game.js?v=soop-live-20261001"></script>
+  <script src="game.js?v=soop-button-20261001"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
@@ -83,11 +83,11 @@
         <div class="soop-effect-row"><label class="soop-count"><span class="soop-sr-only">랜덤 보스 삭제 후원 개수</span><input type="number" min="1" max="999999" step="1" value="50" data-default="50" inputmode="numeric"><span aria-hidden="true">개</span></label><div class="soop-effect-copy"><strong>랜덤 보스 삭제</strong><p>플레이어와 가장 가까운 보스 1마리 삭제</p></div></div>
       </div>
     </section>
-    <p class="soop-approval-note" id="soopApprovalNote">뽀린걸 계정으로 방송 중에 연결해주세요. 후원 효과는 이 게임에 적용됩니다. 일시정지 중에는 효과 처리를 대기합니다.</p>
+    <p class="soop-approval-note" id="soopApprovalNote" role="status" aria-live="polite">뽀린걸 계정으로 방송 중에 연결해주세요. 후원 효과는 이 게임에 적용됩니다. 일시정지 중에는 효과 처리를 대기합니다.</p>
     <p class="soop-sr-only" id="soopPopupFeedback" role="status"></p>
     <form method="dialog" class="soop-popup-footer"><button type="submit" autofocus>닫기</button></form>
   </dialog>
   <div id="soopDonationToast" role="status" hidden></div>
-  <script src="soop-popup.js?v=soop-live-20261001"></script>
+  <script src="soop-popup.js?v=soop-button-20261001"></script>
 </body>
 </html>
