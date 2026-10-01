@@ -441,6 +441,8 @@
       this.createWorld();
       this.createPlayer();
       this.createGroups();
+      this.bossItems=new window.BBOBossItems(this);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.bossItems.destroy());
       this.extraWeapons=new window.BBOExtraWeapons(this);
       this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.extraWeapons.destroy());
       this.enemyHealthGraphics=this.add.graphics().setDepth(19);
@@ -1418,6 +1420,8 @@
     }
 
     killEnemy(enemy) {
+      if(!enemy?.active)return;
+      if(enemy.type==='boss')this.bossItems?.drop(enemy);
       this.enemyProjectiles.getChildren().filter(b=>b.owner===enemy).forEach(b=>b.destroy());
       const value=enemy.type==='boss'?40:enemy.type==='elite'?8:enemy.type==='bat'?3:2;
       this.state.kills++;
@@ -1541,6 +1545,8 @@
     update(time,delta) {
       if(!this.state?.running || this.state.pausedForLevel || this.state.pausedForUser) return;
 
+      this.bossItems.update(delta);
+      if(!this.state.running||this.state.pausedForLevel)return;
       this.extraWeapons.update(delta);
       if(!this.state.running)return;
       this.player.donationInvulnerableMs=Math.max(0,(this.player.donationInvulnerableMs||0)-delta);
