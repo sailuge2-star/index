@@ -7,7 +7,7 @@
   drop(enemy){
    const s=this.scene;
    // 최종 보스는 처치 즉시 클리어되므로 획득 불가능한 상자를 남기지 않는다.
-   if(this.wiping||!s.state.running||(!enemy.isDonationBoss&&s.state.elapsed>=1800&&s.state.bossRound===6)||Math.random()>=DROP_CHANCE)return;
+   if(this.wiping||!s.state.running||(!enemy.isDonationBoss&&s.state.elapsed>=1800&&s.state.bossRound===6)||Math.random()>=(s.bossDropGuaranteed===true?1:DROP_CHANCE))return;
    this.items.push({x:enemy.x,y:enemy.y});
   }
   notify(name){const node=document.getElementById('bossItemNotice');if(!node)return;clearTimeout(this.timer);node.textContent=name+' 아이템을 획득하셨습니다!';node.hidden=false;this.timer=setTimeout(()=>{node.hidden=true;},4500);}

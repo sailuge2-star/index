@@ -148,7 +148,7 @@
         await window.BBO_RANKING?.prepare();
         this.startPending=false;
         if(!this.scene.isActive())return;
-        this.scene.start('MainScene',{difficulty:this.selectedDifficulty,autoAim:document.querySelector('input[name="attackMode"]:checked')?.value!=='mouse'});
+        this.scene.start('MainScene',{difficulty:this.selectedDifficulty,bossDropGuaranteed:document.getElementById('bossDropGuaranteed')?.checked===true,autoAim:document.querySelector('input[name="attackMode"]:checked')?.value!=='mouse'});
       });
 
       this.createMenuButton(GAME_W/2-108, 575, 204, 58, '설명서', false, () => {
@@ -272,6 +272,7 @@
 
     init(data) {
       this.autoAim=data?.autoAim!==false;
+      this.bossDropGuaranteed=data?.bossDropGuaranteed===true;
       document.getElementById('gameAttackMode').textContent=this.autoAim?'자동 조준':'마우스 조준';
       this.balance=window.BBO_GAME_ACCESS?.settings()||{player_hp:100,player_damage:18,player_speed:250,enemy_multiplier:1,spawn_ms:900};
       this.difficulty=Object.prototype.hasOwnProperty.call(DIFFICULTIES,data?.difficulty)?data.difficulty:'easy';
@@ -1730,7 +1731,7 @@
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2+20,'화면을 클릭하면 다시 시작',{
         fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim}));
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
     }
 
     victory() {
@@ -1755,7 +1756,7 @@
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2+65,'화면을 클릭하면 다시 플레이',{
         fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim}));
+      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
     }
   }
 
