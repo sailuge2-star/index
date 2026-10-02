@@ -1252,7 +1252,7 @@
         this.player.hp=Math.min(this.player.maxHp,this.player.hp+Math.ceil(this.player.maxHp*0.3));
         result='체력 30% 회복';
       }else if(effect==='harm'){
-        if(!window.BBO_GAME_ACCESS?.isAdmin()&&!(this.player.donationInvulnerableMs>0)){
+        if(!window.BBO_GAME_ACCESS?.isVerifying?.()&&!window.BBO_GAME_ACCESS?.isAdmin()&&!(this.player.donationInvulnerableMs>0)){
           this.player.hp=Math.max(1,this.player.hp-Math.ceil(this.player.maxHp*0.2));
         }
         result='체력 20% 감소 (최소 1 유지)';
@@ -1451,7 +1451,7 @@
 
     playerHit(player,enemy) {
       if(!this.state.running||this.state.pausedForLevel||this.state.pausedForUser)return;
-      if(window.BBO_GAME_ACCESS?.isAdmin()||player.donationInvulnerableMs>0) return;
+      if(window.BBO_GAME_ACCESS?.isVerifying?.()||window.BBO_GAME_ACCESS?.isAdmin()||player.donationInvulnerableMs>0) return;
       if(!enemy.active || !this.state.running) return;
       const now=this.time.now;
       if(now<player.invulnerableUntil) return;
@@ -1739,7 +1739,7 @@
     }
 
     gameOver() {
-      if(!this.state.running) return;
+      if(!this.state.running || window.BBO_GAME_ACCESS?.isVerifying?.() || window.BBO_GAME_ACCESS?.isAdmin()) return;
       void window.BBO_RANKING?.finish(this.rankingRun,this.state,false);
       this.state.running=false;
       this.clearEncounterHud();
@@ -1755,9 +1755,9 @@
       this.add.text(this.scale.width/2,this.scale.height/2-50,`생존 ${Math.floor(this.state.elapsed/60)}분 ${this.state.elapsed%60}초 · 처치 ${this.state.kills}마리`,{
         fontFamily:'Noto Sans KR',fontSize:'15px',color:'#e8dce7'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(this.scale.width/2,this.scale.height/2+20,'화면을 클릭하면 다시 시작',{
-        fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
+      this.add.text(this.scale.width/2,this.scale.height/2+20,'다시 시작',{
+        fontFamily:'Noto Sans KR',fontSize:'20px',fontStyle:'800',color:'#ffffff',backgroundColor:'#c73570',padding:{x:36,y:16}
+      }).setOrigin(.5).setDepth(301).setScrollFactor(0).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
     }
 
     victory() {
@@ -1780,9 +1780,9 @@
       this.add.text(this.scale.width/2,this.scale.height/2-5,`LV ${this.state.level} · 처치 ${this.state.kills}마리`,{
         fontFamily:'Noto Sans KR',fontSize:'13px',color:'#e6dce6'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(this.scale.width/2,this.scale.height/2+65,'화면을 클릭하면 다시 플레이',{
-        fontFamily:'Noto Sans KR',fontSize:'14px',fontStyle:'800',color:'#ff9dca'
-      }).setOrigin(.5).setDepth(301).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
+      this.add.text(this.scale.width/2,this.scale.height/2+65,'다시 시작',{
+        fontFamily:'Noto Sans KR',fontSize:'20px',fontStyle:'800',color:'#ffffff',backgroundColor:'#c73570',padding:{x:36,y:16}
+      }).setOrigin(.5).setDepth(301).setScrollFactor(0).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
     }
   }
 

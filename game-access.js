@@ -2,7 +2,7 @@
   'use strict';
   const defaults={player_hp:100,player_damage:18,player_speed:250,enemy_multiplier:1,spawn_ms:900};
   const limits={player_hp:[1,10000],player_damage:[1,999],player_speed:[50,1000],enemy_multiplier:[0.1,20],spawn_ms:[100,10000]};
-  let admin=false,settings={...defaults},generation=0,loadError='';
+  let verifying=true,admin=false,settings={...defaults},generation=0,loadError='';
   const cfg=window.BBORINGIRL_CONFIG||{};
   const client=cfg.supabaseUrl&&cfg.supabaseKey&&window.supabase?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey):null;
   function bounded(promise){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('연결 시간이 초과되었습니다.')),8000);Promise.resolve(promise).then(v=>{clearTimeout(timer);resolve(v)},e=>{clearTimeout(timer);reject(e)});});}
@@ -14,10 +14,10 @@
     window.dispatchEvent(new Event('game-role-change'));
   }
   async function refresh(){
-    const ticket=++generation;admin=false;render();
+    const ticket=++generation;verifying=true;admin=false;render();
     let verified=false;
     try{if(client){const {data,error}=await bounded(client.auth.getUser());if(!error&&data.user){const r=await bounded(client.from('admin_users').select('user_id').eq('user_id',data.user.id).maybeSingle());verified=!r.error&&Boolean(r.data);}}}catch{/* Default to guest on any failed verification. */}
-    if(ticket===generation){admin=verified;render();}
+    if(ticket===generation){admin=verified;verifying=false;render();}
   }
   async function load(){
     if(!client){loadError='Supabase 연결 설정이 없습니다.';return;}
@@ -32,10 +32,10 @@
     }
   }));
   const ready=Promise.all([refresh(),load()]);
-  window.BBO_GAME_ACCESS=Object.freeze({client,isAdmin:()=>admin,settings:()=>({...settings}),ready,
+  window.BBO_GAME_ACCESS=Object.freeze({client,isAdmin:()=>admin,isVerifying:()=>verifying,settings:()=>({...settings}),ready,
     async save(values){const clean=validate(values);await refresh();if(!admin||!client)throw Error('관리자 로그인 후 이용해주세요.');const {error}=await bounded(client.from('game_balance').upsert({id:1,...clean}));if(error)throw error;settings=clean;loadError='';}
   });
-  client?.auth.onAuthStateChange(()=>{admin=false;render();setTimeout(refresh,0);});
+  client?.auth.onAuthStateChange(()=>{verifying=true;admin=false;render();setTimeout(refresh,0);});
   window.addEventListener('focus',refresh);
   if(document.body.dataset.page==='game-admin'){
     const form=document.getElementById('balanceForm'),status=document.getElementById('balanceStatus');
