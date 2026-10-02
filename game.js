@@ -1614,21 +1614,21 @@
       const speed=650/Math.max(170,Number(p.fireDelay)||650),damage=value=>Number(value.toFixed(1));
       byId('gameWeaponStats').textContent=[
         `AUG A3 · LV ${1+(this.state.upgrades.multishot||0)}\n탄환당 피해 ${damage(window.BBO_GAME_ACCESS?.isAdmin()?999:p.damage)} · ${p.projectiles}발 · ${(1000/p.fireDelay).toFixed(2)}회/초`,
-        cannon?`박격포 · LV ${cannon}\n폭발 피해 ${damage(p.damage*(2+.55*(cannon-1)))} · ${(Math.max(700,2800-(cannon-1)*180)/speed/1000).toFixed(2)}초 간격`:'박격포 · 미획득',
-        guardian?`뽀글스의 수호 · LV ${guardian}\n접촉 피해 ${damage(p.damage*(.8+(guardian-1)*.25))} · ${Math.min(6,guardian)}마리\n회전 ${(Math.PI*2/((2+Math.min(guardian-1,15)*.18)*speed)).toFixed(2)}초/바퀴`:'뽀글스의 수호 · 미획득'
-      ].join('\n\n');
+        cannon?`박격포 · LV ${cannon}\n폭발 피해 ${damage(p.damage*(2+.55*(cannon-1)))} · ${(Math.max(700,2800-(cannon-1)*180)/speed/1000).toFixed(2)}초 간격`:'',
+        guardian?`뽀글스의 수호 · LV ${guardian}\n접촉 피해 ${damage(p.damage*(.8+(guardian-1)*.25))} · ${Math.min(6,guardian)}마리\n회전 ${(Math.PI*2/((2+Math.min(guardian-1,15)*.18)*speed)).toFixed(2)}초/바퀴`:''
+      ].filter(Boolean).join('\n');
       byId('gameEnemyGrowth').textContent=`체력 · 공격력 +${((Math.pow(1.1,this.state.stage-1)-1)*100).toFixed(1)}%`;
       byId('gameEnemyMultiplier').textContent=`난이도·설정 포함 기본 배율 ×${this.enemyStatMultiplier().toFixed(2)}`;
       const bossLines=Object.entries(this.state.defeatedBosses).map(([name,count])=>`${name} ×${count}`);
-      byId('gameDefeatedBosses').textContent=bossLines.join('\n')||'아직 처치한 보스 없음';
-      byId('gameCollectedBossItems').textContent=['전멸의 별','경험치 자석','반쪽 회복 물약','완전 회복 물약','성장의 축복'].map(name=>`${name} ×${this.state.collectedBossItems[name]||0}`).join('\n');
+      byId('gameDefeatedBosses').textContent=bossLines.join('\n');
+      byId('gameCollectedBossItems').textContent=['전멸의 별','경험치 자석','반쪽 회복 물약','완전 회복 물약','성장의 축복'].filter(name=>this.state.collectedBossItems[name]>0).map(name=>`${name} ×${this.state.collectedBossItems[name]||0}`).join('\n');
       byId('gameDamage').textContent=String(window.BBO_GAME_ACCESS?.isAdmin()?999:Math.round(this.player.damage));
       byId('gameAttackSpeed').textContent=`${(1000/this.player.fireDelay).toFixed(2)}/s`;
       byId('gameMoveSpeed').textContent=String(Math.round(this.player.moveSpeed));
       byId('gamePickup').textContent=String(Math.round(this.player.pickupRadius));
       const passiveLines=UPGRADES.filter(u=>this.state.upgrades[u.id])
         .map(u=>`${u.icon} ${u.title} ×${this.state.upgrades[u.id]}`);
-      byId('gamePassives').textContent=passiveLines.length?passiveLines.join('\n'):'선택한 능력 없음';
+      byId('gamePassives').textContent=passiveLines.join('\n');
       const bossStatus=byId('gameBossStatus');
       bossStatus.hidden=!this.state.bossActive;
       bossStatus.textContent=this.state.bossActive
@@ -1640,7 +1640,7 @@
         this.combatHud.statTexts[1].setText(`${(1000/this.player.fireDelay).toFixed(2)}/s`);
         this.combatHud.statTexts[2].setText(String(Math.round(this.player.moveSpeed)));
         this.combatHud.statTexts[3].setText(String(Math.round(this.player.pickupRadius)));
-        this.combatHud.passive.setText(passiveLines.length?passiveLines.join('\n'):'선택한 능력 없음');
+        this.combatHud.passive.setText(passiveLines.join('\n'));
       }
       this.updateBossHud();
     }
@@ -1738,6 +1738,24 @@
       });
     }
 
+    createRestartButton(x,y) {
+      const group=this.add.container(x,y).setDepth(302).setScrollFactor(0);
+      const bg=this.add.graphics();
+      const paint=hover=>{
+        bg.clear();
+        bg.fillStyle(0x521e3c,.5).fillRoundedRect(-108,-23,216,60,18);
+        bg.fillStyle(hover?0xef83ae:0xdf6397,1).fillRoundedRect(-108,-30,216,58,18);
+        bg.lineStyle(2,0xffcee2,.9).strokeRoundedRect(-108,-30,216,58,18);
+        bg.lineStyle(1,0xffffff,.3).lineBetween(-86,-21,86,-21);
+      };
+      paint(false);
+      const label=this.add.text(0,-1,'다시 시작',{fontFamily:'Gowun Dodum, Noto Sans KR, sans-serif',fontSize:'23px',fontStyle:'bold',color:'#ffffff',shadow:{offsetX:0,offsetY:2,color:'#a03967',blur:2,fill:true}}).setOrigin(.5);
+      group.add([bg,label]).setSize(216,58).setInteractive({useHandCursor:true});
+      group.on('pointerover',()=>paint(true)).on('pointerout',()=>{paint(false);group.setScale(1);});
+      group.on('pointerdown',()=>group.setScale(.97));
+      group.on('pointerup',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
+    }
+
     gameOver() {
       if(!this.state.running || window.BBO_GAME_ACCESS?.isVerifying?.() || window.BBO_GAME_ACCESS?.isAdmin()) return;
       void window.BBO_RANKING?.finish(this.rankingRun,this.state,false);
@@ -1750,14 +1768,12 @@
 
       const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x100b13,.78).setDepth(300).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2-120,'GAME OVER',{
-        fontFamily:'Noto Sans KR',fontSize:'52px',fontStyle:'900',color:'#ffffff'
+        fontFamily:'Gowun Dodum, Noto Sans KR, sans-serif',fontSize:'54px',fontStyle:'900',color:'#ffffff'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2-50,`생존 ${Math.floor(this.state.elapsed/60)}분 ${this.state.elapsed%60}초 · 처치 ${this.state.kills}마리`,{
-        fontFamily:'Noto Sans KR',fontSize:'15px',color:'#e8dce7'
+        fontFamily:'Gowun Dodum, Noto Sans KR, sans-serif',fontSize:'18px',color:'#f4dce8'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(this.scale.width/2,this.scale.height/2+20,'다시 시작',{
-        fontFamily:'Noto Sans KR',fontSize:'20px',fontStyle:'800',color:'#ffffff',backgroundColor:'#c73570',padding:{x:36,y:16}
-      }).setOrigin(.5).setDepth(301).setScrollFactor(0).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
+      this.createRestartButton(this.scale.width/2,this.scale.height/2+20);
     }
 
     victory() {
@@ -1772,17 +1788,15 @@
 
       const overlay=this.add.rectangle(this.scale.width/2,this.scale.height/2,this.scale.width,this.scale.height,0x180f1b,.8).setDepth(300).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2-120,'3000 DAYS CLEAR!',{
-        fontFamily:'Noto Sans KR',fontSize:'46px',fontStyle:'900',color:'#ffffff'
+        fontFamily:'Gowun Dodum, Noto Sans KR, sans-serif',fontSize:'46px',fontStyle:'900',color:'#ffffff'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2-50,'30분 생존 · 보스 6명 격파 · 6스테이지 클리어! ♡',{
-        fontFamily:'Noto Sans KR',fontSize:'17px',color:'#ffd5e7'
+        fontFamily:'Gowun Dodum, Noto Sans KR, sans-serif',fontSize:'17px',color:'#ffd5e7'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
       this.add.text(this.scale.width/2,this.scale.height/2-5,`LV ${this.state.level} · 처치 ${this.state.kills}마리`,{
-        fontFamily:'Noto Sans KR',fontSize:'13px',color:'#e6dce6'
+        fontFamily:'Gowun Dodum, Noto Sans KR, sans-serif',fontSize:'13px',color:'#e6dce6'
       }).setOrigin(.5).setDepth(301).setScrollFactor(0);
-      this.add.text(this.scale.width/2,this.scale.height/2+65,'다시 시작',{
-        fontFamily:'Noto Sans KR',fontSize:'20px',fontStyle:'800',color:'#ffffff',backgroundColor:'#c73570',padding:{x:36,y:16}
-      }).setOrigin(.5).setDepth(301).setScrollFactor(0).setInteractive({useHandCursor:true}).on('pointerdown',()=>this.scene.restart({difficulty:this.difficulty,autoAim:this.autoAim,bossDropGuaranteed:this.bossDropGuaranteed}));
+      this.createRestartButton(this.scale.width/2,this.scale.height/2+65);
     }
   }
 
