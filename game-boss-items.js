@@ -13,6 +13,9 @@
   notify(name){const node=document.getElementById('bossItemNotice');if(!node)return;clearTimeout(this.timer);node.textContent=name+' 아이템을 획득하셨습니다!';node.hidden=false;this.timer=setTimeout(()=>{node.hidden=true;},4500);}
   apply(index){
    const s=this.scene,p=s.player;
+   if(!NAMES[index])return;
+   s.state.collectedBossItems??={};
+   s.state.collectedBossItems[NAMES[index]]=(s.state.collectedBossItems[NAMES[index]]||0)+1;
    if(index===0){
     this.wiping=true;
     try{for(const e of s.enemies.getChildren().slice()){if(!s.state.running)break;if(e.active)s.killEnemy(e);}for(const b of s.enemyProjectiles.getChildren().slice())if(b.active)b.destroy();}finally{this.wiping=false;}

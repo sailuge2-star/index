@@ -400,6 +400,9 @@
         running: true,
         elapsed: 0,
         kills: 0,
+        defeatedBosses: {},
+        mainBossKills: 0,
+        collectedBossItems: {},
         wave: 1,
         stage: 1,
         bossRound: 0,
@@ -1338,7 +1341,12 @@
 
     killEnemy(enemy) {
       if(!enemy?.active)return;
-      if(enemy.type==='boss')this.bossItems?.drop(enemy);
+      if(enemy.type==='boss'){
+        const name=(enemy.bossName||'보스')+(enemy.isDonationBoss?' (후원)':'');
+        this.state.defeatedBosses[name]=(this.state.defeatedBosses[name]||0)+1;
+        if(!enemy.isDonationBoss)this.state.mainBossKills++;
+        this.bossItems?.drop(enemy);
+      }
       this.enemyProjectiles.getChildren().filter(b=>b.owner===enemy).forEach(b=>b.destroy());
       const value=enemy.type==='boss'?40:enemy.type==='elite'?8:enemy.type==='bat'?3:2;
       this.state.kills++;
@@ -1351,6 +1359,7 @@
         this.state.bossActive=false;
         if(this.state.elapsed>=SURVIVAL_SECONDS && this.state.bossRound===TOTAL_STAGES){
           enemy.destroy();
+          this.updateUi();
           this.victory();
           return;
         }
@@ -1596,6 +1605,23 @@
       byId('gameWave').textContent=`STAGE ${this.state.stage}/${TOTAL_STAGES} · WAVE ${this.state.wave}`;
       byId('gameDifficulty').textContent={easy:'쉬움',normal:'보통',hard:'하드'}[this.difficulty];
       byId('gameKills').textContent=`KILLS ${this.state.kills}`;
+      const remaining=Math.max(0,Math.min(TOTAL_STAGES,this.state.bossRound+1)*STAGE_SECONDS-this.state.elapsed);
+      const countdown=`${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`;
+      byId('gameNextBoss').textContent=this.state.mainBossKills>=TOTAL_STAGES?'최종 보스 격파 완료':this.state.bossActive?'보스전 진행 중 · 타이머 정지':`다음 보스까지 ${countdown}`;
+      byId('gameBossProgress').textContent=`스테이지 보스 ${this.state.mainBossKills} / ${TOTAL_STAGES} 처치`;
+      byId('gameDropChance').textContent=`보스 상자 드랍 ${this.bossDropGuaranteed?100:30}%`;
+      const p=this.player,cannon=p.cannonLevel||0,guardian=p.boomerangLevel||0;
+      const speed=650/Math.max(170,Number(p.fireDelay)||650),damage=value=>Number(value.toFixed(1));
+      byId('gameWeaponStats').textContent=[
+        `AUG A3 · LV ${1+(this.state.upgrades.multishot||0)}\n탄환당 피해 ${damage(window.BBO_GAME_ACCESS?.isAdmin()?999:p.damage)} · ${p.projectiles}발 · ${(1000/p.fireDelay).toFixed(2)}회/초`,
+        cannon?`박격포 · LV ${cannon}\n폭발 피해 ${damage(p.damage*(2+.55*(cannon-1)))} · ${(Math.max(700,2800-(cannon-1)*180)/speed/1000).toFixed(2)}초 간격`:'박격포 · 미획득',
+        guardian?`뽀글스의 수호 · LV ${guardian}\n접촉 피해 ${damage(p.damage*(.8+(guardian-1)*.25))} · ${Math.min(6,guardian)}마리\n회전 ${(Math.PI*2/((2+Math.min(guardian-1,15)*.18)*speed)).toFixed(2)}초/바퀴`:'뽀글스의 수호 · 미획득'
+      ].join('\n\n');
+      byId('gameEnemyGrowth').textContent=`체력 · 공격력 +${((Math.pow(1.1,this.state.stage-1)-1)*100).toFixed(1)}%`;
+      byId('gameEnemyMultiplier').textContent=`난이도·설정 포함 기본 배율 ×${this.enemyStatMultiplier().toFixed(2)}`;
+      const bossLines=Object.entries(this.state.defeatedBosses).map(([name,count])=>`${name} ×${count}`);
+      byId('gameDefeatedBosses').textContent=bossLines.join('\n')||'아직 처치한 보스 없음';
+      byId('gameCollectedBossItems').textContent=['전멸의 별','경험치 자석','반쪽 회복 물약','완전 회복 물약','성장의 축복'].map(name=>`${name} ×${this.state.collectedBossItems[name]||0}`).join('\n');
       byId('gameDamage').textContent=String(window.BBO_GAME_ACCESS?.isAdmin()?999:Math.round(this.player.damage));
       byId('gameAttackSpeed').textContent=`${(1000/this.player.fireDelay).toFixed(2)}/s`;
       byId('gameMoveSpeed').textContent=String(Math.round(this.player.moveSpeed));

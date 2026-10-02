@@ -28,6 +28,9 @@
   <style>
     .player-entry .boss-drop-option{display:flex;align-items:center;gap:7px;white-space:nowrap;padding:10px 12px;border:1px solid #edb0c2;border-radius:12px;background:#ffe7ee;color:#a72f50;cursor:pointer}
     .player-entry .boss-drop-option input{width:18px;height:18px;margin:0;accent-color:#db4464;cursor:pointer}
+    .status-weapon-details summary{cursor:pointer}
+    #gameWeaponStats{max-height:none}
+    .status-history-note{font-size:9px;line-height:1.6;color:#aebcc2;margin-top:4px;overflow-wrap:anywhere}
     #gameManual{width:min(800px,calc(100vw - 24px));height:min(820px,calc(100dvh - 24px));max-height:calc(100dvh - 24px);padding:0;overflow:hidden;color-scheme:light}
     #gameManual[open]{display:flex;flex-direction:column}
     #gameManual .manual-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:24px 26px 16px;flex-shrink:0}
@@ -91,13 +94,33 @@
           <div class="status-difficulty">공격 방식 <strong id="gameAttackMode">자동 조준</strong></div>
           <div class="status-difficulty">난이도 <strong id="gameDifficulty">쉬움</strong></div>
           <div class="status-xp-text" id="gameXp">EXP 0 / 18</div>
+          <div class="status-passives" id="gameNextBoss">다음 보스까지 05:00</div>
+          <div class="status-history-note" id="gameBossProgress">스테이지 보스 0 / 6 처치</div>
+          <div class="status-history-note" id="gameDropChance">보스 상자 드랍 30%</div>
           <div class="status-divider"></div>
           <div class="status-heading status-subheading">능력치</div>
           <dl class="status-stats"><div><dt>공격력</dt><dd id="gameDamage">18</dd></div><div><dt>공격속도</dt><dd id="gameAttackSpeed">1.54/s</dd></div><div><dt>이동속도</dt><dd id="gameMoveSpeed">250</dd></div><div><dt>흡수범위</dt><dd id="gamePickup">75</dd></div></dl>
           <div class="status-divider"></div>
+          <details class="status-weapon-details" open><summary class="status-heading status-subheading">현재 무기 정보</summary>
+          <div class="status-passives" id="gameWeaponStats"></div>
+          <div class="status-history-note">피해는 1회 명중 기준 · 발사 간격은 조준 대상이 있을 때 기준</div></details>
+          <div class="status-divider"></div>
           <div class="status-heading status-subheading">패시브 효과</div>
           <div id="gameSlowStatus" class="status-passives" role="status" hidden></div><div class="status-passives" id="gamePassives">선택한 능력 없음</div>
           <div class="status-boss" id="gameBossStatus" hidden>BOSS 등장</div>
+          <div class="status-divider"></div>
+          <div class="status-heading status-subheading">현재 스테이지 적 강화</div>
+          <div class="status-passives" id="gameEnemyGrowth">체력 · 공격력 +0.0%</div>
+          <div class="status-history-note">1스테이지 대비 누적 상승률</div>
+          <div class="status-history-note" id="gameEnemyMultiplier">난이도·설정 포함 기본 배율 ×1.00</div>
+          <div class="status-history-note">보스 고유 능력치·회차별 강화는 별도 적용</div>
+          <div class="status-divider"></div>
+          <div class="status-heading status-subheading">처치한 보스</div>
+          <div class="status-passives" id="gameDefeatedBosses">아직 처치한 보스 없음</div>
+          <div class="status-divider"></div>
+          <div class="status-heading status-subheading">보스 드랍 아이템 획득 기록</div>
+          <div class="status-passives" id="gameCollectedBossItems">아직 획득한 아이템 없음</div>
+          <div class="status-history-note">획득 즉시 사용 · 이번 플레이의 누적 횟수</div>
         </aside>
         <div class="game-overlay-actions"><button class="game-overlay-pause" id="gamePauseButton" type="button" aria-pressed="false">⏸ 일시정지</button><button class="game-overlay-menu" id="gameMenuButton" type="button">☰ 메뉴</button></div>
         <div class="game-pause-notice" id="gamePauseNotice" hidden>일시정지 · 계속 버튼을 눌러 재개하세요</div>
@@ -121,8 +144,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
   <script src="character-assets.js?v=boss-png-large-20260930"></script>
   <script src="game-weapons.js?v=attack-speed-20261002"></script>
-  <script src="game-boss-items.js?v=boss-drop-20261002"></script>
-  <script src="game.js?v=boss-drop-20261002"></script>
+  <script src="game-boss-items.js?v=status-extra-20261002"></script>
+  <script src="game.js?v=status-extra-20261002"></script>
   <dialog id="soopConnectDialog" class="soop-connect-dialog" aria-labelledby="soopConnectTitle" aria-describedby="soopApprovalNote">
     <header class="soop-popup-heading"><h2 id="soopConnectTitle">SOOP 계정 · 후원 연동</h2><span class="soop-connection-badge"><i aria-hidden="true"></i> 연결 안 됨</span></header>
     <section class="soop-streamer-section" aria-labelledby="soopStreamerTitle">
