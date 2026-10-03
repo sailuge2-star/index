@@ -78,88 +78,53 @@
     `;
   }
 
+  const kstDay = date => new Date(date.getTime()+9*3600000).toISOString().slice(0,10);
   function aggregate(samples) {
-    const byDay = new Map();
-    samples.forEach(row => {
-      const date = new Date(row.sampled_at);
-      if (Number.isNaN(date.getTime())) return;
-      // 캘린더와 동일하게 브라우저의 현지 날짜(KST)를 기준으로 일자를 묶습니다.
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      if (!byDay.has(key)) byDay.set(key, []);
-      const n = Number(row.viewers);
-      if (Number.isFinite(n) && n >= 0) byDay.get(key).push(n);
-    });
-
-    return [...byDay.entries()].sort((a,b) => a[0].localeCompare(b[0])).map(([date, values]) => ({
-      date,
-      label: dayFmt.format(new Date(`${date}T00:00:00`)),
-      peak: Math.max(...values),
-      average: Math.round(values.reduce((a,b) => a+b, 0) / values.length)
-    }));
-  }
-
-  let selectedMonth = (() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth() + 1 };
-  })();
-
-  function monthRange(year, month) {
-    // 캘린더와 같은 현지 시간 기준으로 해당 월의 시작/끝을 만듭니다.
-    const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
-    const end = new Date(year, month, 1, 0, 0, 0, 0);
-    return { start, end };
-  }
-
-  async function loadStats() {
-    if (!sb) {
-      setEmpty(peakChart, "Supabase 연결 후 통계가 표시됩니다.");
-      setEmpty(averageChart, "Supabase 연결 후 통계가 표시됩니다.");
-      status.textContent = "Supabase 설정을 확인해주세요.";
-      return;
+    const byDay=new Map();
+    for(const row of samples){
+      const date=new Date(row.sampled_at),n=Number(row.viewers);
+      if(!row.sampled_at||Number.isNaN(date.getTime())||row.viewers==null||row.viewers===''||!Number.isFinite(n)||n<0)continue;
+      const key=kstDay(date),v=byDay.get(key)||{sum:0,count:0,peak:0};
+      v.sum+=n;v.count++;v.peak=Math.max(v.peak,n);byDay.set(key,v);
     }
-
-    try {
-      const { start, end } = monthRange(selectedMonth.year, selectedMonth.month);
-
-      const { data, error } = await sb
-        .from("soop_viewer_samples")
-        .select("viewers,sampled_at")
-        .eq("streamer_id", config.soopStreamerId || "bboringirl")
-        .gte("sampled_at", start.toISOString())
-        .lt("sampled_at", end.toISOString())
-        .order("sampled_at", { ascending: true })
-        .limit(10000);
-
-      if (error) throw error;
-
-      const rows = aggregate(data || []);
-      if (!rows.length) {
-        setEmpty(peakChart, "아직 수집된 시청자 데이터가 없습니다.");
-        setEmpty(averageChart, "아직 수집된 시청자 데이터가 없습니다.");
-        peakTotal.textContent = "-";
-        averageTotal.textContent = "-";
-        peakNote.textContent = "방송 중인 동안 시청자 데이터를 자동으로 수집합니다.";
-        averageNote.textContent = "방송 중인 동안 시청자 데이터를 자동으로 수집합니다.";
-        status.textContent = `${selectedMonth.year}년 ${selectedMonth.month}월에 수집된 방송 데이터가 없습니다.`;
-        return;
-      }
-
-      const peak = Math.max(...rows.map(r => r.peak));
-      const avg = Math.round(rows.reduce((sum, r) => sum + r.average, 0) / rows.length);
-
-      peakTotal.textContent = `${fmt(peak)}명`;
-      averageTotal.textContent = `${fmt(avg)}명`;
-      peakNote.textContent = `${selectedMonth.year}년 ${selectedMonth.month}월의 일자별 최고 시청자 수`;
-      averageNote.textContent = `${selectedMonth.year}년 ${selectedMonth.month}월의 일자별 평균 시청자 수`;
-
-      drawLineChart(peakChart, rows, "peak", "최고 시청자");
-      drawLineChart(averageChart, rows, "average", "평균 시청자");
-      status.textContent = `${selectedMonth.year}년 ${selectedMonth.month}월 데이터를 기준으로 표시합니다. 마지막 갱신 ${new Intl.DateTimeFormat("ko-KR", { hour:"2-digit", minute:"2-digit" }).format(new Date())}`;
-    } catch (error) {
-      console.error("[SOOP STATS]", error);
-      setEmpty(peakChart, "통계 데이터를 불러오지 못했습니다.");
-      setEmpty(averageChart, "통계 데이터를 불러오지 못했습니다.");
-      status.textContent = "통계 데이터를 불러오지 못했습니다. Supabase 테이블과 정책을 확인해주세요.";
+    return [...byDay].sort(([a],[b])=>a.localeCompare(b)).map(([date,v])=>({date,label:`${Number(date.slice(5,7))}/${Number(date.slice(8,10))}`,peak:v.peak,average:Math.round(v.sum/v.count)}));
+  }
+  let selectedMonth=(()=>{const day=kstDay(new Date());return {year:Number(day.slice(0,4)),month:Number(day.slice(5,7))};})();
+  function monthRange(year,month){return {start:new Date(Date.UTC(year,month-1,1)-9*3600000),end:new Date(Date.UTC(year,month,1)-9*3600000)};}
+  async function samplesBetween(start,end){
+    const all=[];let offset=0;
+    for(;;){
+      const {data,error}=await sb.from('soop_viewer_samples').select('viewers,sampled_at')
+        .eq('streamer_id',config.soopStreamerId||'bboringirl').gte('sampled_at',start.toISOString()).lt('sampled_at',end.toISOString())
+        .order('sampled_at',{ascending:true}).range(offset,offset+499);
+      if(error)throw error;
+      if(!data?.length)return all;
+      all.push(...data);offset+=data.length;
+    }
+  }
+  let loadVersion=0;
+  async function loadStats(){
+    const version=++loadVersion,{year,month}=selectedMonth;
+    if(!sb){setEmpty(peakChart,'Supabase 연결 후 통계가 표시됩니다.');setEmpty(averageChart,'Supabase 연결 후 통계가 표시됩니다.');status.textContent='Supabase 설정을 확인해주세요.';return;}
+    try{
+      const {start,end}=monthRange(year,month),today=kstDay(new Date());
+      const todayStart=new Date(today+'T00:00:00+09:00'),todayEnd=new Date(todayStart.getTime()+86400000);
+      const sameMonth=todayStart>=start&&todayStart<end;
+      const [samples,todaySamples]=await Promise.all([samplesBetween(start,end),sameMonth?Promise.resolve(null):samplesBetween(todayStart,todayEnd)]);
+      if(version!==loadVersion)return;
+      const rows=aggregate(samples),todayRow=aggregate(todaySamples??samples).find(r=>r.date===today);
+      peakTotal.textContent=todayRow?`${fmt(todayRow.peak)}명`:'-';
+      peakTotal.title=`${today} 한국 시간 기준 오늘 최고 시청자 수${todayRow?'':' · 수집 기록 없음'}`;
+      averageTotal.textContent=rows.length?`${fmt(Math.round(rows.reduce((sum,r)=>sum+r.average,0)/rows.length))}명`:'-';
+      peakNote.textContent=`그래프: ${year}년 ${month}월 날짜별 최고 · 상단 숫자: 오늘(${today}) 최고${todayRow?'':' · 오늘 수집 기록 없음'}`;
+      averageNote.textContent=`${year}년 ${month}월의 일자별 평균 시청자 수`;
+      drawLineChart(peakChart,rows,'peak','최고 시청자');drawLineChart(averageChart,rows,'average','평균 시청자');
+      status.textContent=`한국 시간 기준 · DB 수집 기록${rows.length?'':' · 선택한 달의 기록 없음'} · 마지막 갱신 ${new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit'}).format(new Date())}`;
+    }catch(error){
+      if(version!==loadVersion)return;
+      console.error('[SOOP STATS]',error);peakTotal.textContent='-';averageTotal.textContent='-';
+      setEmpty(peakChart,'통계 데이터를 불러오지 못했습니다.');setEmpty(averageChart,'통계 데이터를 불러오지 못했습니다.');
+      status.textContent='통계 데이터를 불러오지 못했습니다. Supabase 테이블과 정책을 확인해주세요.';
     }
   }
 
